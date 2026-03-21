@@ -12,13 +12,18 @@ class Attendance extends Model
         'approved_by',
         'approved_at',
         'updated_by',
-        'memo',
-        'start_time',
-        'end_time',
+        'note',
+        'clock_in',
+        'clock_out',
     ];
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function breaksTime()

@@ -15,15 +15,19 @@ return new class () extends Migration {
             $table->foreignId('user_id')->constrained();
             $table->date('work_date');
             $table->unique(['user_id', 'work_date']);
-            $table->timestamp('start_time');
-            $table->timestamp('end_time')->nullable();
-            $table->string('approved_by', 10)->nullable();
-            $table->string('approved_at', 10)->nullable();
-            $table->string('updated_by', 10);
-            $table->string('memo', 255)->nullable();
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-        });
+            $table->timestamp('clock_in');
+            $table->timestamp('clock_out')->nullable();
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->foreignId('approved_by')->nullable()->constrained('users');
+            $table->timestamp('approved_at')->nullable();
+            $table->string('note', 255)->nullable();
+            $table->string('status', 10)->default('draft')
+                ->comment('draft=申請前, pending=承認待ち, approved=承認済み');
+            $table->timestamp('requested_at')->nullable();
+            $table->timestamps();
+            $table->index('status');
+                });
     }
 
     /**
