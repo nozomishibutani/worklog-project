@@ -12,7 +12,7 @@ class BreakTime extends Model
     'clock_in',
     'clock_out',
     'created_by',
-    'updated_by',
+    'corrected_by',
     ];
 
     // DBから取った値を Carbon に変換する

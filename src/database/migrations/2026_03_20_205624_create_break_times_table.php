@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('clock_in')->nullable();
             $table->timestamp('clock_out')->nullable();
             $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->foreignId('corrected_by')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

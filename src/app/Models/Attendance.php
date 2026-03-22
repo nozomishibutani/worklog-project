@@ -12,12 +12,11 @@ class Attendance extends Model
         'clock_in',
         'clock_out',
         'created_by',
-        'updated_by',
+        'corrected_by',
         'approved_by',
         'approved_at',
         'note',
         'status',
-        'requested_at',
     ];
 
     // DBから取った値を Carbon に変換する
@@ -25,7 +24,6 @@ class Attendance extends Model
     'clock_in' => 'datetime',
     'clock_out' => 'datetime',
     'approved_at' => 'datetime',
-    'requested_at' => 'datetime',
     ];
 
     public function user()

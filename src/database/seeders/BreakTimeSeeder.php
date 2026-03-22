@@ -18,11 +18,8 @@ class BreakTimeSeeder extends Seeder
             $clockIn = $attendance->clock_in;
             $clockOut = $attendance->clock_out;
 
-
-
             // 打刻漏れスキップ
             if (!$clockIn || !$clockOut) {
-
                 continue;
             }
 
@@ -30,13 +27,12 @@ class BreakTimeSeeder extends Seeder
 
             // 4時間未満は休憩なし
             if ($workMinutes < 240) {
-
                 continue;
             }
 
             /*
             |--------------------------------------------------------------------------
-            | ① 休憩回数（現実寄せ）
+            | 休憩回数
             |--------------------------------------------------------------------------
              */
             // 4〜6時間 → 0〜1回
@@ -58,7 +54,7 @@ class BreakTimeSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | ② 休憩生成（重複なし）
+            | 休憩生成
             |--------------------------------------------------------------------------
              */
             for ($i = 0; $i < $breakCount; $i++) {
@@ -93,30 +89,21 @@ class BreakTimeSeeder extends Seeder
                 }
             }
 
-            // ==== 修正 ====
-            if ($attendance->updated_by) {
-                if (rand(1, 100) > 50) {
-                        // 休憩を修正した場合
-                        $updatedAt = $attendance->updated_at;
-                    }
-                // 休憩以外を修正した場合
-                $updatedAt = $break['end'];
-            }
-
             /*
             |--------------------------------------------------------------------------
-            | ③ 保存
+            | 保存
             |--------------------------------------------------------------------------
              */
             foreach ($breaks as $break) {
 
+                // ==== 修正 ====
+                $correctedBy = null;
                 $updatedAt = $break['end'];
-                $updatedBy = null;
-                if ($attendance->updated_by) {
+                if ($attendance->corrected_by) {
                     if (rand(1, 100) > 50) {
                         // 休憩を修正した場合
-                        $updatedBy = $attendance->updated_by;
                         $updatedAt = $attendance->updated_at;
+                        $correctedBy = $attendance->corrected_by;
                     }
                 }
 
@@ -126,7 +113,7 @@ class BreakTimeSeeder extends Seeder
                     'clock_in'       => $break['start'],
                     'clock_out'      => $break['end'],
                     'created_by'     => $attendance->user_id,
-                    'updated_by'     => $updatedBy,
+                    'corrected_by'   => $correctedBy,
                     'created_at'     => $break['start'],
                     'updated_at'     => $updatedAt,
                 ]);
