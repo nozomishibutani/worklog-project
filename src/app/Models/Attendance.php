@@ -9,13 +9,25 @@ class Attendance extends Model
     protected $fillable = [
         'user_id',
         'work_date',
-        'approved_by',
-        'approved_at',
-        'updated_by',
-        'note',
         'clock_in',
         'clock_out',
+        'created_by',
+        'updated_by',
+        'approved_by',
+        'approved_at',
+        'note',
+        'status',
+        'requested_at',
     ];
+
+    // DBから取った値を Carbon に変換する
+    protected $casts = [
+    'clock_in' => 'datetime',
+    'clock_out' => 'datetime',
+    'approved_at' => 'datetime',
+    'requested_at' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

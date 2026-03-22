@@ -9,9 +9,16 @@ class BreakTime extends Model
     protected $fillable = [
     'user_id',
     'attendance_id',
+    'clock_in',
+    'clock_out',
+    'created_by',
     'updated_by',
-    'start_time',
-    'end_time',
+    ];
+
+    // DBから取った値を Carbon に変換する
+    protected $casts = [
+    'clock_in' => 'datetime',
+    'clock_out' => 'datetime',
     ];
 
     public function user()

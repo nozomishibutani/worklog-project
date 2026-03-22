@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Attendance;
 use App\Models\BreakTime;
@@ -10,12 +9,8 @@ use Carbon\Carbon;
 
 class BreakTimeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // 例: 過去3か月の管理者勤怠を取得
         $attendances = Attendance::all();
 
         foreach ($attendances as $attendance) {
@@ -23,38 +18,118 @@ class BreakTimeSeeder extends Seeder
             $clockIn = $attendance->clock_in;
             $clockOut = $attendance->clock_out;
 
-            $workMinutes = $clockOut->diffInMinutes($clockIn);
-            $totalBreak = 0;
 
-            // 総勤務時間が4時間以上なら休憩生成
-            if ($workMinutes >= 240) {
-                $maxBreaks = floor($workMinutes / 60);
-                $breakCount = rand(1, $maxBreaks);
 
-                for ($b = 0; $b < $breakCount; $b++) {
-                    // 1回目は1時間、それ以降は15分か30分
-                    $breakLength = $totalBreak < 60 ? 60 : (rand(0,1) ? 15 : 30);
+            // 打刻漏れスキップ
+            if (!$clockIn || !$clockOut) {
 
-                    // 勤務時間を超えないよう調整
-                    if ($totalBreak + $breakLength > $workMinutes) {
-                        $breakLength = $workMinutes - $totalBreak;
-                        if ($breakLength <= 0) break;
+                continue;
+            }
+
+            $workMinutes = $clockIn->diffInMinutes($clockOut);
+
+            // 4時間未満は休憩なし
+            if ($workMinutes < 240) {
+
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ① 休憩回数（現実寄せ）
+            |--------------------------------------------------------------------------
+             */
+            // 4〜6時間 → 0〜1回
+            // 6〜8時間 → 0〜2回
+            // 8時間以上 → 1〜3回
+            if ($workMinutes < 360) {
+                $breakCount = rand(0, 1);
+            } elseif ($workMinutes < 480) {
+                $breakCount = rand(0, 2);
+            } else {
+                $breakCount = rand(1, 3);
+            }
+
+            if ($breakCount === 0) {
+                continue;
+            }
+
+            $breaks = [];
+
+            /*
+            |--------------------------------------------------------------------------
+            | ② 休憩生成（重複なし）
+            |--------------------------------------------------------------------------
+             */
+            for ($i = 0; $i < $breakCount; $i++) {
+
+                $length = $i === 0 ? 60 : (rand(0, 1) ? 15 : 30);
+
+                $attempt = 0;
+
+                // 既に休憩済みの場合は、被らずに休憩とれそうなところを10回まで探す
+                while ($attempt < 10) {
+
+                    $start = $clockIn->copy()->addMinutes(rand(0, $workMinutes - $length));
+                    $end   = $start->copy()->addMinutes($length);
+
+                    // 重複チェック
+                    $overlap = false;
+                    foreach ($breaks as $break) {
+                        if ($start < $break['end'] && $end > $break['start']) {
+                            $overlap = true;
+                            break;
+                        }
                     }
 
-                    $maxStart = $workMinutes - $breakLength;
-                    $breakStart = $clockIn->copy()->addMinutes(rand(0, $maxStart));
-                    $breakEnd = $breakStart->copy()->addMinutes($breakLength);
-
-                    BreakTime::create([
-                        'user_id' => $attendance->user_id,
-                        'attendance_id' => $attendance->id,
-                        'updated_by' => $attendance->updated_by,
-                        'start_time' => $breakStart,
-                        'end_time' => $breakEnd,
-                    ]);
-
-                    $totalBreak += $breakLength;
+                    if (!$overlap) {
+                        $breaks[] = [
+                            'start' => $start,
+                            'end'   => $end,
+                        ];
+                        break;
+                    }
+                    $attempt++;
                 }
+            }
+
+            // ==== 修正 ====
+            if ($attendance->updated_by) {
+                if (rand(1, 100) > 50) {
+                        // 休憩を修正した場合
+                        $updatedAt = $attendance->updated_at;
+                    }
+                // 休憩以外を修正した場合
+                $updatedAt = $break['end'];
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ③ 保存
+            |--------------------------------------------------------------------------
+             */
+            foreach ($breaks as $break) {
+
+                $updatedAt = $break['end'];
+                $updatedBy = null;
+                if ($attendance->updated_by) {
+                    if (rand(1, 100) > 50) {
+                        // 休憩を修正した場合
+                        $updatedBy = $attendance->updated_by;
+                        $updatedAt = $attendance->updated_at;
+                    }
+                }
+
+                BreakTime::create([
+                    'user_id'        => $attendance->user_id,
+                    'attendance_id'  => $attendance->id,
+                    'clock_in'       => $break['start'],
+                    'clock_out'      => $break['end'],
+                    'created_by'     => $attendance->user_id,
+                    'updated_by'     => $updatedBy,
+                    'created_at'     => $break['start'],
+                    'updated_at'     => $updatedAt,
+                ]);
             }
         }
     }

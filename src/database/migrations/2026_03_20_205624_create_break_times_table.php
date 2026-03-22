@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('attendance_id')->constrained();
-            $table->string('updated_by', 10);
             $table->timestamp('clock_in')->nullable();
             $table->timestamp('clock_out')->nullable();
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

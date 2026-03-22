@@ -18,5 +18,6 @@ class DatabaseSeeder extends Seeder
         $this->call(AdminSeeder::class);
         $this->call(UserAttendanceSeeder::class);
         $this->call(AdminAttendanceSeeder::class);
+        $this->call(BreakTimeSeeder::class);
     }
 }
