@@ -47,4 +47,18 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function attendance()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function breaksTime()
+    {
+        return $this->hasMany(BreakTime::class);
+    }
+
+    protected $casts = [
+        'role' => \App\Enums\Role::class,
+    ];
 }
