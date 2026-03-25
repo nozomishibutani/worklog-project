@@ -22,15 +22,14 @@ class UserAttendanceSeeder extends Seeder
             $start = $month->copy()->startOfMonth();
             $end = $month->copy()->endOfMonth();
 
-            for ($date = $start->copy(); $date <= $end; $date->addDay()) {
+            for ($date = $end->copy(); $date->greaterThanOrEqualTo($start); $date->subDay()) {
+
+                $date = $date->copy()->startOfDay();
 
                 foreach ($users as $user) {
 
                     $note = null;
-
-                    if ($date->isToday()) {
-                        continue;
-                    }
+                    $isToday = $date->isToday();
 
                     if ($date->isFuture()) {
                         continue;
@@ -51,7 +50,14 @@ class UserAttendanceSeeder extends Seeder
                     }
 
                     // ===== 勤務時間生成 =====
-                    if ($type === 'partTime') {
+                    if ($isToday) {
+                        $clockIn = Carbon::now()->subHours(rand(3, 8))
+                                                            ->minute(rand(0, 3) * 15)
+                                                            ->second(0);
+                        $clockOut = Carbon::now()->subHours(1)
+                                                            ->minute(rand(0, 3) * 15)
+                                                            ->second(0);
+                    } elseif ($type === 'partTime') {
                         $clockIn = $date->copy()->setTime(14, rand(0, 3) * 15);
                         $clockOut = $date->copy()->setTime(16, rand(0, 3) * 15);
                     } elseif ($type === 'normal') {
@@ -72,6 +78,22 @@ class UserAttendanceSeeder extends Seeder
                     $isForgot = rand(1, 100) <= 10;
                     if ($isForgot) {
                         $clockOut = null;
+                    }
+
+                    // ===== 重複 =====
+                    if ($date->isYesterday()) {
+                        $today = Attendance::where('user_id', $user->id)
+                                                    ->where('work_date', Carbon::today())
+                                                    ->first();
+
+                        if ($today && !$isForgot) {
+                            $todayClockIn = Carbon::parse($today->clock_in);
+                            if ($todayClockIn->lessThan($clockOut)) {
+                                // 翌日の勤務と被るなら作成しない
+                                echo('重複あり'. $user->id);
+                                continue;
+                            }
+                        }
                     }
 
                     // ===== 修正処理 =====
@@ -136,7 +158,7 @@ class UserAttendanceSeeder extends Seeder
                         'clock_in' => $clockIn,
                         'clock_out' => $clockOut,
                         'created_by' => $user->id,
-                        'corrected_by' => $correctedBy ?? $user->id,
+                        'corrected_by' => $correctedBy,
                         'approved_by' => $admin?->id,
                         'approved_at' => $approvedAt,
                         'status' => $status,

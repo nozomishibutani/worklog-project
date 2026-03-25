@@ -36,8 +36,8 @@ class Attendance extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function breaksTime()
+    public function breakTimes()
     {
-        return $this->hasMany(BreakTime::class);
+        return $this->hasMany(BreakTime::class,'attendance_id', 'id');
     }
 }

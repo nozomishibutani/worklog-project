@@ -12,13 +12,12 @@ use App\Http\Middleware\SetGuard;
 // admin
 // =====================
 Route::prefix('admin')
-->middleware('guest:admin')
     ->group(function () {
 
         Route::get('/login', [AdminAuthenticatedSessionController::class, 'create'])
             ->name('admin.login');
 
-        // 期待通りに SetGuard が動かないので route に明示する
+        // SetGuard が動かないので route に明示する
         Route::post('/login', [AuthenticatedSessionController::class, 'store'])
                         ->name('admin.login');
 
@@ -27,12 +26,18 @@ Route::prefix('admin')
 Route::prefix('admin')
     ->middleware('auth:admin')
     ->group(function () {
-
-        Route::get('/attendance/list', [AdminController::class, 'index'])
+Route::get('/attendance/list', [AdminController::class, 'index'])
             ->name('admin.index');
-
-        Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])
+Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])
             ->name('admin.logout');
+Route::post('/attendance/list', [AdminController::class, 'changeDate'])
+            ->name('admin.change_date');
+Route::get('/attendance/{id}', [AdminController::class, 'show'])
+            ->name('admin.show');
+Route::get('/admin/staff/list', [AdminController::class, 'userIndex'])
+            ->name('admin.user.index');
+Route::get('/admin/attendance/staff/{id}', [AdminController::class, 'userMonthlyIndex'])
+            ->name('admin.monthly.index');
 
     });
 
@@ -47,7 +52,3 @@ Route::middleware(['web', SetGuard::class])
             ->name('user.index');
 
     });
-
-Route::get('/', function () {
-    return view('welcome');
-});

@@ -12,7 +12,9 @@ use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Contracts\LogoutResponse;
 use App\Http\Responses\LoginResponse as CustomLoginResponse;
 use App\Http\Responses\LogoutResponse as CustomLogoutResponse;
-
+use Laravel\Fortify\Http\Requests\LoginRequest as FortifyLoginRequest;
+use App\Http\Requests\LoginRequest;
+use Illuminate\Support\Facades\Auth;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -52,8 +54,6 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         //デフォルトのログイン機能にあるフォームリクエストを自作のものに代替するため、サービスコンテナにバインド
-        //app()->bind(FortifyLoginRequest::class, LoginRequest::class);
-
-
+        app()->bind(FortifyLoginRequest::class, LoginRequest::class);
     }
 }

@@ -48,12 +48,12 @@ class User extends Authenticatable
         ];
     }
 
-    public function attendance()
+    public function attendances()
     {
         return $this->hasMany(Attendance::class);
     }
 
-    public function breaksTime()
+    public function breakTimes()
     {
         return $this->hasMany(BreakTime::class);
     }

@@ -30,7 +30,7 @@ class LoginResponse implements LoginResponseContract
             if ($adminUser && $adminUser->role === Role::ADMIN) {
 
                 // userセッションが残ってたら消す
-                Auth::guard(Guard::WEB)->logout();
+                Auth::guard(Guard::WEB->value)->logout();
 
                 return redirect()->route('admin.index');
             }
