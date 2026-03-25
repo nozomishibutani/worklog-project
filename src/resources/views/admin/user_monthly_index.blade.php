@@ -59,7 +59,7 @@
                     <td class="admin__data">{{ $time['display'] }}</td>
                     <td class="admin__data">
                         <a class="admin__detail-btn"
-                            href="{{ route('admin.attendance.daily.show', ['id' => $userId]) }}">詳細</a>
+                            href="{{ route('admin.show', ['id' => $userId]) }}">詳細</a>
                     </td>
                 </tr>
             @endforeach

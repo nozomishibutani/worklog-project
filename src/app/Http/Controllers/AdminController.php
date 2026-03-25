@@ -83,7 +83,7 @@ class AdminController extends Controller
         return view('admin/user_index', compact('users'));
     }
 
-    public function userShow()
+    public function userMonthlyIndex()
     {
         //$date = Carbon::today();
         [
@@ -97,6 +97,11 @@ class AdminController extends Controller
             'breakTimes' => $breakTimes,
             'date' => $this->today,
         ]);
+    }
+
+    public function userShow()
+    {
+        //
     }
 
     /**
@@ -113,9 +118,5 @@ class AdminController extends Controller
     public function getApproved()  : array
     {
         return Attendance::where('status', AttendanceStatus::APPROVED)->get();
-    }
-
-    public function userMonthlyIndex(){
-        dd("未着手");
     }
 }
