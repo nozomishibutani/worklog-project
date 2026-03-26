@@ -32,7 +32,7 @@ class AdminController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
         ]
-        = $this->attendanceService->getByPeriod($this->today);
+        = $this->attendanceService->getAllUserAttendances($this->today);
 
         return view('admin/index', [
             'workTimes' => $workTimes,
@@ -57,7 +57,7 @@ class AdminController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
         ]
-        = $this->attendanceService->getByPeriod($date);
+        = $this->attendanceService->getAllUserAttendances($date);
 
         return view('admin/index', [
                     'workTimes' => $workTimes,
@@ -83,20 +83,20 @@ class AdminController extends Controller
         return view('admin/user_index', compact('users'));
     }
 
-    public function userMonthlyIndex()
+    public function userMonthlyIndex($userId)
     {
         //$date = Carbon::today();
-        [
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-        ]
-        = $this->attendanceService->getByPeriod($this->today, Type::TYPE_MONTHLY);
+        // [
+        //     'workTimes' => $workTimes,
+        //     'breakTimes' => $breakTimes,
+        // ]
+        // = $this->attendanceService->getByPeriod($this->today, Type::TYPE_MONTHLY, $userId);
 
-        return view('admin/user_monthly_index', [
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-            'date' => $this->today,
-        ]);
+        // return view('admin/user_monthly_index', [
+        //     'workTimes' => $workTimes,
+        //     'breakTimes' => $breakTimes,
+        //     'date' => $this->today,
+        // ]);
     }
 
     public function userShow()

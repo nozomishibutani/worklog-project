@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Repositories\AttendanceRepository;
-use App\Enums\Type;
-use Carbon\Carbon;
 
 class AttendanceService
 {
@@ -16,28 +14,12 @@ class AttendanceService
     }
 
     /**
-     * 勤怠の取得範囲
+     * 全ユーザーの勤怠を取得して、必要な加工をする
      */
-    public function getByPeriod($date, $type = Type::TYPE_DAILY)
+    public function getAllUserAttendances($date): array
     {
-        $date = Carbon::parse($date);
-        if ($type === Type::TYPE_MONTHLY->value) {
-            $start = $date->copy()->startOfMonth();
-            $end   = $date->copy()->endOfMonth();
-        } else {
-            $start = $date->copy()->startOfDay();
-            $end   = $date->copy()->endOfDay();
-        }
+        $attendances = $this->attendanceRepository->getAllUserAttendances($date);
 
-        $attendances = $this->attendanceRepository->getAttendances($start, $end);
-        return $this->getAttendances($attendances);
-    }
-
-    /**
-     * 勤怠を取得して、必要な加工をする
-     */
-    public function getAttendances($attendances) : array
-    {
         $workTimes = [];
         $breakTimes = [];
         $base = [];
@@ -49,7 +31,9 @@ class AttendanceService
             $userId = $attendance->user_id;
 
             $clockIn  = strtotime($attendance->clock_in);
-            if (!$clockIn) continue;
+            if (!$clockIn) {
+                continue;
+            }
 
             $clockOut = $attendance->clock_out ? strtotime($attendance->clock_out) : null;
 
@@ -57,7 +41,6 @@ class AttendanceService
             if (!isset($base[$userId])) {
                 $base[$userId] = [
                     'name' => $attendance->user->name,
-                    'work_date' => $attendance->work_date,
                     'clock_in' => date('H:i', $clockIn),
                     'clock_out' => $clockOut ? date('H:i', $clockOut) : null,
                 ];
@@ -141,7 +124,6 @@ class AttendanceService
 
         ksort($workTimes);
         ksort($breakTimes);
-
         return [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,

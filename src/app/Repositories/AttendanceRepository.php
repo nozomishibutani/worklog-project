@@ -7,12 +7,12 @@ use App\Models\Attendance;
 class AttendanceRepository
 {
     /**
-     * 勤怠を取得
+     * 全ユーザーの勤怠を取得
      */
-    public function getAttendances($start, $end)
+    public function getAllUserAttendances($date)
     {
         return Attendance::with(['user', 'breakTimes'])
-                            ->whereBetween('work_date', [$start, $end])
+                            ->where('work_date', $date)
                             ->get();
     }
 }
