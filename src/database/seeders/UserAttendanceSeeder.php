@@ -15,6 +15,8 @@ class UserAttendanceSeeder extends Seeder
     {
         $users = User::where('role', 'user')->get();
         $admins = User::where('role', 'admin')->get();
+        $firstAdmin = $admins->first();
+        $member = $users->concat([$firstAdmin]);
 
         for ($i = 0; $i < 3; $i++) {
 
@@ -26,7 +28,7 @@ class UserAttendanceSeeder extends Seeder
 
                 $date = $date->copy()->startOfDay();
 
-                foreach ($users as $user) {
+                foreach ($member as $user) {
 
                     $note = null;
                     $isToday = $date->isToday();

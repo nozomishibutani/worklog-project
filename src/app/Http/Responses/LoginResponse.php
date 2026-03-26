@@ -6,6 +6,7 @@ use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\Role;
 use App\Enums\Guard;
+use App\Enums\Type;
 
 class LoginResponse implements LoginResponseContract
 {
@@ -18,6 +19,19 @@ class LoginResponse implements LoginResponseContract
         // adminログイン
         // =====================
         if ($request->routeIs('admin.login')) {
+
+            // 検索セッション残っていたら消す
+            if (session()->has('admin_' . TYPE::DAILY->value)) {
+                session()->forget('admin_' . TYPE::DAILY->value);
+            }
+            if (session()->has('admin_' . TYPE::MONTHLY->value)) {
+                session()->forget('admin_' . TYPE::MONTHLY->value);
+            };
+
+            if (session()->has('admin_' . TYPE::PERSONALLY->value)) {
+                session()->forget('admin_' . TYPE::PERSONALLY->value);
+            }
+
 
             if ($adminUser && $adminUser->role !== Role::ADMIN) {
                 Auth::guard(Guard::ADMIN->value)->logout();

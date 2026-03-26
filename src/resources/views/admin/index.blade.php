@@ -15,21 +15,17 @@
             <nav class="">
                 <ul class="">
                     <li class="">
-                        <form action="{{ route('admin.change_date') }}" method="post">
-                            @csrf
-                            <input type="hidden" name="change_date" value="{{ $date->copy()->subDay() }}">
-                            <button class="btn">前日</button>
-                        </form>
+                        <a class=""
+                            href="{{ route('admin.daily.session', ['date' => $date->copy()->subDay()->format('Ymd')]) }}">前日</a>
+                    </li>
                     </li>
                     <li class="">
                         {{ $date->format('Y/m/d') }}
                     </li>
                     <li class="">
-                        <form action="{{ route('admin.change_date') }}" method="post">
-                            @csrf
-                            <input type="hidden" name="change_date" value="{{ $date->copy()->addDay() }}">
-                            <button class="btn">翌日</button>
-                        </form>
+                        <a class=""
+                            href="{{ route('admin.daily.session', ['date' => $date->copy()->addDay()->format('Ymd')]) }}">翌日</a>
+                    </li>
                     </li>
                 </ul>
             </nav>
@@ -49,13 +45,14 @@
                     <td class="admin__data">{{ $time['name'] }}</td>
                     <td class="admin__data">{{ $time['clock_in'] }}</td>
                     <td class="admin__data">{{ $time['clock_out'] }}</td>
-                    <td class="admin__data">{{ $breakTimes[$userId]['display'] }}</td>
-                    <td class="admin__data">{{ $time['display'] }}</td>
+                    <td class="admin__data">{{ $breakTimes[$userId]['display_total'] }}</td>
+                    <td class="admin__data">{{ $time['display_total'] }}</td>
                     <td class="admin__data">
-                        <a class="admin__detail-btn"
-                            href="{{ route('admin.show', ['id' => $userId]) }}">詳細</a>
+                        <a class="admin__detail-btn" href="{{ route('admin.show', ['id' => $userId]) }}">詳細
+                        </a>
                     </td>
                 </tr>
             @endforeach
+        </table>
     </div><!-- admin-->
 @endsection

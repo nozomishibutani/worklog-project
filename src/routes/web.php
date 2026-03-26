@@ -26,18 +26,23 @@ Route::prefix('admin')
 Route::prefix('admin')
     ->middleware('auth:admin')
     ->group(function () {
-Route::get('/attendance/list', [AdminController::class, 'index'])
-            ->name('admin.index');
-Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])
-            ->name('admin.logout');
-Route::post('/attendance/list', [AdminController::class, 'changeDate'])
-            ->name('admin.change_date');
-Route::get('/attendance/{id}', [AdminController::class, 'show'])
-            ->name('admin.show');
-Route::get('/admin/staff/list', [AdminController::class, 'userIndex'])
-            ->name('admin.user.index');
-Route::get('/admin/attendance/staff/{id}', [AdminController::class, 'userMonthlyIndex'])
-            ->name('admin.monthly.index');
+        Route::get('/attendance/list', [AdminController::class, 'index'])
+                    ->name('admin.index');
+        Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])
+                    ->name('admin.logout');
+        Route::get('/attendance/{id}', [AdminController::class, 'show'])
+                    ->name('admin.show');
+        Route::get('/staff/list', [AdminController::class, 'userIndex'])
+                    ->name('admin.user.index');
+        Route::get('/attendance/staff/{id}', [AdminController::class, 'userMonthlyIndex'])
+                    ->name('admin.monthly.index');
+        Route::get('/session/{date}', [AdminController::class, 'setDailySession'])
+                            ->where('date', '\d{8}')
+                            ->name('admin.daily.session');
+        Route::get('/session/{to}/{id}/{date}', [AdminController::class, 'setMonthlySession'])
+                    ->where('date', '\d{8}')
+                    ->name('admin.monthly.session');
+
 
     });
 
