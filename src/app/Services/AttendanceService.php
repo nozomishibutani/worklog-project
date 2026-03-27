@@ -137,116 +137,56 @@ class AttendanceService
      */
     public function getUserDailyAttendance($userId, $date): array
     {
-        $attendanceCollection = $this->attendanceRepository->getUserDailyAttendance($userId, $date->format('Ymd'));
+        $attendances = $this->attendanceRepository->getUserDailyAttendance($userId, $date->format('Ymd'));
 
-        $workTimes = [];
+        $workTimes = [
+            'attendanceId' => $attendances->id,
+            'name' => $attendances->user->name,
+            'work_date' => $attendances->work_date, //format('Ymd')だとタイムスタンプでだめ
+            'clock_in' => null,
+            'clock_out' => null,
+            'note' =>  null,
+            'status' =>  null,
+        ];
         $breakTimes = [];
-        $base = [];
 
-        $invalidWorkUsers = [];  // 労働時間NG
-        $invalidBreakUsers = []; // 休憩NG
-
-        foreach ($attendanceCollection as $attendance) {
-            //$workDate = Carbon::parse($attendance->work_date)->format('Ymd');
-            $workDate = $attendance->work_date; //YYYYMMDDだとタイムスタンプ
-
-            $clockIn  = strtotime($attendance->clock_in);
-            if (!$clockIn) {
-                continue;
-            }
-
-            $clockOut = $attendance->clock_out ? strtotime($attendance->clock_out) : null;
-
-            // --- base ---
-            $base = [
-                'name' => $attendance->user->name,
-                //'work_date' => $attendance->work_date,
-                'clock_in' => date('H:i', $clockIn),
-                'clock_out' => $clockOut ? date('H:i', $clockOut) : null,
-                'note' => $attendance->note,
+        if (!$attendances) {
+            return [
+                'workTimes' => $workTimes,
+                'breakTimes' => $breakTimes,
             ];
-
-            // --- 休憩 ---
-            $breakDiff = 0;
-            $hasBreak = false;
-
-            foreach ($attendance->breakTimes as $breakTime) {
-                $hasBreak = true;
-
-                // 戻りなし → 未確定
-                if (!$breakTime->clock_out) {
-                    $invalidBreakUsers[$workDate] = true;
-                    break;
-                }
-
-                $breakIn  = strtotime($breakTime->clock_in);
-                $breakOut = strtotime($breakTime->clock_out);
-                $breakDiff += $breakOut - $breakIn;
-            }
-
-            // 休憩が成立している場合のみ加算
-            if (!isset($invalidBreakUsers[$workDate]) && $hasBreak) {
-                $breakTimes[$workDate] = ($breakTimes[$workDate] ?? 0) + $breakDiff;
-            }
-
-            // --- 労働時間 ---
-            if (!$clockOut) {
-                // 退勤なし → 未確定
-                $invalidWorkUsers[$workDate] = true;
-                continue;
-            }
-
-            // 休憩が壊れてたら労働時間も未確定
-            if (isset($invalidBreakUsers[$workDate])) {
-                $invalidWorkUsers[$workDate] = true;
-                continue;
-            }
-
-            $workDiff = ($clockOut - $clockIn) - $breakDiff;
-            $workTimes[$workDate] = ($workTimes[$workDate] ?? 0) + $workDiff;
-
-            // 退勤済み & 休憩なし → 0確定
-            if (!$hasBreak) {
-                $breakTimes[$workDate] = 0;
-            }
-
-            // --- 整形 ---
-            // 労働時間
-            $workTimes[$workDate] = array_merge(
-                $base,
-                $this->formatTime(
-                    isset($invalidWorkUsers[$workDate]) ? null : ($workTimes[$workDate] ?? null),
-                    true
-                )
-            );
-
-            if (isset($invalidBreakUsers[$workDate])) {
-                // 戻り忘れ → 未確定
-                $breakTimes[$workDate] = $this->formatTime(null, true);
-
-            } elseif (isset($breakTimes[$workDate])) {
-                // 休憩成立 → 表示
-                $breakTimes[$workDate] = $this->formatTime($breakTimes[$workDate], true);
-
-            } else {
-                // 休憩なし
-                if ($base['clock_out']) {
-                    // 退勤済み → 0確定
-                    $breakTimes[$workDate] = $this->formatTime(0, true);
-                } else {
-                    // 退勤なし → 未確定
-                    $breakTimes[$workDate] = $this->formatTime(null, true);
-                }
-            }
         }
 
+        // ---  労働時間 ---
+        $clockIn  = $attendances->clock_in ? Carbon::parse($attendances->clock_in) : null;
+        $clockOut = $attendances->clock_out ? Carbon::parse($attendances->clock_out) : null;
+        $tmp = [
+                'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
+                'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
+                'note' =>  $attendances->note,
+                'status' =>  $attendances->status,
+                ];
+
+        // ---  休憩時間 ---
+        $index = 1;
+        foreach ($attendances->breakTimes as $breakTime) {
+            $clockIn  = $breakTime->clock_in ? Carbon::parse($breakTime->clock_in) : null;
+            $clockOut = $breakTime->clock_out ? Carbon::parse($breakTime->clock_out) : null;
+            $breakTimes[$index] = [
+                'id' => $breakTime->id,
+                'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
+                'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
+            ];
+            $index++;
+        }
+        $workTimes = array_merge($workTimes, $tmp);
+
+        // --- 整形 ---
         ksort($breakTimes);
-       //dd($workTimes[$workDate]);
         return [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
         ];
-
     }
 
 

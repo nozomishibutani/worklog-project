@@ -25,7 +25,7 @@ class AttendanceRepository
         return Attendance::with(['user', 'breakTimes'])
                             ->where('user_id', $userId)
                             ->where('work_date', $date)
-                            ->get();
+                            ->first();
     }
 
     /**
