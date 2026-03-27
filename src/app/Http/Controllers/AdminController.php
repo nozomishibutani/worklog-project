@@ -63,11 +63,11 @@ class AdminController extends Controller
         ]
         = $this->attendanceService->getUserDailyAttendance($userId, $date);
 
-        $workDate = Carbon::parse($workTimes['work_date']);
-        $date = [
-            'year'  => $workDate->year,
-            'month' => $workDate->month,
-            'day'   => $workDate->day,
+        //$workDate = Carbon::parse($workTimes['work_date']);
+        $workDate = [
+            'year'  => $date->year,
+            'month' => $date->month,
+            'day'   => $date->day,
         ];
 
         $breakTimeCount = count($breakTimes);
@@ -76,7 +76,7 @@ class AdminController extends Controller
             'userId' => $userId,
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
-            'date' => $date,
+            'workDate' => $workDate,
             'breakTimeCount' => $breakTimeCount,
         ]);
     }

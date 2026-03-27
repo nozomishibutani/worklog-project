@@ -48,8 +48,9 @@
                     <td class="admin__data">{{ $breakTimes[$userId]['display_total'] }}</td>
                     <td class="admin__data">{{ $time['display_total'] }}</td>
                     <td class="admin__data">
-                        <a class="admin__detail-btn" href="{{ route('admin.show', ['id' => $userId]) }}">詳細
-                        </a>
+                        {{-- <a class="admin__detail-btn"
+                        href="{{ route('admin.monthly.session', ['to' => App\Enums\TYPE::PERSONALLY->value, 'id' => $userId, 'date' => $workDate]) }}">詳細
+                        </a> --}}
                     </td>
                 </tr>
             @endforeach

@@ -23,12 +23,12 @@
                 </tr>
                 <tr class="admin__row">
                     <th class="admin__label">日付</th>
-                    <td class="admin__data">{{ $date['year'] }}年</td>
-                    <td class="admin__data">{{ $date['month'] }}月{{ $date['day'] }}日</td>
+                    <td class="admin__data">{{ $workDate['year'] }}年</td>
+                    <td class="admin__data">{{ $workDate['month'] }}月{{ $workDate['day'] }}日</td>
                 </tr>
                 <tr class="admin__row">
                     <th class="admin__label">出勤・退勤</th>
-                    <td class="admin__data">{{ $workTimes['clock_in'] }}
+                    <td class="admin__data">
                         <input type="time" name="work_in" value="{{ old('work_in', $workTimes['clock_in']) }}">
                     </td>
                     <td class="admin__data">～</td>
@@ -48,7 +48,7 @@
                             <input type="time" name="break_out" value="{{ old('break_out') }}">
                         </td>
                     </tr>
-                @elseif ($breakTimeCount > 1)
+                @elseif ($breakTimeCount > 0)
                     {{-- 休憩がある場合 --}}
                     @for ($i = 1; $i <= $breakTimeCount; $i++)
                         <tr class="admin__row">

@@ -133,16 +133,14 @@ class AttendanceService
     }
 
     /**
-     * 特定日のユーザーの勤怠を取得
+     * 特定日のユーザーの勤怠詳細を取得
      */
     public function getUserDailyAttendance($userId, $date): array
     {
-        $attendances = $this->attendanceRepository->getUserDailyAttendance($userId, $date->format('Ymd'));
+        $attendances = $this->attendanceRepository->getUserDailyAttendance($userId, $date);
 
         $workTimes = [
-            'attendanceId' => $attendances->id,
-            'name' => $attendances->user->name,
-            'work_date' => $attendances->work_date, //format('Ymd')だとタイムスタンプでだめ
+            'attendanceId' => null,
             'clock_in' => null,
             'clock_out' => null,
             'note' =>  null,
@@ -151,6 +149,8 @@ class AttendanceService
         $breakTimes = [];
 
         if (!$attendances) {
+            $user = User::find($userId);
+            $workTimes['name'] = $user->name;
             return [
                 'workTimes' => $workTimes,
                 'breakTimes' => $breakTimes,
@@ -161,6 +161,8 @@ class AttendanceService
         $clockIn  = $attendances->clock_in ? Carbon::parse($attendances->clock_in) : null;
         $clockOut = $attendances->clock_out ? Carbon::parse($attendances->clock_out) : null;
         $tmp = [
+                'attendanceId' => $attendances->id,
+                'name' => $attendances->user->name,
                 'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
                 'note' =>  $attendances->note,
