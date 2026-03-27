@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\User;
-use App\Services\AttendanceService;
+use App\Services\AttendanceCalculatorService;
 //use App\Services\ApprovalService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -13,13 +13,13 @@ use App\Enums\AttendanceStatus;
 
 class AdminController extends Controller
 {
-    protected AttendanceService $attendanceService;
+    protected AttendanceCalculatorService $attendanceCalculatorService;
     //protected ApprovalService $approvalService;
 
-    //public function __construct(AttendanceService $attendanceService, ApprovalService $approvalService)
-    public function __construct(AttendanceService $attendanceService)
+    //public function __construct(AttendanceCalculatorService $attendanceCalculatorService, ApprovalService $approvalService)
+    public function __construct(AttendanceCalculatorService $attendanceCalculatorService)
     {
-        $this->attendanceService = $attendanceService;
+        $this->attendanceCalculatorService = $attendanceCalculatorService;
         //$this->approvalService = $approvalService;
     }
     public function clearSession()
@@ -38,11 +38,6 @@ class AdminController extends Controller
         return back();
     }
 
-    /**
-     * 全ユーザーの指定日の勤怠一覧表示
-     *
-     * @return \Illuminate\View\View
-     */
     public function index(): \Illuminate\View\View
     {
         // sessionを受け取る
@@ -58,7 +53,7 @@ class AdminController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
         ]
-        = $this->attendanceService->getAllUserDailyAttendances($date);
+        = $this->attendanceCalculatorService->getAllUserDailyAttendances($date);
 
         return view('admin/index', [
             'workTimes' => $workTimes,
@@ -73,12 +68,6 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * 特定ユーザーの指定日の勤怠詳細を表示
-     *
-     * @param int $userId ユーザーid
-     * @return \Illuminate\View\View
-     */
     public function show($userId): \Illuminate\View\View
     {
         // sessionを受け取る
@@ -90,7 +79,7 @@ class AdminController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
         ]
-        = $this->attendanceService->getUserDailyAttendance($userId, $date);
+        = $this->attendanceCalculatorService->getUserDailyAttendance($userId, $date);
 
         $workDate = [
             'year'  => $date->year,
@@ -109,11 +98,6 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * 全ユーザーの一覧表示
-     *
-     * @return \Illuminate\View\View
-     */
     public function userIndex(): \Illuminate\View\View
     {
         $users = User::all();
@@ -136,7 +120,7 @@ class AdminController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
         ]
-        = $this->attendanceService->getUserMonthlyAttendances($userId, $date);
+        = $this->attendanceCalculatorService->getUserMonthlyAttendances($userId, $date);
 
         return view('admin/user_monthly_index', [
             'userId' => $userId,
@@ -168,7 +152,7 @@ class AdminController extends Controller
     }
 
     /**
-     * 勤怠の日付をsessionに保存する
+     * 指定された勤怠の日付をsessionに保存する
      *
      * @param string $date
      * @param string|null $to 遷移先
