@@ -36,12 +36,11 @@ Route::prefix('admin')
                     ->name('admin.user.index');
         Route::get('/attendance/staff/{id}', [AdminController::class, 'userMonthlyIndex'])
                     ->name('admin.monthly.index');
-        Route::get('/session/{date}', [AdminController::class, 'setDailySession'])
-                            ->where('date', '\d{8}')
-                            ->name('admin.daily.session');
-        Route::get('/session/{to}/{id}/{date}', [AdminController::class, 'setMonthlySession'])
+        Route::get('/session/{date}/{to?}/{id?}', [AdminController::class, 'setSession'])
                     ->where('date', '\d{8}')
-                    ->name('admin.monthly.session');
+                    ->name('admin.session');
+        Route::get('/admin/session/clear', [AdminController::class, 'clearSession'])
+            ->name('admin.session.clear');
 
 
     });

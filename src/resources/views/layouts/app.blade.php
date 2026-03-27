@@ -13,7 +13,9 @@
     <header class="header">
         <div class="header__container">
             <div class="header__logo">
-                <img src="{{ asset('header_logo.png') }}" alt="ヘッダーロゴ画像">
+                <a href="{{ route('admin.session.clear') }}">
+                    <img src="{{ asset('header_logo.png') }}" alt="ヘッダーロゴ画像">
+                </a>
             </div>
             <!-- 管理画面 -->
             @auth('admin')

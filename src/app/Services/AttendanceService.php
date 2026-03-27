@@ -20,120 +20,109 @@ class AttendanceService
      */
     public function getAllUserDailyAttendances($date): array
     {
-        $attendances = $this->attendanceRepository->getAllUserDailyAttendances($date);
+        $users = $this->attendanceRepository->getAllUserDailyAttendances($date);
 
         $workTimes = [];
         $breakTimes = [];
-        $base = [];
+        $baseList = [];
 
-        $invalidWorkUsers = [];  // 労働時間NG
-        $invalidBreakUsers = []; // 休憩NG
+        $invalidWorkUsers = [];
+        $invalidBreakUsers = [];
 
-        foreach ($attendances as $attendance) {
-            $userId = $attendance->user_id;
+        $workMinutes = [];
+        $breakMinutes = [];
 
-            $clockIn  = strtotime($attendance->clock_in);
+        foreach ($users as $user) {
+            $userId = $user->id;
+
+            $attendance = $user->attendances->first();
+
+            // 勤怠なし
+            if (!$attendance) {
+                $workTimes[$userId] = [
+                    'name'      => $user->name,
+                    'clock_in'  => null,
+                    'clock_out' => null,
+                    'hours'     => null,
+                    'minutes'   => null,
+                    'display_total' => null,
+                ];
+                continue;
+            }
+
+            $clockIn  = $attendance->clock_in ? Carbon::parse($attendance->clock_in) : null;
             if (!$clockIn) {
                 continue;
             }
 
-            $clockOut = $attendance->clock_out ? strtotime($attendance->clock_out) : null;
+            $clockOut = $attendance->clock_out ? Carbon::parse($attendance->clock_out) : null;
 
             // --- base ---
-            if (!isset($base[$userId])) {
-                $base[$userId] = [
-                    'name' => $attendance->user->name,
-                    'clock_in' => date('H:i', $clockIn),
-                    'clock_out' => $clockOut ? date('H:i', $clockOut) : null,
-                ];
-            }
+            $baseList[$userId] = [
+                'name'      => $user->name,
+                'clock_in'  => $clockIn->format('H:i'),
+                'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
+            ];
 
             // --- 休憩 ---
             $breakDiff = 0;
             $hasBreak = false;
 
             foreach ($attendance->breakTimes as $breakTime) {
-                $hasBreak = true;
-
-                // 戻りなし → 未確定
                 if (!$breakTime->clock_out) {
                     $invalidBreakUsers[$userId] = true;
                     break;
                 }
 
-                $breakIn  = strtotime($breakTime->clock_in);
-                $breakOut = strtotime($breakTime->clock_out);
-                $breakDiff += $breakOut - $breakIn;
+                $hasBreak = true;
+
+                $breakIn  = Carbon::parse($breakTime->clock_in);
+                $breakOut = Carbon::parse($breakTime->clock_out);
+                $breakDiff += $breakIn->diffInMinutes($breakOut);
             }
 
-            // 休憩が成立している場合のみ加算
             if (!isset($invalidBreakUsers[$userId]) && $hasBreak) {
-                $breakTimes[$userId] = ($breakTimes[$userId] ?? 0) + $breakDiff;
+                $breakMinutes[$userId] = $breakDiff;
             }
 
-            // --- 労働時間 ---
-            if (!$clockOut) {
-                // 退勤なし → 未確定
+            // --- 労働 ---
+            if (!$clockOut || isset($invalidBreakUsers[$userId])) {
                 $invalidWorkUsers[$userId] = true;
                 continue;
             }
 
-            // 休憩が壊れてたら労働時間も未確定
-            if (isset($invalidBreakUsers[$userId])) {
-                $invalidWorkUsers[$userId] = true;
-                continue;
-            }
+            $workMinutes[$userId] = $clockIn->diffInMinutes($clockOut) - $breakDiff;
 
-            $workDiff = ($clockOut - $clockIn) - $breakDiff;
-            $workTimes[$userId] = ($workTimes[$userId] ?? 0) + $workDiff;
-
-            // 退勤済み & 休憩なし → 0確定
+            // 休憩なし
             if (!$hasBreak) {
-                $breakTimes[$userId] = 0;
+                $breakMinutes[$userId] = 0;
             }
         }
 
         // --- 整形 ---
-        foreach ($base as $userId => $baseData) {
+        foreach ($baseList as $userId => $baseData) {
 
-            // 労働時間
-            $workTimes[$userId] = array_merge(
-                $baseData,
-                $this->formatTime(
-                    isset($invalidWorkUsers[$userId]) ? null : ($workTimes[$userId] ?? null)
-                )
-            );
-
-            if (isset($invalidBreakUsers[$userId])) {
-                // 戻り忘れ → 未確定
-                $breakTimes[$userId] = $this->formatTime(null);
-
-            } elseif (isset($breakTimes[$userId])) {
-                // 休憩成立 → 表示
-                $breakTimes[$userId] = $this->formatTime($breakTimes[$userId]);
-
-            } else {
-                // 休憩なし
-                if ($baseData['clock_out']) {
-                    // 退勤済み → 0確定
-                    $breakTimes[$userId] = $this->formatTime(0);
-                } else {
-                    // 退勤なし → 未確定
-                    $breakTimes[$userId] = $this->formatTime(null);
-                }
-            }
+            [$workTimes[$userId], $breakTimes[$userId]] =
+                $this->formatAttendanceRow(
+                    $baseData,
+                    $workMinutes[$userId] ?? null,
+                    $breakMinutes[$userId] ?? null,
+                    isset($invalidWorkUsers[$userId]),
+                    isset($invalidBreakUsers[$userId])
+                );
         }
 
         ksort($workTimes);
         ksort($breakTimes);
+
         return [
-            'workTimes' => $workTimes,
+            'workTimes'  => $workTimes,
             'breakTimes' => $breakTimes,
         ];
     }
 
     /**
-     * 特定日のユーザーの勤怠詳細を取得
+     * 指定ユーザーの日時勤怠詳細を取得
      */
     public function getUserDailyAttendance($userId, $date): array
     {
@@ -191,41 +180,47 @@ class AttendanceService
         ];
     }
 
-
     /**
-     * ユーザーの月次勤怠を取得
+     * 指定ユーザーの月次勤怠を取得
      */
-    public function getUserMonthlyAttendances($userId, $date): array
+    public function getUserMonthlyAttendances($userId, Carbon $date): array
     {
         $start = $date->copy()->startOfMonth();
         $end   = $date->copy()->endOfMonth();
 
-        $attendances = $this->attendanceRepository->getUserMonthlyAttendances($userId, $start, $end);
+        $attendances = $this->attendanceRepository
+            ->getUserMonthlyAttendances($userId, $start, $end);
 
         $workTimes = [];
         $breakTimes = [];
-        $base = [];
 
-        $invalidWorkUsers = [];  // 労働時間NG
-        $invalidBreakUsers = []; // 休憩NG
+        $invalidWorkUsers = [];
+        $invalidBreakUsers = [];
+
+        $workMinutes = [];
+        $breakMinutes = [];
+
+        $baseList = [];
 
         $user = User::find($userId);
         $name = $user->name;
 
         foreach ($attendances as $attendance) {
-            $workDate = Carbon::parse($attendance->work_date)->format('Ymd');
 
-            $clockIn  = strtotime($attendance->clock_in);
+            $workDate = Carbon::parse($attendance->work_date);
+            $key = $workDate->format('Ymd');
+
+            $clockIn  = $attendance->clock_in ? Carbon::parse($attendance->clock_in) : null;
+            $clockOut = $attendance->clock_out ? Carbon::parse($attendance->clock_out) : null;
+
             if (!$clockIn) {
                 continue;
             }
 
-            $clockOut = $attendance->clock_out ? strtotime($attendance->clock_out) : null;
-
             // --- base ---
-            $base = [
-                'clock_in' => date('H:i', $clockIn),
-                'clock_out' => $clockOut ? date('H:i', $clockOut) : null,
+            $baseList[$key] = [
+                'clock_in'  => $clockIn->format('H:i'),
+                'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
             ];
 
             // --- 休憩 ---
@@ -233,123 +228,132 @@ class AttendanceService
             $hasBreak = false;
 
             foreach ($attendance->breakTimes as $breakTime) {
-                $hasBreak = true;
-
-                // 戻りなし → 未確定
                 if (!$breakTime->clock_out) {
-                    $invalidBreakUsers[$workDate] = true;
+                    $invalidBreakUsers[$key] = true;
                     break;
                 }
 
-                $breakIn  = strtotime($breakTime->clock_in);
-                $breakOut = strtotime($breakTime->clock_out);
-                $breakDiff += $breakOut - $breakIn;
+                $hasBreak = true;
+
+                $breakIn  = Carbon::parse($breakTime->clock_in);
+                $breakOut = Carbon::parse($breakTime->clock_out);
+                $breakDiff += $breakIn->diffInMinutes($breakOut);
             }
 
-            // 休憩が成立している場合のみ加算
-            if (!isset($invalidBreakUsers[$workDate]) && $hasBreak) {
-                $breakTimes[$workDate] = ($breakTimes[$workDate] ?? 0) + $breakDiff;
+            if (!isset($invalidBreakUsers[$key]) && $hasBreak) {
+                $breakMinutes[$key] = $breakDiff;
             }
 
-            // --- 労働時間 ---
-            if (!$clockOut) {
-                // 退勤なし → 未確定
-                $invalidWorkUsers[$workDate] = true;
+            // --- 労働 ---
+            if (!$clockOut || isset($invalidBreakUsers[$key])) {
+                $invalidWorkUsers[$key] = true;
                 continue;
             }
 
-            // 休憩が壊れてたら労働時間も未確定
-            if (isset($invalidBreakUsers[$workDate])) {
-                $invalidWorkUsers[$workDate] = true;
-                continue;
-            }
+            $workMinutes[$key] = $clockIn->diffInMinutes($clockOut) - $breakDiff;
 
-            $workDiff = ($clockOut - $clockIn) - $breakDiff;
-            $workTimes[$workDate] = ($workTimes[$workDate] ?? 0) + $workDiff;
-
-            // 退勤済み & 休憩なし → 0確定
             if (!$hasBreak) {
-                $breakTimes[$workDate] = 0;
-            }
-
-            // --- 整形 ---
-            // 労働時間
-            $workTimes[$workDate] = array_merge(
-                $base,
-                $this->formatTime(
-                    isset($invalidWorkUsers[$workDate]) ? null : ($workTimes[$workDate] ?? null),
-                )
-            );
-
-            if (isset($invalidBreakUsers[$workDate])) {
-                // 戻り忘れ → 未確定
-                $breakTimes[$workDate] = $this->formatTime(null);
-
-            } elseif (isset($breakTimes[$workDate])) {
-                // 休憩成立 → 表示
-                $breakTimes[$workDate] = $this->formatTime($breakTimes[$workDate]);
-
-            } else {
-                // 休憩なし
-                if ($base['clock_out']) {
-                    // 退勤済み → 0確定
-                    $breakTimes[$workDate] = $this->formatTime(0);
-                } else {
-                    // 退勤なし → 未確定
-                    $breakTimes[$workDate] = $this->formatTime(null);
-                }
+                $breakMinutes[$key] = 0;
             }
         }
 
-        // 勤怠がない日は空レコード作成
-        $tmp = [];
-        for ($i = $start->copy(); $i->lte($end); $i->addDay()) {
+        // --- 整形（ここが超重要） ---
+        foreach ($baseList as $key => $base) {
 
-            $date = $i->format('Ymd');
-            $formatDate = $this->formatDate($i->copy());
-
-            // その日の勤怠データ
-            $work = $workTimes[$date] ?? [];
-            if (empty($work)) {
-                $work = $this->formatTime(null);
-            }
-
-            // 空データ + 勤怠データ + 表示日付 をマージ
-            $tmp[$date] = array_merge(
-                [
-                    'clock_in'      => null,
-                    'clock_out'     => null,
-                ],
-                $work,
-                [
-                    'display_date' => $formatDate,
-                ]
-            );
+            [$workTimes[$key], $breakTimes[$key]] =
+                $this->formatAttendanceRow(
+                    $base,
+                    $workMinutes[$key] ?? null,
+                    $breakMinutes[$key] ?? null,
+                    isset($invalidWorkUsers[$key]),
+                    isset($invalidBreakUsers[$key])
+                );
         }
 
-        ksort($tmp);
+        // 空日付埋める
+        $workTimes = $this->createMonthlyEmptyRecords($start, $end, $workTimes);
+
+        ksort($workTimes);
         ksort($breakTimes);
 
         return [
-            'name' => $name,
-            'workTimes' => $tmp,
+            'name'       => $name,
+            'workTimes'  => $workTimes,
             'breakTimes' => $breakTimes,
         ];
     }
 
+
     /**
-     * 秒数を「時間・分」にフォーマットする
+     * 勤怠1件分の表示用データを整形する
      *
-     * @param int|null $seconds 秒数（nullの場合は空データとして扱う）
+     * @param array $base 基本情報（例: ['name', 'clock_in', 'clock_out']）
+     * @param int|null $workMinutes 労働時間（分）。nullの場合は未確定として扱う
+     * @param int|null $breakMinutes 休憩時間（分）。nullの場合は未確定または未取得
+     * @param bool $invalidWork 労働時間が無効かどうか（退勤打刻漏れなど）
+     * @param bool $invalidBreak 休憩時間が無効かどうか（休憩戻り打刻漏れなど）
+     *
      * @return array{
-     *     seconds: int|null,
-     *     hours: string|null,
-     *     minutes: string|null
+     *     0: array{
+     *         clock_in: string|null,
+     *         clock_out: string|null,
+     *         hours: int|null,
+     *         minutes: string|null,
+     *         display_total: string|null
+     *     },
+     *     1: array{
+     *         hours: int|null,
+     *         minutes: string|null,
+     *         display_total: string|null
+     *     }
      * }
      */
-    private function formatTime(?int $seconds, bool $padHour = false): array
+    private function formatAttendanceRow(
+        array $base,
+        ?int $workMinutes,
+        ?int $breakMinutes,
+        bool $invalidWork,
+        bool $invalidBreak
+    ): array {
+
+        // --- 労働時間 ---
+        $work = array_merge(
+            $base,
+            $this->formatTime(
+                $invalidWork ? null : $workMinutes
+            )
+        );
+
+        // --- 休憩 ---
+        if ($invalidBreak) {
+            $break = $this->formatTime(null);
+
+        } elseif ($breakMinutes !== null) {
+            $break = $this->formatTime($breakMinutes);
+
+        } else {
+            $break = $base['clock_out']
+                ? $this->formatTime(0)
+                : $this->formatTime(null);
+        }
+
+        return [$work, $break];
+    }
+
+    /**
+     * 分数を「時間・分」にフォーマットする
+     *
+     * @param int|null $minutes 分数（nullの場合は空データとして扱う）
+     * @param bool $padHour 2桁ゼロ埋めするか
+     * @return array{
+     *     minutes: int|null,
+     *     hours: string|null,
+     *     display_total: string|null
+     * }
+     */
+    private function formatTime(?int $minutes, bool $padHour = false): array
     {
-        if ($seconds === null) {
+        if ($minutes === null) {
             return [
                 'hours'         => null,
                 'minutes'       => null,
@@ -357,13 +361,12 @@ class AttendanceService
             ];
         }
 
-        $hours = floor($seconds / 3600);
-        $minutes = floor(($seconds % 3600) / 60);
+        $hours = floor($minutes / 60);
+        $mins  = $minutes % 60;
 
         // $padHour = true → 2桁ゼロ埋め
-        // $padHour = false → 1桁可
-        $hourStr = $padHour ? str_pad($hours, 2, '0', STR_PAD_LEFT) : (string)$hours;
-        $minuteStr = str_pad($minutes, 2, '0', STR_PAD_LEFT);
+        $hourStr   = $padHour ? str_pad($hours, 2, '0', STR_PAD_LEFT) : (string)$hours;
+        $minuteStr = str_pad($mins, 2, '0', STR_PAD_LEFT);
 
         return [
             'hours'         => $hours,
@@ -383,5 +386,35 @@ class AttendanceService
         $date = Carbon::parse($date);
         $weekdays = ['日','月','火','水','木','金','土'];
         return $date->format('m月d日') . '（' . $weekdays[$date->dayOfWeek] . '）';
+    }
+
+
+    /**
+     * 月間の空レコード作成をする
+     *
+     * @param Carbon $start 取得する月の初日
+     * @param Carbon $end 取得する月の最終日
+     * @param array $workTimes 勤務日
+     * @return array 月次勤怠
+     */
+    private function createMonthlyEmptyRecords(Carbon $start, Carbon $end, array $workTimes): array
+    {
+        $result = [];
+
+        for ($i = $start->copy(); $i->lte($end); $i->addDay()) {
+            $key = $i->format('Ymd');
+            $formatDate = $this->formatDate($i);
+
+            $work = $workTimes[$key] ?? $this->formatTime(null);
+
+            $result[$key] = array_merge(
+                ['clock_in' => null, 'clock_out' => null],
+                $work,
+                ['display_date' => $formatDate]
+            );
+        }
+
+        ksort($result);
+        return $result;
     }
 }

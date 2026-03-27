@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Attendance;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 class AttendanceRepository
@@ -12,9 +13,16 @@ class AttendanceRepository
      */
     public function getAllUserDailyAttendances($date): Collection
     {
-        return Attendance::with(['user', 'breakTimes'])
-                            ->where('work_date', $date)
-                            ->get();
+        // return Attendance::with(['user', 'breakTimes'])
+        //                     ->where('work_date', $date)
+        //                     ->get();
+
+        return User::select('id', 'name')->with([
+            'attendances' => function ($query) use ($date) {
+                $query->whereDate('work_date', $date);
+            },
+            'attendances.breakTimes'
+        ])->get();
     }
 
     /**

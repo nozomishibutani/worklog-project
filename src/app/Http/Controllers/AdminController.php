@@ -22,8 +22,28 @@ class AdminController extends Controller
         $this->attendanceService = $attendanceService;
         //$this->approvalService = $approvalService;
     }
+    public function clearSession()
+    {
+        // 隠しセッション削除ボタン
+        if (session()->has('admin_' . TYPE::DAILY->value)) {
+            session()->forget('admin_' . TYPE::DAILY->value);
+        }
+        if (session()->has('admin_' . TYPE::MONTHLY->value)) {
+            session()->forget('admin_' . TYPE::MONTHLY->value);
+        }
 
-    public function index()
+        if (session()->has('admin_' . TYPE::PERSONALLY->value)) {
+            session()->forget('admin_' . TYPE::PERSONALLY->value);
+        }
+        return back();
+    }
+
+    /**
+     * 全ユーザーの指定日の勤怠一覧表示
+     *
+     * @return \Illuminate\View\View
+     */
+    public function index(): \Illuminate\View\View
     {
         // sessionを受け取る
         if (session()->has('admin_' . TYPE::DAILY->value)) {
@@ -43,19 +63,28 @@ class AdminController extends Controller
         return view('admin/index', [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
-            'date' => $date,
+            'date' => [
+                'title' => $date->copy()->format('Y年m月d日'),
+                'label' => $date->copy()->format('Y/m/d'),
+                'prev' => $date->copy()->subDay()->format('Ymd'),
+                'next' => $date->copy()->addDay()->format('Ymd'),
+                'detail' => $date->copy()->format('Ymd'),
+            ],
         ]);
-
     }
 
-    public function show($userId)
+    /**
+     * 特定ユーザーの指定日の勤怠詳細を表示
+     *
+     * @param int $userId ユーザーid
+     * @return \Illuminate\View\View
+     */
+    public function show($userId): \Illuminate\View\View
     {
         // sessionを受け取る
-        //if (session()->has('admin_' . TYPE::PERSONALLY->value)) {
         $date = session('admin_' . TYPE::PERSONALLY->value);
         $date = Carbon::parse($date);
         //session()->forget('admin_' . TYPE::PERSONALLY->value);
-        //}
 
         [
             'workTimes' => $workTimes,
@@ -63,7 +92,6 @@ class AdminController extends Controller
         ]
         = $this->attendanceService->getUserDailyAttendance($userId, $date);
 
-        //$workDate = Carbon::parse($workTimes['work_date']);
         $workDate = [
             'year'  => $date->year,
             'month' => $date->month,
@@ -81,7 +109,12 @@ class AdminController extends Controller
         ]);
     }
 
-    public function userIndex()
+    /**
+     * 全ユーザーの一覧表示
+     *
+     * @return \Illuminate\View\View
+     */
+    public function userIndex(): \Illuminate\View\View
     {
         $users = User::all();
         return view('admin/user_index', compact('users'));
@@ -110,51 +143,12 @@ class AdminController extends Controller
             'name' => $name,
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
-            'date' => $date,
+            'date' => [
+                'label' => $date->copy()->format('Y/m'),
+                'prev' => $date->copy()->subMonth()->format('Ymd'),
+                'next' => $date->copy()->addMonth()->format('Ymd'),
+            ],
         ]);
-    }
-
-    public function setDailySession($date)
-    {
-        if (!$date) {
-            return redirect()->route('admin.index')
-            ->with('alert', 'システムエラーが発生しました')
-            ->with('alert-type', 'alert-error');
-        }
-
-        session(['admin_' . TYPE::DAILY->value => $date]);
-        return redirect()->route('admin.index');
-    }
-
-    public function setMonthlySession($to, $userId, $date)
-    {
-
-        if (!$to || !$userId || !$date) {
-            return redirect()->route('admin.index')
-            ->with('alert', 'システムエラーが発生しました')
-            ->with('alert-type', 'alert-error');
-        }
-
-        switch ($to) {
-            case TYPE::MONTHLY->value:
-                session(['admin_' . TYPE::MONTHLY->value => $date]);
-                return redirect()->route('admin.monthly.index', ['id' => $userId]);
-
-            case TYPE::PERSONALLY->value:
-                session(['admin_' . TYPE::PERSONALLY->value => $date]);
-                return redirect()->route('admin.show', ['id' => $userId]);
-
-            default:
-                return redirect()->route('admin.index')
-                            ->with('alert', 'システムエラーが発生しました')
-                            ->with('alert-type', 'alert-error');
-        }
-    }
-
-
-    public function userShow()
-    {
-        //
     }
 
     /**
@@ -171,5 +165,39 @@ class AdminController extends Controller
     public function getApproved(): array
     {
         return Attendance::where('status', AttendanceStatus::APPROVED)->get();
+    }
+
+    /**
+     * 勤怠の日付をsessionに保存する
+     *
+     * @param string $date
+     * @param string|null $to 遷移先
+     * @param int|null $userId ユーザーid
+     * @return @return \Illuminate\Http\RedirectResponse
+     */
+    public function setSession($date, $to = null, $userId = null): \Illuminate\Http\RedirectResponse
+    {
+        if (!$date) {
+            return redirect()->route('admin.index')
+            ->with('alert', 'システムエラーが発生しました')
+            ->with('alert-type', 'alert-error');
+        }
+
+        switch ($to) {
+            case TYPE::MONTHLY->value:
+                session(['admin_' . TYPE::MONTHLY->value => $date]);
+                return redirect()->route('admin.monthly.index', ['id' => $userId]);
+
+            case TYPE::PERSONALLY->value:
+                if (session()->has('admin_' . TYPE::DAILY->value)) {
+                    session()->forget('admin_' . TYPE::DAILY->value);
+                }
+                session(['admin_' . TYPE::PERSONALLY->value => $date]);
+                return redirect()->route('admin.show', ['id' => $userId]);
+
+            default:
+                session(['admin_' . TYPE::DAILY->value => $date]);
+                return redirect()->route('admin.index');
+        }
     }
 }

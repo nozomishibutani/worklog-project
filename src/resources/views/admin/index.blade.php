@@ -10,21 +10,21 @@
 
 @section('content')
     <div class="admin">
-        <h1>{{ $date->format('Y年m月d日') }}の勤怠</h1>
+        <h1>{{ $date['title'] }}の勤怠</h1>
         <div>
             <nav class="">
                 <ul class="">
                     <li class="">
                         <a class=""
-                            href="{{ route('admin.daily.session', ['date' => $date->copy()->subDay()->format('Ymd')]) }}">前日</a>
+                            href="{{ route('admin.session', ['date' => $date['prev']]) }}">前日</a>
                     </li>
                     </li>
                     <li class="">
-                        {{ $date->format('Y/m/d') }}
+                        {{ $date['label'] }}
                     </li>
                     <li class="">
                         <a class=""
-                            href="{{ route('admin.daily.session', ['date' => $date->copy()->addDay()->format('Ymd')]) }}">翌日</a>
+                            href="{{ route('admin.session', ['date' => $date['next']]) }}">翌日</a>
                     </li>
                     </li>
                 </ul>
@@ -45,12 +45,12 @@
                     <td class="admin__data">{{ $time['name'] }}</td>
                     <td class="admin__data">{{ $time['clock_in'] }}</td>
                     <td class="admin__data">{{ $time['clock_out'] }}</td>
-                    <td class="admin__data">{{ $breakTimes[$userId]['display_total'] }}</td>
+                    <td class="admin__data">{{ $breakTimes[$userId]['display_total'] ?? null; }}</td>
                     <td class="admin__data">{{ $time['display_total'] }}</td>
                     <td class="admin__data">
-                        {{-- <a class="admin__detail-btn"
-                        href="{{ route('admin.monthly.session', ['to' => App\Enums\TYPE::PERSONALLY->value, 'id' => $userId, 'date' => $workDate]) }}">詳細
-                        </a> --}}
+                        <a class="admin__detail-btn"
+                        href="{{ route('admin.session', ['date' => $date['detail'], 'to' => App\Enums\TYPE::PERSONALLY->value, 'id' => $userId]) }}">詳細
+                        </a>
                     </td>
                 </tr>
             @endforeach

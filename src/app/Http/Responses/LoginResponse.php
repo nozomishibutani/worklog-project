@@ -26,7 +26,7 @@ class LoginResponse implements LoginResponseContract
             }
             if (session()->has('admin_' . TYPE::MONTHLY->value)) {
                 session()->forget('admin_' . TYPE::MONTHLY->value);
-            };
+            }
 
             if (session()->has('admin_' . TYPE::PERSONALLY->value)) {
                 session()->forget('admin_' . TYPE::PERSONALLY->value);

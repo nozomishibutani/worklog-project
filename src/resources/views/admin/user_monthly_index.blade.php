@@ -16,14 +16,14 @@
                 <ul class="">
                     <li class="">
                         <a class=""
-                            href="{{ route('admin.monthly.session', ['to' => App\Enums\TYPE::MONTHLY->value, 'id' => $userId, 'date' => $date->copy()->subMonth()->format('Ymd')]) }}">前月</a>
+                            href="{{ route('admin.session', ['date' => $date['prev'], 'to' => App\Enums\TYPE::MONTHLY->value, 'id' => $userId]) }}">前月</a>
                     </li>
                     <li class="">
-                        {{ $date->format('Y/m') }}
+                        {{ $date['label'] }}
                     </li>
                     <li class="">
                         <a class=""
-                            href="{{ route('admin.monthly.session', ['to' => App\Enums\TYPE::MONTHLY->value, 'id' => $userId, 'date' => $date->copy()->addMonth()->format('Ymd')]) }}">翌月</a>
+                            href="{{ route('admin.session', ['date' => $date['next'], 'to' => App\Enums\TYPE::MONTHLY->value, 'id' => $userId, ]) }}">翌月</a>
                     </li>
                 </ul>
             </nav>
@@ -47,7 +47,7 @@
                     <td class="admin__data">{{ $value['display_total'] }}</td>
                     <td class="admin__data">
                         <a class="admin__detail-btn"
-                            href="{{ route('admin.monthly.session', ['to' => App\Enums\TYPE::PERSONALLY->value, 'id' => $userId, 'date' => $workDate]) }}">詳細</a>
+                            href="{{ route('admin.session', ['date' => $workDate, 'to' => App\Enums\TYPE::PERSONALLY->value, 'id' => $userId]) }}">詳細</a>
                     </td>
                 </tr>
             @endforeach
