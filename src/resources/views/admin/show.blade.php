@@ -11,7 +11,7 @@
 @section('content')
     <div class="admin">
         <h1>勤怠詳細</h1>
-        <form class="" action="post">
+        <form class="" action="{{ route('admin.update') }}" method="post">
             @csrf
             {{-- hidden --}}
             <input type="hidden" name="user_id" value="{{ $userId }}">
@@ -41,11 +41,11 @@
                     <tr class="admin__row">
                         <th class="admin__label">休憩</th>
                         <td class="admin__data">
-                            <input type="time" name="break_in" value="{{ old('break_in') }}">
+                            <input type="time" name="break_in[create]" value="{{ old('break_in') }}">
                         </td>
                         <td class="admin__data">～</td>
                         <td class="admin__data">
-                            <input type="time" name="break_out" value="{{ old('break_out') }}">
+                            <input type="time" name="break_out[create]" value="{{ old('break_out') }}">
                         </td>
                     </tr>
                 @elseif ($breakTimeCount > 0)
@@ -54,12 +54,12 @@
                         <tr class="admin__row">
                             <th class="admin__label">休憩{{ $i > 1 ? $i : '' }}</th>
                             <td class="admin__data">
-                                <input type="time" name="break_in"
+                                <input type="time" name="break_in[{{ $breakTimes[$i]['id'] }}]"
                                     value="{{ old('break_in', $breakTimes[$i]['clock_in']) }}">
                             </td>
                             <td class="admin__data">～</td>
                             <td class="admin__data">
-                                <input type="time" name="break_out"
+                                <input type="time" name="break_out[{{ $breakTimes[$i]['id'] }}]"
                                     value="{{ old('break_out', $breakTimes[$i]['clock_out']) }}">
                             </td>
                         </tr>
@@ -67,11 +67,11 @@
                     <tr class="admin__row">
                         <th class="admin__label">休憩{{ $breakTimeCount + 1 }}</th>
                         <td class="admin__data">
-                            <input type="time" name="break_in" value="{{ old('break_in') }}">
+                            <input type="time" name="break_in[create]" value="{{ old('break_in') }}">
                         </td>
                         <td class="admin__data">～</td>
                         <td class="admin__data">
-                            <input type="time" name="break_out" value="{{ old('break_out') }}">
+                            <input type="time" name="break_out[create]" value="{{ old('break_out') }}">
                         </td>
                     </tr>
                 @endif

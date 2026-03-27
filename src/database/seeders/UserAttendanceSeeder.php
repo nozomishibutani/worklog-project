@@ -92,7 +92,6 @@ class UserAttendanceSeeder extends Seeder
                             $todayClockIn = Carbon::parse($today->clock_in);
                             if ($todayClockIn->lessThan($clockOut)) {
                                 // 翌日の勤務と被るなら作成しない
-                                echo('重複あり'. $user->id);
                                 continue;
                             }
                         }

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Attendance;
 use App\Models\User;
+use App\Models\Attendance;
+use App\Models\BreakTime;
 use App\Services\AttendanceCalculatorService;
+use App\Services\AttendanceUpdateService;
 //use App\Services\ApprovalService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -14,12 +16,15 @@ use App\Enums\AttendanceStatus;
 class AdminController extends Controller
 {
     protected AttendanceCalculatorService $attendanceCalculatorService;
+    protected AttendanceUpdateService $attendanceUpdateService;
     //protected ApprovalService $approvalService;
 
+
     //public function __construct(AttendanceCalculatorService $attendanceCalculatorService, ApprovalService $approvalService)
-    public function __construct(AttendanceCalculatorService $attendanceCalculatorService)
+    public function __construct(AttendanceCalculatorService $attendanceCalculatorService, AttendanceUpdateService $attendanceUpdateService)
     {
         $this->attendanceCalculatorService = $attendanceCalculatorService;
+        $this->attendanceUpdateService = $attendanceUpdateService;
         //$this->approvalService = $approvalService;
     }
     public function clearSession()
@@ -133,6 +138,27 @@ class AdminController extends Controller
                 'next' => $date->copy()->addMonth()->format('Ymd'),
             ],
         ]);
+    }
+
+    public function update(Request $request): bool|\Illuminate\Http\RedirectResponse
+    {
+        $attendance = $request->input();
+
+        $res = $this->attendanceUpdateService->updateAttendance($attendance);
+        if ($res) {
+
+            return redirect()->route('admin.show', ['id' => $attendance['user_id']])
+                            ->with('alert', '修正が完了しました。')
+                            ->with('alert-type', 'alert-success');
+
+        }
+
+        return redirect()->route('admin.index')
+                    ->with('alert', 'システムエラーが発生しました')
+                    ->with('alert-type', 'alert-error');
+
+
+        //dd($attendance);
     }
 
     /**

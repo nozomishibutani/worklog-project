@@ -39,8 +39,11 @@ Route::prefix('admin')
         Route::get('/session/{date}/{to?}/{id?}', [AdminController::class, 'setSession'])
                     ->where('date', '\d{8}')
                     ->name('admin.session');
-        Route::get('/admin/session/clear', [AdminController::class, 'clearSession'])
+        Route::get('/session/clear', [AdminController::class, 'clearSession'])
             ->name('admin.session.clear');
+        Route::post('/attendance/update', [AdminController::class, 'update'])
+                            ->name('admin.update');
+
 
 
     });
