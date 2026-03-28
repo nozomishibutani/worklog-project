@@ -11,11 +11,19 @@
 @section('content')
     <div class="admin">
         <h1>勤怠詳細</h1>
+        @if (session('alert'))
+            <div class="alert {{ session('alert-type', 'alert-success') }}">
+                <p>{{ session('alert') }}</p>
+            </div>
+        @endif
         <form class="" action="{{ route('admin.update') }}" method="post">
             @csrf
             {{-- hidden --}}
             <input type="hidden" name="user_id" value="{{ $userId }}">
             <input type="hidden" name="attendance_id" value="{{ $workTimes['attendanceId'] }}">
+            <input type="hidden" name="year" value="{{ $workDate['year'] }}">
+            <input type="hidden" name="month" value="{{ $workDate['month'] }}">
+            <input type="hidden" name="day" value="{{ $workDate['day'] }}">
             <table class="admin__table">
                 <tr class="admin__row">
                     <th class="admin__label">名前</th>
@@ -41,11 +49,13 @@
                     <tr class="admin__row">
                         <th class="admin__label">休憩</th>
                         <td class="admin__data">
-                            <input type="time" name="break_in[create]" value="{{ old('break_in') }}">
+                            <input type="time" name="break_in[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
+                                value="{{ old('break_in') }}">
                         </td>
                         <td class="admin__data">～</td>
                         <td class="admin__data">
-                            <input type="time" name="break_out[create]" value="{{ old('break_out') }}">
+                            <input type="time" name="break_out[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
+                                value="{{ old('break_out') }}">
                         </td>
                     </tr>
                 @elseif ($breakTimeCount > 0)
@@ -67,11 +77,13 @@
                     <tr class="admin__row">
                         <th class="admin__label">休憩{{ $breakTimeCount + 1 }}</th>
                         <td class="admin__data">
-                            <input type="time" name="break_in[create]" value="{{ old('break_in') }}">
+                            <input type="time" name="break_in[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
+                                value="{{ old('break_in') }}">
                         </td>
                         <td class="admin__data">～</td>
                         <td class="admin__data">
-                            <input type="time" name="break_out[create]" value="{{ old('break_out') }}">
+                            <input type="time" name="break_out[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
+                                value="{{ old('break_out') }}">
                         </td>
                     </tr>
                 @endif
@@ -83,9 +95,9 @@
                 </tr>
             </table>
             <div class="">
-                @if ($workTimes['status'] == App\Enums\AttendanceStatus::APPROVED)
-                    <button class="">修正済み</button>
-                @elseif($workTimes['status'] == App\Enums\AttendanceStatus::PENDING)
+                @if ($workTimes['status'] == App\Enums\AttendanceStatus::APPROVED->value)
+                    <button class="">承認済み</button>
+                @elseif($workTimes['status'] == App\Enums\AttendanceStatus::PENDING->value)
                     <button class="">承認</button>
                 @else
                     <button class="">修正</button>

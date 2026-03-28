@@ -93,7 +93,7 @@ class AdminController extends Controller
         ];
 
         $breakTimeCount = count($breakTimes);
-
+        //dd($workDate);
         return view('admin/show', [
             'userId' => $userId,
             'workTimes' => $workTimes,
@@ -140,25 +140,21 @@ class AdminController extends Controller
         ]);
     }
 
-    public function update(Request $request): bool|\Illuminate\Http\RedirectResponse
+    public function update(Request $request): \Illuminate\Http\RedirectResponse
     {
         $attendance = $request->input();
 
-        $res = $this->attendanceUpdateService->updateAttendance($attendance);
-        if ($res) {
+        $result = $this->attendanceUpdateService->updateAttendance($attendance);
+        if ($result) {
 
-            return redirect()->route('admin.show', ['id' => $attendance['user_id']])
-                            ->with('alert', '修正が完了しました。')
+            return redirect()->route('admin.show', ['id' => $result->user_id])
+                            ->with('alert', '勤怠情報を修正しました')
                             ->with('alert-type', 'alert-success');
-
         }
 
         return redirect()->route('admin.index')
                     ->with('alert', 'システムエラーが発生しました')
                     ->with('alert-type', 'alert-error');
-
-
-        //dd($attendance);
     }
 
     /**

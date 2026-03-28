@@ -6,8 +6,10 @@ use App\Models\Attendance;
 use App\Models\User;
 use App\Models\BreakTime;
 use App\Enums\AttendanceStatus;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceRepository
 {
@@ -50,54 +52,54 @@ class AttendanceRepository
                             ->get();
     }
 
-    public function updateAttendance(array $attendance): bool
+    public function updateAttendance(array $attendance, array $formatCarbonDate, $targetAttendance): Attendance
     {
-        dd($attendance['break_out'][4]);
+        return DB::transaction(function () use ($attendance, $formatCarbonDate, $targetAttendance) {
+            // 休憩
+            foreach ($attendance['break_in'] as $id => $breakIn) {
+                if (!is_null($breakIn) && !is_null($attendance['break_out'][$id])) {
 
-        // 休憩
-        foreach ($attendance['break_in'] as $id => $breakTime) {
-
-            if ($id === 'create') {
-                // 新規作成
-                BreakTime::create([
-                                'user_id' => $breakTime['user_id'],
-                                'attendance_id' => $breakTime['attendance_id'],
-                                'clock_in' => $breakTime['create'],
-                                'clock_out' => $breakTime['break_out']['create'],
-                            ]);
-            } elseif ($breakTime[$id]) {
-                // 更新
-                $target = BreakTime::find($id);
-                $target->clock_in = $breakTime['create'];
-                $target->clock_out = $breakTime['break_out']['create'];
-
-                $target->save();
-                // BreakTime::where('id', $id)
-                //         ->where('user_id', $breakTime['user_id'])
-                //         ->where('attendance_id', $breakTime['attendance_id'])
-                //         ->updated([
-                //                 'clock_in' => $breakTime['break_in']['create'],
-                //                 'clock_out' => $breakTime['break_out']['create'],
-                //                 //'updated_at' => now(),
-                //             ]);
-
-            } elseif (!$breakTime[$id]) {
-                // 削除
-                BreakTime::where('id', $id)
-                        ->where('user_id', $breakTime['user_id'])
-                        ->where('attendance_id', $breakTime['attendance_id'])->delete();
+                    BreakTime::updateOrCreate(
+                        ['id' => $id,  'attendance_id' => $attendance['attendance_id']],
+                        [
+                            'clock_in'  => $formatCarbonDate['break_in'][$id],
+                            'clock_out' => $formatCarbonDate['break_out'][$id],
+                        ]
+                    );
+                } elseif ($id !== AttendanceStatus::DRAFT->value && is_null($attendance['break_in'][$id])) {
+                    // 削除
+                    BreakTime::find($id)->delete();
+                }
             }
 
-            $target = Attendance::find($attendance['attendance_id']);
-            $target->clock_in = $attendance['work_in'];
-            $target->clock_out = $attendance['work_out'];
-            $target->note = $attendance['note'];
-            $target->corrected_by = Auth::id();
-            $target->status = AttendanceStatus::PENDING->value;
+            // 勤怠日
+            if (is_null($targetAttendance)) {
+                // 新規登録
+                return Attendance::create([
+                    'user_id'      => $attendance['user_id'],
+                    'work_date'    => $formatCarbonDate['work_day'],
+                    'created_by'   => Auth::id(),
+                    'clock_in'     => $formatCarbonDate['work_in'],
+                    'clock_out'    => $formatCarbonDate['work_out'],
+                    'note'         => $attendance['note'],
+                    'corrected_by' => Auth::id(),
+                    'approved_by'  => Auth::id(),
+                    'approved_at'  => now(),
+                    'status'       => AttendanceStatus::APPROVED->value,
+                ]);
+            }
 
-            return $target->save();
-        }
+            // 更新
+            $targetAttendance->clock_in = $formatCarbonDate['work_in'];
+            $targetAttendance->clock_out = $formatCarbonDate['work_out'];
+            $targetAttendance->note = $attendance['note'];
+            $targetAttendance->corrected_by = Auth::id();
+            $targetAttendance->approved_by = Auth::id();
+            $targetAttendance->approved_at =  now();
+            $targetAttendance->status =  AttendanceStatus::APPROVED->value;
+            $targetAttendance->save();
 
+            return $targetAttendance;
+        });
     }
-
 }

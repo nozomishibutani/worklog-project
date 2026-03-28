@@ -110,6 +110,37 @@ class AttendanceFormatterService
         return $date->format('m月d日') . '（' . $weekdays[$date->dayOfWeek] . '）';
     }
 
+    /**
+     * 日付けをCarbon形式にフォーマットする
+     *
+     * @param array $date フォーマットしたい日付
+     * @param string $time フォーマットしたい時刻
+     * @return Carbon
+     */
+    public function formatCarbonDate(array $date, string|null $time = null): Carbon
+    {
+        if ($time == null) {
+            $res = Carbon::create(
+                $date['year'],
+                $date['month'],
+                $date['day'],
+            );
+
+            return $res;
+
+        }
+        [$hour, $minute] = explode(':', $time);
+        $res = Carbon::create(
+            $date['year'],
+            $date['month'],
+            $date['day'],
+            $hour,
+            $minute
+        );
+
+        return $res;
+    }
+
 
     /**
      * 空レコード作成しデータを整形する

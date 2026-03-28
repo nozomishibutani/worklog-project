@@ -18,13 +18,13 @@ class UserAttendanceSeeder extends Seeder
         $firstAdmin = $admins->first();
         $member = $users->concat([$firstAdmin]);
 
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 3; $i >= 0; $i--) {
 
             $month = Carbon::now()->subMonths($i);
             $start = $month->copy()->startOfMonth();
             $end = $month->copy()->endOfMonth();
 
-            for ($date = $end->copy(); $date->greaterThanOrEqualTo($start); $date->subDay()) {
+            for ($date = $start->copy(); $date <= $end ; $date->addDay()) {
 
                 $date = $date->copy()->startOfDay();
 
