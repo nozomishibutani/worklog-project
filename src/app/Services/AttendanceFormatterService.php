@@ -125,9 +125,7 @@ class AttendanceFormatterService
                 $date['month'],
                 $date['day'],
             );
-
             return $res;
-
         }
         [$hour, $minute] = explode(':', $time);
         $res = Carbon::create(
@@ -137,10 +135,8 @@ class AttendanceFormatterService
             $hour,
             $minute
         );
-
         return $res;
     }
-
 
     /**
      * 空レコード作成しデータを整形する

@@ -57,8 +57,12 @@ class AttendanceRepository
         return DB::transaction(function () use ($attendance, $formatCarbonDate, $targetAttendance) {
             // 休憩
             foreach ($attendance['break_in'] as $id => $breakIn) {
-                if (!is_null($breakIn) && !is_null($attendance['break_out'][$id])) {
-
+                if //(!is_null($breakIn) && !is_null($attendance['break_out'][$id]))
+                ($id !== AttendanceStatus::DRAFT->value && is_null($attendance['break_in'][$id]) && is_null($attendance['break_out'][$id])) {
+                    // 削除
+                    BreakTime::find($id)->delete();
+                } else {
+                    // 何かしら入力があるとき
                     BreakTime::updateOrCreate(
                         ['id' => $id,  'attendance_id' => $attendance['attendance_id']],
                         [
@@ -66,9 +70,6 @@ class AttendanceRepository
                             'clock_out' => $formatCarbonDate['break_out'][$id],
                         ]
                     );
-                } elseif ($id !== AttendanceStatus::DRAFT->value && is_null($attendance['break_in'][$id])) {
-                    // 削除
-                    BreakTime::find($id)->delete();
                 }
             }
 

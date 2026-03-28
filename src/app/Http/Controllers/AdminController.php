@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
 use App\Enums\AttendanceStatus;
+use App\Http\Requests\AttendanceRequest;
 
 class AdminController extends Controller
 {
@@ -140,9 +141,9 @@ class AdminController extends Controller
         ]);
     }
 
-    public function update(Request $request): \Illuminate\Http\RedirectResponse
+    public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
     {
-        $attendance = $request->input();
+        $attendance = $request->validated();
 
         $result = $this->attendanceUpdateService->updateAttendance($attendance);
         if ($result) {

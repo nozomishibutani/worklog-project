@@ -96,23 +96,15 @@ class BreakTimeSeeder extends Seeder
             foreach ($breaks as $break) {
 
                 // ==== 修正 ====
-                //$correctedBy = null;
                 $updatedAt = $break['end'];
                 if ($attendance->corrected_by) {
-                    //if (rand(1, 100) > 50) {
-                    // 休憩を修正した場合
                     $updatedAt = $attendance->updated_at;
-                    //$correctedBy = $attendance->corrected_by;
-                    //}
                 }
 
                 BreakTime::create([
-                    //'user_id'        => $attendance->user_id,
                     'attendance_id'  => $attendance->id,
                     'clock_in'       => $break['start'],
                     'clock_out'      => $break['end'],
-                    //'created_by'     => $attendance->user_id,
-                    //'corrected_by'   => $correctedBy,
                     'created_at'     => $break['start'],
                     'updated_at'     => $updatedAt,
                 ]);

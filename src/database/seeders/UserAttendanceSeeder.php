@@ -71,30 +71,12 @@ class UserAttendanceSeeder extends Seeder
                     } elseif ($type === 'early') {
                         $clockIn = $date->copy()->setTime(rand(6, 8), rand(0, 3) * 15);
                         $clockOut = $date->copy()->setTime(rand(15, 17), rand(0, 3) * 15);
-                    } elseif ($type === 'night') {
-                        $clockIn = $date->copy()->setTime(rand(20, 22), rand(0, 3) * 15);
-                        $clockOut = $date->copy()->addDay()->setTime(rand(5, 7), rand(0, 3) * 15);
                     }
 
                     // ===== 打刻忘れ =====
                     $isForgot = rand(1, 100) <= 10;
                     if ($isForgot) {
                         $clockOut = null;
-                    }
-
-                    // ===== 重複 =====
-                    if ($date->isYesterday()) {
-                        $today = Attendance::where('user_id', $user->id)
-                                                    ->where('work_date', Carbon::today())
-                                                    ->first();
-
-                        if ($today && !$isForgot) {
-                            $todayClockIn = Carbon::parse($today->clock_in);
-                            if ($todayClockIn->lessThan($clockOut)) {
-                                // 翌日の勤務と被るなら作成しない
-                                continue;
-                            }
-                        }
                     }
 
                     // ===== 修正処理 =====
@@ -177,11 +159,10 @@ class UserAttendanceSeeder extends Seeder
         $rand = rand(1, 100);
 
         return match (true) {
-            $rand <= 10 => 'partTime', // 休憩なし
-            $rand <= 70 => 'normal',   // 通常
+            $rand <= 15 => 'partTime', // 休憩なし
+            $rand <= 75 => 'normal',   // 通常
             $rand <= 85 => 'late',     // 遅刻
-            $rand <= 90 => 'early',    // 早退
-            $rand <= 95 => 'night',    // 夜勤
+            $rand <= 95 => 'early',    // 早退
             default => 'absent',       // 欠勤
         };
     }

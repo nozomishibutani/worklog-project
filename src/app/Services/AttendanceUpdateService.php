@@ -21,7 +21,7 @@ class AttendanceUpdateService
 
     public function updateAttendance(array $attendance): Attendance|\Illuminate\Http\RedirectResponse
     {
-        try {
+        //try {
             if (!$attendance) {
                 throw new \Exception();
             }
@@ -29,28 +29,40 @@ class AttendanceUpdateService
             $targetAttendance = Attendance::find($attendance['attendance_id']);
 
             // 日付をDBフォーマットに合わせる
-            $formatCarbonDate = [];
+            $formatCarbonDate = [
+                'work_in' => $attendance['work_in'],
+                'work_out' => $attendance['work_out'],
+                'break_in' => $attendance['break_in'],
+                'break_out' => $attendance['break_out'],
+            ];
             $workDay = [
                 'year' => $attendance['year'],
                 'month' => $attendance['month'],
                 'day' => $attendance['day'],
             ];
-            $formatCarbonDate['work_day'] = $this->attendanceFormatterService->formatCarbonDate($workDay)->format('Y-m-d');
-            $formatCarbonDate['work_in'] = $this->attendanceFormatterService->formatCarbonDate($workDay, $attendance['work_in']);
-            $formatCarbonDate['work_out'] = $this->attendanceFormatterService->formatCarbonDate($workDay, $attendance['work_out']);
-            foreach ($attendance['break_in'] as $id => $breakIn) {
-                if (!is_null($attendance['break_in'][$id]) && !is_null($attendance['break_out'][$id])) {
-                    $formatCarbonDate['break_in'][$id] = $this->attendanceFormatterService->formatCarbonDate($workDay, $attendance['break_in'][$id]);
-                    $formatCarbonDate['break_out'][$id] = $this->attendanceFormatterService->formatCarbonDate($workDay, $attendance['break_out'][$id]);
+
+            foreach ($formatCarbonDate as $key => $val) {
+                if ($key === 'break_in' || $key === 'break_out') {
+                    foreach ($val as $breakId => $breakTime) {
+                        if (!is_null($breakTime)) {
+                            $formatCarbonDate[$key][$breakId] = $this->attendanceFormatterService->formatCarbonDate($workDay, $attendance[$key][$breakId]);
+                        } else {
+                            $formatCarbonDate[$key][$breakId] = null;
+                        }
+                    }
+                } elseif (!is_null($val)) {
+                    $formatCarbonDate[$key] = $this->attendanceFormatterService->formatCarbonDate($workDay, $attendance[$key]);
+                } else {
+                    $formatCarbonDate[$key] = null;
                 }
             }
             return $this->attendanceRepository->updateAttendance($attendance, $formatCarbonDate, $targetAttendance);
-        } catch (\Exception $e) {
-            Log::error($e);
-            return redirect()
-                ->route('admin.index')
-                ->with('alert', 'システムエラーが発生しました')
-                ->with('alert-type', 'alert-error');
-        }
+        // } catch (\Exception $e) {
+        //     Log::error($e);
+        //     return redirect()
+        //         ->route('admin.index')
+        //         ->with('alert', 'システムエラーが発生しました')
+        //         ->with('alert-type', 'alert-error');
+        // }
     }
 }

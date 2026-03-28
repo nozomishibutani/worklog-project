@@ -16,7 +16,18 @@
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
-        <form class="" action="{{ route('admin.update') }}" method="post">
+        {{-- バリデーションエラー --}}
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form class="" action="{{ route('admin.update') }}" method="post" novalidate>
             @csrf
             {{-- hidden --}}
             <input type="hidden" name="user_id" value="{{ $userId }}">
@@ -50,12 +61,12 @@
                         <th class="admin__label">休憩</th>
                         <td class="admin__data">
                             <input type="time" name="break_in[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
-                                value="{{ old('break_in') }}">
+                                    value="{{ old('break_in.' . App\Enums\AttendanceStatus::DRAFT->value) }}">
                         </td>
                         <td class="admin__data">～</td>
                         <td class="admin__data">
                             <input type="time" name="break_out[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
-                                value="{{ old('break_out') }}">
+                                    value="{{ old('break_out.' . App\Enums\AttendanceStatus::DRAFT->value) }}">
                         </td>
                     </tr>
                 @elseif ($breakTimeCount > 0)

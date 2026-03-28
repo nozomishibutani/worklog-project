@@ -15,7 +15,7 @@ return new class () extends Migration {
             $table->foreignId('user_id')->constrained();
             $table->date('work_date');
             $table->unique(['user_id', 'work_date']);
-            $table->dateTime('clock_in');
+            $table->dateTime('clock_in')->nullable();
             $table->dateTime('clock_out')->nullable();
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('corrected_by')->nullable()->constrained('users');
