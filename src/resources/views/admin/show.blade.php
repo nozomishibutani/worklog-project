@@ -16,16 +16,6 @@
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
-        {{-- バリデーションエラー --}}
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
 
         <form class="" action="{{ route('admin.update') }}" method="post" novalidate>
             @csrf
@@ -54,6 +44,16 @@
                     <td class="admin__data">
                         <input type="time" name="work_out" value="{{ old('work_out', $workTimes['clock_out']) }}">
                     </td>
+                    @error('work_in')
+                        <td class="msg">
+                            {{ $message }}
+                        </td>
+                    @enderror
+                    @error('work_out')
+                        <td class="msg">
+                            {{ $message }}
+                        </td>
+                    @enderror
                 </tr>
                 {{-- 休憩なし --}}
                 @if ($breakTimeCount == 0)
@@ -61,13 +61,23 @@
                         <th class="admin__label">休憩</th>
                         <td class="admin__data">
                             <input type="time" name="break_in[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
-                                    value="{{ old('break_in.' . App\Enums\AttendanceStatus::DRAFT->value) }}">
+                                value="{{ old('break_in.' . App\Enums\AttendanceStatus::DRAFT->value) }}">
                         </td>
                         <td class="admin__data">～</td>
                         <td class="admin__data">
                             <input type="time" name="break_out[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
-                                    value="{{ old('break_out.' . App\Enums\AttendanceStatus::DRAFT->value) }}">
+                                value="{{ old('break_out.' . App\Enums\AttendanceStatus::DRAFT->value) }}">
                         </td>
+                        @error('break_in.' . App\Enums\AttendanceStatus::DRAFT->value)
+                            <td class="msg">
+                                {{ $message }}
+                            </td>
+                        @enderror
+                        @error('break_out.' . App\Enums\AttendanceStatus::DRAFT->value)
+                            <td class="msg">
+                                {{ $message }}
+                            </td>
+                        @enderror
                     </tr>
                 @elseif ($breakTimeCount > 0)
                     {{-- 休憩がある場合 --}}
@@ -76,26 +86,46 @@
                             <th class="admin__label">休憩{{ $i > 1 ? $i : '' }}</th>
                             <td class="admin__data">
                                 <input type="time" name="break_in[{{ $breakTimes[$i]['id'] }}]"
-                                    value="{{ old('break_in', $breakTimes[$i]['clock_in']) }}">
+                                    value="{{ old('break_in.' . $breakTimes[$i]['id'], $breakTimes[$i]['clock_in']) }}">
                             </td>
                             <td class="admin__data">～</td>
                             <td class="admin__data">
                                 <input type="time" name="break_out[{{ $breakTimes[$i]['id'] }}]"
-                                    value="{{ old('break_out', $breakTimes[$i]['clock_out']) }}">
+                                    value="{{ old('break_out.' . $breakTimes[$i]['id'], $breakTimes[$i]['clock_out']) }}">
                             </td>
+                            @error('break_in.' . $breakTimes[$i]['id'])
+                                <td class="msg">
+                                    {{ $message }}
+                                </td>
+                            @enderror
+                            @error('break_out.' . $breakTimes[$i]['id'])
+                                <td class="msg">
+                                    {{ $message }}
+                                </td>
+                            @enderror
                         </tr>
                     @endfor
                     <tr class="admin__row">
                         <th class="admin__label">休憩{{ $breakTimeCount + 1 }}</th>
                         <td class="admin__data">
                             <input type="time" name="break_in[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
-                                value="{{ old('break_in') }}">
+                                value="{{ old('break_in.' . App\Enums\AttendanceStatus::DRAFT->value) }}">
                         </td>
                         <td class="admin__data">～</td>
                         <td class="admin__data">
                             <input type="time" name="break_out[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
-                                value="{{ old('break_out') }}">
+                                value="{{ old('break_out.' . App\Enums\AttendanceStatus::DRAFT->value) }}">
                         </td>
+                        @error('break_in.' . App\Enums\AttendanceStatus::DRAFT->value)
+                            <td class="msg">
+                                {{ $message }}
+                            </td>
+                        @enderror
+                        @error('break_out.' . App\Enums\AttendanceStatus::DRAFT->value)
+                            <td class="msg">
+                                {{ $message }}
+                            </td>
+                        @enderror
                     </tr>
                 @endif
                 <tr class="admin__row">
@@ -103,6 +133,11 @@
                     <td class="admin__data">
                         <textarea name="note">{{ old('note', $workTimes['note']) }}</textarea>
                     </td>
+                    @error('note')
+                        <td class="msg">
+                            {{ $message }}
+                        </td>
+                    @enderror
                 </tr>
             </table>
             <div class="">
