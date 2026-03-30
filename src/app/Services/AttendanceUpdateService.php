@@ -56,6 +56,8 @@ class AttendanceUpdateService
                     $formatCarbonDate[$key] = null;
                 }
             }
+            $formatCarbonDate['work_date'] = $this->attendanceFormatterService->formatCarbonDate($workDay);
+
             return $this->attendanceRepository->updateAttendance($attendance, $formatCarbonDate, $targetAttendance);
         // } catch (\Exception $e) {
         //     Log::error($e);

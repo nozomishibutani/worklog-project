@@ -36,13 +36,12 @@ Route::prefix('admin')
                     ->name('admin.user.index');
         Route::get('/attendance/staff/{id}', [AdminController::class, 'userMonthlyIndex'])
                     ->name('admin.monthly.index');
-        Route::get('/session/{date}/{to?}/{id?}', [AdminController::class, 'setSession'])
+        Route::get('/{id}/{date}', [AdminController::class, 'setSession'])
                     ->where('date', '\d{8}')
                     ->name('admin.session');
-        Route::get('/session/clear', [AdminController::class, 'clearSession'])
-            ->name('admin.session.clear');
         Route::post('/attendance/update', [AdminController::class, 'update'])
                             ->name('admin.update');
+
 
 
 

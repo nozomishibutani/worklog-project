@@ -44,13 +44,12 @@ class AdminController extends Controller
         return back();
     }
 
-    public function index(): \Illuminate\View\View
+    public function index(Request $request): \Illuminate\View\View
     {
-        // sessionを受け取る
-        if (session()->has('admin_' . TYPE::DAILY->value)) {
-            $date = session('admin_' . TYPE::DAILY->value);
+        $date = $request->query('date');
+
+        if ($date) {
             $date = Carbon::parse($date);
-            //session()->forget('admin_' . TYPE::DAILY->value);
         } else {
             $date = carbon::today();
         }
@@ -77,9 +76,8 @@ class AdminController extends Controller
     public function show($userId): \Illuminate\View\View
     {
         // sessionを受け取る
-        $date = session('admin_' . TYPE::PERSONALLY->value);
+        $date = session('admin_date');
         $date = Carbon::parse($date);
-        //session()->forget('admin_' . TYPE::PERSONALLY->value);
 
         [
             'workTimes' => $workTimes,
@@ -110,15 +108,14 @@ class AdminController extends Controller
         return view('admin/user_index', compact('users'));
     }
 
-    public function userMonthlyIndex($userId)
+    public function userMonthlyIndex(Request $request, $userId)
     {
-        // sessionを受け取る
-        if (session()->has('admin_' . TYPE::MONTHLY->value)) {
-            $date = session('admin_' . TYPE::MONTHLY->value);
-            $date = Carbon::parse($date);
-            //session()->forget('admin_' . TYPE::MONTHLY->value);
+        $date = $request->query('date');
+
+        if ($date) {
+            $startOfMonth = Carbon::createFromFormat('Ymd', $date . '01');
         } else {
-            $date = carbon::today();
+            $startOfMonth = carbon::today()->startOfMonth();
         }
 
         [
@@ -126,7 +123,7 @@ class AdminController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
         ]
-        = $this->attendanceCalculatorService->getUserMonthlyAttendances($userId, $date);
+        = $this->attendanceCalculatorService->getUserMonthlyAttendances($userId, $startOfMonth);
 
         return view('admin/user_monthly_index', [
             'userId' => $userId,
@@ -134,9 +131,9 @@ class AdminController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'date' => [
-                'label' => $date->copy()->format('Y/m'),
-                'prev' => $date->copy()->subMonth()->format('Ymd'),
-                'next' => $date->copy()->addMonth()->format('Ymd'),
+                'label' => $startOfMonth->copy()->format('Y/m'),
+                'prev' => $startOfMonth->copy()->subMonth()->format('Ym'),
+                'next' => $startOfMonth->copy()->addMonth()->format('Ym'),
             ],
         ]);
     }
@@ -144,7 +141,7 @@ class AdminController extends Controller
     public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
     {
         $tmp = $request->validated();
-        $attendance = $request->only('id', 'attendance_id', 'year', 'month', 'day');
+        $attendance = $request->only('user_id', 'attendance_id', 'year', 'month', 'day');
         $attendance = array_merge($attendance, $tmp);
 
         $result = $this->attendanceUpdateService->updateAttendance($attendance);
@@ -184,29 +181,16 @@ class AdminController extends Controller
      * @param int|null $userId ユーザーid
      * @return @return \Illuminate\Http\RedirectResponse
      */
-    public function setSession($date, $to = null, $userId = null): \Illuminate\Http\RedirectResponse
+    public function setSession($userId, $date): \Illuminate\Http\RedirectResponse
     {
-        if (!$date) {
+        if (!$userId || !$date) {
             return redirect()->route('admin.index')
             ->with('alert', 'システムエラーが発生しました')
             ->with('alert-type', 'alert-error');
         }
+        session(['admin_date' => $date]);
 
-        switch ($to) {
-            case TYPE::MONTHLY->value:
-                session(['admin_' . TYPE::MONTHLY->value => $date]);
-                return redirect()->route('admin.monthly.index', ['id' => $userId]);
-
-            case TYPE::PERSONALLY->value:
-                if (session()->has('admin_' . TYPE::DAILY->value)) {
-                    session()->forget('admin_' . TYPE::DAILY->value);
-                }
-                session(['admin_' . TYPE::PERSONALLY->value => $date]);
-                return redirect()->route('admin.show', ['id' => $userId]);
-
-            default:
-                session(['admin_' . TYPE::DAILY->value => $date]);
-                return redirect()->route('admin.index');
-        }
+        return redirect()->route('admin.show', ['id' => $userId]);
     }
+
 }

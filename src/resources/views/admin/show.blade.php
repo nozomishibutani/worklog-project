@@ -22,9 +22,6 @@
             {{-- hidden --}}
             <input type="hidden" name="user_id" value="{{ $userId }}">
             <input type="hidden" name="attendance_id" value="{{ $workTimes['attendanceId'] }}">
-            {{-- <input type="hidden" name="year" value="{{ $workDate['year'] }}">
-            <input type="hidden" name="month" value="{{ $workDate['month'] }}">
-            <input type="hidden" name="day" value="{{ $workDate['day'] }}"> --}}
             <table class="admin__table">
                 <tr class="admin__row">
                     <th class="admin__label">名前</th>

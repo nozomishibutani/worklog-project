@@ -62,17 +62,17 @@ class UserAttendanceSeeder extends Seeder
                                                             ->minute(rand(0, 3) * 15)
                                                             ->second(0);
                     } elseif ($type === 'partTime') {
-                        $clockIn = $currentDate->setTime(14, rand(0, 3) * 15);
-                        $clockOut = $currentDate->setTime(16, rand(0, 3) * 15);
+                        $clockIn = $currentDate->copy()->setTime(14, rand(0, 3) * 15);
+                        $clockOut = $currentDate->copy()->setTime(16, rand(0, 3) * 15);
                     } elseif ($type === 'normal') {
-                        $clockIn = $currentDate->setTime(rand(8, 10), rand(0, 3) * 15);
-                        $clockOut = $currentDate->setTime(rand(17, 19), rand(0, 3) * 15);
+                        $clockIn = $currentDate->copy()->setTime(rand(8, 10), rand(0, 3) * 15);
+                        $clockOut = $currentDate->copy()->setTime(rand(17, 19), rand(0, 3) * 15);
                     } elseif ($type === 'late') {
-                        $clockIn = $currentDate->setTime(rand(10, 11), rand(0, 3) * 15);
-                        $clockOut = $currentDate->setTime(rand(19, 20), rand(0, 3) * 15);
+                        $clockIn = $currentDate->copy()->setTime(rand(10, 11), rand(0, 3) * 15);
+                        $clockOut = $currentDate->copy()->setTime(rand(19, 20), rand(0, 3) * 15);
                     } elseif ($type === 'early') {
-                        $clockIn = $currentDate->setTime(rand(6, 8), rand(0, 3) * 15);
-                        $clockOut = $currentDate->setTime(rand(15, 17), rand(0, 3) * 15);
+                        $clockIn = $currentDate->copy()->setTime(rand(6, 8), rand(0, 3) * 15);
+                        $clockOut = $currentDate->copy()->setTime(rand(15, 17), rand(0, 3) * 15);
                     }
 
                     // ===== 打刻忘れ =====

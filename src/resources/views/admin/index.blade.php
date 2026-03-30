@@ -16,7 +16,7 @@
                 <ul class="">
                     <li class="">
                         <a class=""
-                            href="{{ route('admin.session', ['date' => $date['prev']]) }}">前日</a>
+                            href="{{ route('admin.index', ['date' => $date['prev']]) }}">前日</a>
                     </li>
                     </li>
                     <li class="">
@@ -24,7 +24,7 @@
                     </li>
                     <li class="">
                         <a class=""
-                            href="{{ route('admin.session', ['date' => $date['next']]) }}">翌日</a>
+                            href="{{ route('admin.index', ['date' => $date['next']]) }}">翌日</a>
                     </li>
                     </li>
                 </ul>
@@ -49,7 +49,7 @@
                     <td class="admin__data">{{ $time['display_total'] }}</td>
                     <td class="admin__data">
                         <a class="admin__detail-btn"
-                        href="{{ route('admin.session', ['date' => $date['detail'], 'to' => App\Enums\TYPE::PERSONALLY->value, 'id' => $userId]) }}">詳細
+                        href="{{ route('admin.session', ['id' => $userId, 'date' => $date['detail']]) }}">詳細
                         </a>
                     </td>
                 </tr>

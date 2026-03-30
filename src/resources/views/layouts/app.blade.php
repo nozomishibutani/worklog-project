@@ -13,7 +13,7 @@
     <header class="header">
         <div class="header__container">
             <div class="header__logo">
-                <a href="{{ route('admin.session.clear') }}">
+                <a href="">
                     <img src="{{ asset('header_logo.png') }}" alt="ヘッダーロゴ画像">
                 </a>
             </div>

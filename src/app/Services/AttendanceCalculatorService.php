@@ -183,10 +183,10 @@ class AttendanceCalculatorService
     /**
      * 指定ユーザーの月次勤怠を取得
      */
-    public function getUserMonthlyAttendances($userId, Carbon $date): array
+    public function getUserMonthlyAttendances($userId, Carbon $startOfMonth): array
     {
-        $start = $date->copy()->startOfMonth();
-        $end   = $date->copy()->endOfMonth();
+        $start = $startOfMonth;
+        $end   = $startOfMonth->copy()->endOfMonth();
 
         $attendances = $this->attendanceRepository
             ->getUserMonthlyAttendances($userId, $start, $end);
