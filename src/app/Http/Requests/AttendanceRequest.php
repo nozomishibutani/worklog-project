@@ -116,6 +116,7 @@ class AttendanceRequest extends FormRequest
                 }
                 if ($breakOut >= $carbonWorkOut) {
                     $isInvalidBreakTimes[$id] = true;
+                    $validator->errors()->add('break_in.'. $id, '休憩時間もしくは退勤時間が不適切な値です');
                 }
             }
 

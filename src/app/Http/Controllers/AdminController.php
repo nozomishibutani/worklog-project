@@ -157,12 +157,12 @@ class AdminController extends Controller
                     ->with('alert-type', 'alert-error');
     }
 
-    /**
-     * 承認待ち勤怠を取得
-     */
-    public function getPending(): array
+    public function showApplication()
     {
-        return Attendance::where('status', AttendanceStatus::PENDING)->get();
+        $pending = Attendance::where('status', AttendanceStatus::PENDING)->get();
+        $approved = Attendance::where('status', AttendanceStatus::APPROVED)->get();
+
+        return view('admin/application_index', compact($pending,$approved));
     }
 
     /**

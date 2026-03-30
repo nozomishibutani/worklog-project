@@ -84,6 +84,7 @@ class UserAttendanceSeeder extends Seeder
                     // ===== 修正処理 =====
                     $isCorrection = !$isForgot && rand(1, 100) <= 20;
                     $correctedBy = null;
+                    $correctedAt = null;
                     if ($isCorrection) {
                         if (rand(1, 100) <= 90) {
                             $correctedBy = $user->id;
@@ -124,10 +125,12 @@ class UserAttendanceSeeder extends Seeder
                             $approvedAt = $currentDate->copy()->addDays(rand(2, 4));
                         }
                         $updatedAt = $approvedAt;
+                        $correctedAt = $clockOut->copy()->addMinutes(30);
                     } elseif (!$approved && $isCorrection) {
                         // 修正はしたけど未承認
                         $status = AttendanceStatus::PENDING;
-                        $updatedAt = $clockOut->copy()->addMinutes(10);
+                        $updatedAt = $clockOut->copy()->addMinutes(30);
+                        $correctedAt = $updatedAt;
                     } elseif ($isForgot) {
                         $status = AttendanceStatus::DRAFT;
                         $updatedAt = $clockIn;
@@ -144,6 +147,7 @@ class UserAttendanceSeeder extends Seeder
                         'clock_out' => $clockOut,
                         'created_by' => $user->id,
                         'corrected_by' => $correctedBy,
+                        'corrected_at' => $correctedAt,
                         'approved_by' => $admin?->id,
                         'approved_at' => $approvedAt,
                         'status' => $status,

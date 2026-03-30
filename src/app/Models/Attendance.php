@@ -13,6 +13,7 @@ class Attendance extends Model
         'clock_out',
         'created_by',
         'corrected_by',
+        'corrected_at',
         'approved_by',
         'approved_at',
         'note',
