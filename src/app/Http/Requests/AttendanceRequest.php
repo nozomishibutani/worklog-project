@@ -5,7 +5,10 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Enums\AttendanceStatus;
+use App\Services\AttendanceFormatterService;
 use Carbon\Carbon;
+
+use function Illuminate\Support\years;
 
 class AttendanceRequest extends FormRequest
 {
@@ -50,29 +53,31 @@ class AttendanceRequest extends FormRequest
 
     public function withValidator($validator)
     {
-        // // 備考欄以外でrulesにエラーがあれば何もしない
-        // if ($validator->errors('work_in') ||
-        //     $validator->errors('work_out') ||
-        //     $validator->errors('break_in.*') ||
-        //     $validator->errors('break_out.*')
-        // ) {
-        //     return;
-        // }
-
         $validator->after(function ($validator) {
 
+            $attendanceFormatterService = app(AttendanceFormatterService::class);
             $isInvalidBreakTimes = [];
             $breakTimes = [];
-            $carbonWorkIn = Carbon::parse($this->work_in);
-            $carbonWorkOut = Carbon::parse($this->work_out);
+            $workDate = [
+                'year' => $this->year,
+                'month' => $this->month,
+                'day' => $this->day,
+            ];
+            $carbonWorkIn = $attendanceFormatterService->formatCarbonDate($workDate, $this->work_in);
+            $carbonWorkOut = $attendanceFormatterService->formatCarbonDate($workDate, $this->work_out);
 
             // 休憩バリデーション準備
             foreach ($this->break_in as $id => $breakIn) {
-                if ($id === AttendanceStatus::DRAFT->value && is_null($breakIn)) {
+                // if ($id === AttendanceStatus::DRAFT->value && is_null($breakIn)) {
+                //     continue;
+                // }
+                if (is_null($breakIn) && is_null($this->break_out[$id])) {
                     continue;
                 }
-                $CarbonBreakIn[$id] = Carbon::parse($breakIn);
-                $CarbonBreakOut[$id] = Carbon::parse($this->break_out[$id]);
+
+
+                $CarbonBreakIn[$id] = $attendanceFormatterService->formatCarbonDate($workDate, $breakIn);
+                $CarbonBreakOut[$id] = $attendanceFormatterService->formatCarbonDate($workDate, $this->break_out[$id]);
                 $breakTimes[$breakIn] = [
                     'id' => $id,
                     'break_in' =>  $CarbonBreakIn[$id],
@@ -121,7 +126,7 @@ class AttendanceRequest extends FormRequest
                     if ($key == 'id') {
                         $id = $val;
                         // 休憩入り時間が休憩戻り時間より後になっている場合、および休憩戻り時間が休憩入り時間より前になっている場合に以下のメッセージを表示
-                        if ($breakTime['break_in'] > $breakTime['break_out']) {
+                        if ($breakTime['break_in'] >= $breakTime['break_out']) {
                             $isInvalidBreakTimes[$id] = true;
                             break 2;
                         }
@@ -145,11 +150,9 @@ class AttendanceRequest extends FormRequest
             foreach ($isInvalidBreakTimes as $id => $isInvalidBreakTime) {
                 if ($isInvalidBreakTime && !$validator->errors()->has('break_in.'. $id) && !$validator->errors()->has('break_out.'. $id)) {
                     // エラーメッセージは一回だけ表示
-                    $validator->errors()->add('break_in.'. $id, '休憩時間が不適切な値です');
-                    break;
+                    $validator->errors()->add('break_in.'. $id, '休憩時間が不適切な値です!');
                 }
             }
-
         });
     }
 }

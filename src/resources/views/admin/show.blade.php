@@ -22,9 +22,9 @@
             {{-- hidden --}}
             <input type="hidden" name="user_id" value="{{ $userId }}">
             <input type="hidden" name="attendance_id" value="{{ $workTimes['attendanceId'] }}">
-            <input type="hidden" name="year" value="{{ $workDate['year'] }}">
+            {{-- <input type="hidden" name="year" value="{{ $workDate['year'] }}">
             <input type="hidden" name="month" value="{{ $workDate['month'] }}">
-            <input type="hidden" name="day" value="{{ $workDate['day'] }}">
+            <input type="hidden" name="day" value="{{ $workDate['day'] }}"> --}}
             <table class="admin__table">
                 <tr class="admin__row">
                     <th class="admin__label">名前</th>
@@ -32,8 +32,13 @@
                 </tr>
                 <tr class="admin__row">
                     <th class="admin__label">日付</th>
-                    <td class="admin__data">{{ $workDate['year'] }}年</td>
-                    <td class="admin__data">{{ $workDate['month'] }}月{{ $workDate['day'] }}日</td>
+                    <td class="admin__data">
+                        <input type="text" name="year" value="{{ $workDate['year'] }}" readonly>年
+                    </td>
+                    <td class="admin__data">
+                        <input type="text" name="month" value="{{ $workDate['month'] }}" readonly>月
+                        <input type="text" name="day" value="{{ $workDate['day'] }}" readonly>日
+                    </td>
                 </tr>
                 <tr class="admin__row">
                     <th class="admin__label">出勤・退勤</th>
@@ -81,7 +86,7 @@
                     </tr>
                 @elseif ($breakTimeCount > 0)
                     {{-- 休憩がある場合 --}}
-                    @for ($i = 1; $i <= $breakTimeCount; $i++)
+                    @for ($i = 0; $i < $breakTimeCount; $i++)
                         <tr class="admin__row">
                             <th class="admin__label">休憩{{ $i > 1 ? $i : '' }}</th>
                             <td class="admin__data">
@@ -144,7 +149,8 @@
                 @if ($workTimes['status'] == App\Enums\AttendanceStatus::APPROVED->value)
                     <button class="">承認済み</button>
                 @elseif($workTimes['status'] == App\Enums\AttendanceStatus::PENDING->value)
-                    <button class="">承認</button>
+                    {{-- <button class="">承認</button> --}}
+                    *承認待ちのため修正はできません。
                 @else
                     <button class="">修正</button>
                 @endif

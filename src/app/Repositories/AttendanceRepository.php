@@ -61,7 +61,7 @@ class AttendanceRepository
                 ($id !== AttendanceStatus::DRAFT->value && is_null($attendance['break_in'][$id]) && is_null($attendance['break_out'][$id])) {
                     // 削除
                     BreakTime::find($id)->delete();
-                } else {
+                } elseif (!is_null($attendance['break_in'][$id]) && !is_null($attendance['break_out'][$id])) {
                     // 何かしら入力があるとき
                     BreakTime::updateOrCreate(
                         ['id' => $id,  'attendance_id' => $attendance['attendance_id']],

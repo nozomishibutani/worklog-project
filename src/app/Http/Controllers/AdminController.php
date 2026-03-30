@@ -94,7 +94,7 @@ class AdminController extends Controller
         ];
 
         $breakTimeCount = count($breakTimes);
-        //dd($workDate);
+        //dd($breakTimes);
         return view('admin/show', [
             'userId' => $userId,
             'workTimes' => $workTimes,
@@ -143,7 +143,9 @@ class AdminController extends Controller
 
     public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
     {
-        $attendance = $request->validated();
+        $tmp = $request->validated();
+        $attendance = $request->only('id', 'attendance_id', 'year', 'month', 'day');
+        $attendance = array_merge($attendance, $tmp);
 
         $result = $this->attendanceUpdateService->updateAttendance($attendance);
         if ($result) {

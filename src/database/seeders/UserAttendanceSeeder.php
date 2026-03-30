@@ -18,26 +18,28 @@ class UserAttendanceSeeder extends Seeder
         $firstAdmin = $admins->first();
         $member = $users->concat([$firstAdmin]);
 
+        $base = Carbon::now()->startOfMonth();
+
         for ($i = 3; $i >= 0; $i--) {
 
-            $month = Carbon::now()->subMonths($i);
+            $month = $base->copy()->subMonths($i);
             $start = $month->copy()->startOfMonth();
             $end = $month->copy()->endOfMonth();
 
             for ($date = $start->copy(); $date <= $end ; $date->addDay()) {
 
-                $date = $date->copy()->startOfDay();
+                $currentDate = $date->copy()->startOfDay();
 
                 foreach ($member as $user) {
 
                     $note = null;
-                    $isToday = $date->isToday();
+                    $isToday = $currentDate->isToday();
 
-                    if ($date->isFuture()) {
+                    if ($currentDate->isFuture()) {
                         continue;
                     }
 
-                    if ($date->isWeekend()) {
+                    if ($currentDate->isWeekend()) {
                         if (rand(1, 100) <= 80) {
                             continue;
                         }
@@ -60,17 +62,17 @@ class UserAttendanceSeeder extends Seeder
                                                             ->minute(rand(0, 3) * 15)
                                                             ->second(0);
                     } elseif ($type === 'partTime') {
-                        $clockIn = $date->copy()->setTime(14, rand(0, 3) * 15);
-                        $clockOut = $date->copy()->setTime(16, rand(0, 3) * 15);
+                        $clockIn = $currentDate->setTime(14, rand(0, 3) * 15);
+                        $clockOut = $currentDate->setTime(16, rand(0, 3) * 15);
                     } elseif ($type === 'normal') {
-                        $clockIn = $date->copy()->setTime(rand(8, 10), rand(0, 3) * 15);
-                        $clockOut = $date->copy()->setTime(rand(17, 19), rand(0, 3) * 15);
+                        $clockIn = $currentDate->setTime(rand(8, 10), rand(0, 3) * 15);
+                        $clockOut = $currentDate->setTime(rand(17, 19), rand(0, 3) * 15);
                     } elseif ($type === 'late') {
-                        $clockIn = $date->copy()->setTime(rand(10, 11), rand(0, 3) * 15);
-                        $clockOut = $date->copy()->setTime(rand(19, 20), rand(0, 3) * 15);
+                        $clockIn = $currentDate->setTime(rand(10, 11), rand(0, 3) * 15);
+                        $clockOut = $currentDate->setTime(rand(19, 20), rand(0, 3) * 15);
                     } elseif ($type === 'early') {
-                        $clockIn = $date->copy()->setTime(rand(6, 8), rand(0, 3) * 15);
-                        $clockOut = $date->copy()->setTime(rand(15, 17), rand(0, 3) * 15);
+                        $clockIn = $currentDate->setTime(rand(6, 8), rand(0, 3) * 15);
+                        $clockOut = $currentDate->setTime(rand(15, 17), rand(0, 3) * 15);
                     }
 
                     // ===== 打刻忘れ =====
@@ -102,7 +104,7 @@ class UserAttendanceSeeder extends Seeder
                     }
 
                     // ===== 承認処理 =====
-                    $approved = $isCorrection && rand(1, 100) <= 70;
+                    $approved = $isCorrection && rand(1, 100) <= 60;
                     $admin = null;
                     if ($approved) {
                         if ($user->role == Role::ADMIN) {
@@ -119,7 +121,7 @@ class UserAttendanceSeeder extends Seeder
                             // 今月の場合の承認は本日
                             $approvedAt = Carbon::now();
                         } else {
-                            $approvedAt = $date->copy()->addDays(rand(2, 4));
+                            $approvedAt = $currentDate->copy()->addDays(rand(2, 4));
                         }
                         $updatedAt = $approvedAt;
                     } elseif (!$approved && $isCorrection) {
@@ -137,7 +139,7 @@ class UserAttendanceSeeder extends Seeder
 
                     Attendance::create([
                         'user_id' => $user->id,
-                        'work_date' => $date->toDateString(),
+                        'work_date' => $currentDate->toDateString(),
                         'clock_in' => $clockIn,
                         'clock_out' => $clockOut,
                         'created_by' => $user->id,

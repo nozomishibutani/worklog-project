@@ -160,26 +160,23 @@ class AttendanceCalculatorService
                 'note' =>  $attendances->note,
                 'status' =>  $attendances->status,
                 ];
+        $workTimes = array_merge($workTimes, $tmp);
 
         // ---  休憩時間 ---
-        $index = 1;
         foreach ($attendances->breakTimes as $breakTime) {
             $clockIn  = $breakTime->clock_in ? Carbon::parse($breakTime->clock_in) : null;
             $clockOut = $breakTime->clock_out ? Carbon::parse($breakTime->clock_out) : null;
-            $breakTimes[$index] = [
+            $breakTimes[] = [
                 'id' => $breakTime->id,
                 'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
             ];
-            $index++;
         }
-        $workTimes = array_merge($workTimes, $tmp);
+        $sorted = collect($breakTimes)->sortBy('clock_in')->values()->all();
 
-        // --- 整形 ---
-        ksort($breakTimes);
         return [
             'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
+            'breakTimes' => $sorted,
         ];
     }
 
