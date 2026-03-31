@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
 use App\Enums\AttendanceStatus;
-use App\Http\Requests\AttendanceRequest;
+use App\Models\AttendanceRequest;
 
 class AdminController extends Controller
 {
@@ -131,14 +131,28 @@ class AdminController extends Controller
                     ->with('alert-type', 'alert-error');
     }
 
-    public function showApplication()
+
+    public function applicationIndex(Request $request)
     {
-        $pending = Attendance::where('status', AttendanceStatus::PENDING)->get();
-        $approved = Attendance::where('status', AttendanceStatus::APPROVED)->get();
+        // 承認待ち
 
-        return view('admin/application_index', compact($pending, $approved));
+        $tab = $request->query('tab');
+        switch ($tab) {
+            case AttendanceStatus::PENDING->value:
+                $applications = AttendanceRequest::with('attendance.user')->where('status', AttendanceStatus::PENDING->value)->get();
+                //dd($attendances);
+                break;
+            case AttendanceStatus::APPROVED->value:
+                $applications = AttendanceRequest::with('attendance.user')->where('status', AttendanceStatus::APPROVED->value)->get();
+                //dd($attendances);
+                break;
+            default:
+                $applications = null;
+                break;
+        }
+
+        return view('admin/application_index', compact('applications'));
     }
-
     /**
      * 承認済み勤怠を取得
      */

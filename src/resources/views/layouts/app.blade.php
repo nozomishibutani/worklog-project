@@ -28,7 +28,7 @@
                             <a href="{{ route('admin.user.index') }}" class="link header__link">スタッフ一覧</a>
                         </li>
                         <li class="header__item">
-                            <a href="" class="link header__link">申請一覧</a>
+                            <a href="{{ route('application.index') }}" class="link header__link">申請一覧</a>
                         </li>
                         <li class="header__item">
                             <form class="header__form" action="{{ route('admin.logout') }}" method="POST">
@@ -52,7 +52,7 @@
                             <a href="" class="link header__link">勤怠一覧</a>
                         </li>
                         <li class="header__item">
-                            <a href="" class="link header__link">申請</a>
+                            <a href="{{ route('application.index') }}" class="link header__link">申請</a>
                         </li>
                         <li class="header__item">
                         <li class="header__item">

@@ -3,10 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CommonController;
 use App\Http\Controllers\AdminAuthenticatedSessionController;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Middleware\SetGuard;
+
 
 // =====================
 // admin
@@ -42,6 +43,24 @@ Route::prefix('admin')
         Route::post('/attendance/update', [AdminController::class, 'update'])
                             ->name('admin.update');
     });
+
+// =====================
+// userとadmin 共有
+// =====================
+
+Route::middleware('auth:web')
+->group(function () {
+    Route::get('/stamp_correction_request/list', [UserController::class, 'applicationIndex'])
+                                        ->name('application.index');
+});
+
+Route::middleware('auth:admin')
+->group(function () {
+    Route::get('/stamp_correction_request/list', [AdminController::class, 'applicationIndex'])
+                                        ->name('application.index');
+});
+
+
 
 
 // =====================

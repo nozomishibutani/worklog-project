@@ -9,24 +9,22 @@
 @endsection
 
 @section('content')
-    <div class="admin">
+    <div class="application">
         <h1>申請一覧</h1>
         <div>
             <nav class="">
                 <ul class="">
                     <li class="">
+                        <a class=""
+                            href="{{ route('application.index', ['tab' => App\Enums\AttendanceStatus::PENDING->value]) }}">承認待ち</a>
+                    </li>
                     <li class="">
-                        <a class="" href="{{ route('admin.pending') }}">承認待ち</a>
-                    </li>
-                    </li>
-                    <li class="">
-                        <a class="" href="{{ route('admin.approved') }}">承認済み</a>
-                    </li>
+                        <a class=""
+                            href="{{ route('application.index', ['tab' => App\Enums\AttendanceStatus::APPROVED->value]) }}">承認済み</a>
                     </li>
                 </ul>
             </nav>
         </div>
-
         <table class="admin__table">
             <tr class="admin__row">
                 <th class="admin__label">状態</th>
@@ -36,20 +34,22 @@
                 <th class="admin__label">申請日時</th>
                 <th class="admin__label">詳細</th>
             </tr>
-            @foreach ($workTimes as $userId => $time)
-                <tr class="admin__row">
-                    <td class="admin__data">{{ $time['name'] }}</td>
-                    <td class="admin__data">{{ $time['name'] }}</td>
-                    <td class="admin__data">{{ $time['work_date'] }}</td>
-                    <td class="admin__data">{{ $time['note'] }}</td>
-                    <td class="admin__data">{{ $time[''] }}</td>
-                    <td class="admin__data">
-                        <a class="admin__detail-btn"
-                            href="{{ route('admin.session', ['id' => $userId, 'date' => $date['detail']]) }}">詳細
-                        </a>
-                    </td>
-                </tr>
-            @endforeach
+            @if (!empty($applications))
+                @foreach ($applications as $id => $application)
+                    <tr class="admin__row">
+                        <td class="admin__data">{{ $application->status }}</td>
+                        <td class="admin__data">{{ $application->attendance->user->name }}</td>
+                        <td class="admin__data">{{ $application->attendance->work_date }}</td>
+                        <td class="admin__data">{{ $application->note }}</td>
+                        <td class="admin__data">{{ $application->applied_at }}</td>
+                        <td class="admin__data">
+                            <a class="admin__detail-btn"
+                                href="{{ route('admin.show', ['id' => $application->attendance->id]) }}">詳細
+                            </a>
+                        </td>
+                    </tr>
+                @endforeach
+            @endif
         </table>
-    </div><!-- admin-->
+    </div><!-- application -->
 @endsection
