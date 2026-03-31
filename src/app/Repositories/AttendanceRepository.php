@@ -6,7 +6,7 @@ use App\Models\Attendance;
 use App\Models\User;
 use App\Models\BreakTime;
 use App\Enums\AttendanceStatus;
-use App\Models\AttendanceRequest;
+use App\Models\AttendanceApplication;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +46,7 @@ class AttendanceRepository
                             ->get();
     }
 
-    public function updateAttendance(array $attendance, array $formatCarbonDate, $targetAttendance): AttendanceRequest
+    public function updateAttendance(array $attendance, array $formatCarbonDate, $targetAttendance): AttendanceApplication
     {
         return DB::transaction(function () use ($attendance, $formatCarbonDate, $targetAttendance) {
 
@@ -85,7 +85,7 @@ class AttendanceRepository
                 }
             }
             // 承認
-            return AttendanceRequest::create([
+            return AttendanceApplication::create([
                     'attendance_id' => $targetAttendance->id,
                     'applied_by'    => Auth::id(),
                     'applied_at'    => now(),

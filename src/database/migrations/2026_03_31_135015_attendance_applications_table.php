@@ -10,7 +10,7 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        Schema::create('attendance_requests', function (Blueprint $table) {
+        Schema::create('attendance_applications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('attendance_id')->constrained();
             $table->foreignId('applied_by')->nullable()->constrained('users');

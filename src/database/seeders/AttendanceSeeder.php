@@ -18,7 +18,7 @@ class AttendanceSeeder extends Seeder
 
         $base = Carbon::now()->startOfMonth();
 
-        for ($i = 6; $i >= 0; $i--) {
+        for ($i = 3; $i >= 0; $i--) {
 
             $month = $base->copy()->subMonths($i);
             $start = $month->copy()->startOfMonth();

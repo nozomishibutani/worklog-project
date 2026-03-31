@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
 use App\Enums\AttendanceStatus;
-use App\Models\AttendanceRequest;
+use App\Models\AttendanceApplication;
 
 class AdminController extends Controller
 {
@@ -112,7 +112,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
+    public function update(AttendanceApplication $request): \Illuminate\Http\RedirectResponse
     {
         $tmp = $request->validated();
         $attendance = $request->only('user_id', 'attendance_id', 'year', 'month', 'day');
@@ -139,11 +139,11 @@ class AdminController extends Controller
         $tab = $request->query('tab');
         switch ($tab) {
             case AttendanceStatus::PENDING->value:
-                $applications = AttendanceRequest::with('attendance.user')->where('status', AttendanceStatus::PENDING->value)->get();
+                $applications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::PENDING->value)->get();
                 //dd($attendances);
                 break;
             case AttendanceStatus::APPROVED->value:
-                $applications = AttendanceRequest::with('attendance.user')->where('status', AttendanceStatus::APPROVED->value)->get();
+                $applications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::APPROVED->value)->get();
                 //dd($attendances);
                 break;
             default:

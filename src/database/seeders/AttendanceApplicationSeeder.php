@@ -8,9 +8,9 @@ use App\Enums\AttendanceStatus;
 use App\Enums\Role;
 use App\Models\BreakTime;
 use Illuminate\Database\Seeder;
-use App\Models\AttendanceRequest;
+use App\Models\AttendanceApplication;
 
-class AttendanceRequestSeeder extends Seeder
+class AttendanceApplicationSeeder extends Seeder
 {
     public function run(): void
     {
@@ -33,7 +33,7 @@ class AttendanceRequestSeeder extends Seeder
             }
 
             // ===== 修正処理 =====
-            $isCorrection =  rand(1, 100) <= 50;
+            $isCorrection =  rand(1, 100) <= 10;
 
             if ($isCorrection) {
                 if (rand(1, 100) <= 80) {
@@ -89,7 +89,7 @@ class AttendanceRequestSeeder extends Seeder
 
             $appliedAt = $clockOut->copy()->addHour(1);
 
-            AttendanceRequest::create([
+            AttendanceApplication::create([
                 'attendance_id' => $attendance->id,
                 'applied_by' => $appliedBy,
                 'applied_at' => $appliedAt,
