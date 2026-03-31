@@ -6,6 +6,8 @@ use Illuminate\Database\Seeder;
 use App\Models\Attendance;
 use App\Models\BreakTime;
 
+use function Symfony\Component\Clock\now;
+
 class BreakTimeSeeder extends Seeder
 {
     public function run(): void
@@ -95,18 +97,12 @@ class BreakTimeSeeder extends Seeder
              */
             foreach ($breaks as $break) {
 
-                // ==== 修正 ====
-                $updatedAt = $break['end'];
-                if ($attendance->corrected_by) {
-                    $updatedAt = $attendance->updated_at;
-                }
-
                 BreakTime::create([
                     'attendance_id'  => $attendance->id,
                     'clock_in'       => $break['start'],
                     'clock_out'      => $break['end'],
                     'created_at'     => $break['start'],
-                    'updated_at'     => $updatedAt,
+                    'updated_at'     => $break['end'],
                 ]);
             }
         }

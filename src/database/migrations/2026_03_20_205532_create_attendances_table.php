@@ -18,15 +18,7 @@ return new class () extends Migration {
             $table->dateTime('clock_in')->nullable();
             $table->dateTime('clock_out')->nullable();
             $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('corrected_by')->nullable()->constrained('users');
-            $table->dateTime('corrected_at')->nullable();
-            $table->foreignId('approved_by')->nullable()->constrained('users');
-            $table->dateTime('approved_at')->nullable();
-            $table->string('note', 255)->nullable();
-            $table->string('status', 10)->default('draft')
-                ->comment('draft=登録漏れ, completed= 登録完了, pending=承認待ち, approved=承認済み');
             $table->timestamps();
-            $table->index('status');
                 });
     }
 

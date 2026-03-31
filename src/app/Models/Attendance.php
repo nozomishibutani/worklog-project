@@ -12,12 +12,6 @@ class Attendance extends Model
         'clock_in',
         'clock_out',
         'created_by',
-        'corrected_by',
-        'corrected_at',
-        'approved_by',
-        'approved_at',
-        'note',
-        'status',
     ];
 
     // DBから取った値を Carbon に変換する
@@ -39,6 +33,11 @@ class Attendance extends Model
 
     public function breakTimes()
     {
-        return $this->hasMany(BreakTime::class,'attendance_id', 'id');
+        return $this->hasMany(BreakTime::class);
+    }
+
+    public function attendanceRequests()
+    {
+        return $this->hasOne(AttendanceRequest::class);
     }
 }
