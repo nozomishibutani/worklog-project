@@ -1,0 +1,60 @@
+.auth {
+    width: 50%;
+    margin: 0 auto;
+    padding-bottom: 3.5rem;
+}
+
+.auth-ttl{
+    text-align: center;
+}
+.auth__list {
+    margin-bottom: 3rem;
+    padding-left: 0;
+}
+
+.auth__item {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    /* 縦に並べる */
+    margin-bottom: 2.5px;
+}
+
+.auth__label {
+    font-weight: 600;
+    margin-top: 1.5rem;
+}
+
+.auth__form-input {
+    height: 40px;
+    border: solid 1px rgb(195, 195, 199);
+    outline: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.auth__link-box {
+    margin: 2.5rem 0;
+    text-align: center;
+}
+
+.auth__link,
+.auth__btn {
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.auth__btn {
+    width: 100%;
+    color: white;
+    border: none;
+    background-color: black;
+    padding: 0.7rem 0;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.auth__link {
+    color: rgb(3, 105, 238);
+}

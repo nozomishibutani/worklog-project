@@ -1,0 +1,120 @@
+/* ===============================
+    Base Layout
+================================ */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* ===============================
+    header
+================================ */
+header {
+    background-color: black;
+    /* 背景色は画面いっぱいに */
+}
+
+.header__container {
+    max-width: 1540px;
+    /* PC (1400-1540px) で崩れない */
+    width: 100%;
+    margin-bottom: 4rem;
+    padding: 0;
+    display: flex;
+}
+
+.header__logo,
+.header__list {
+    margin: 1rem;
+    flex: 3;
+}
+
+.header__logo {
+    margin-left: 1.5rem;
+}
+
+.header__logo img {
+    width: 400px;
+    /* 画面サイズが変わっても固定 */
+    height: auto;
+}
+
+.header__list {
+    list-style: none;
+    display: flex;
+    margin-top: 1.7rem;
+    margin-right: 1.5rem;
+    gap: 1rem;
+}
+
+.header__item {
+    display: flex;
+    align-items: center;
+}
+
+.header__btn {
+    background: black;
+    color: white;
+    font-size: 1rem;
+    border: none;
+}
+
+.header__link {
+    color: white;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+/* ===============================
+    main
+================================ */
+
+.main__container {
+    max-width: 1540px;
+    /* PC (1400-1540px) で崩れない */
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}
+.btn{
+    padding: 0;
+}
+
+.btn:hover {
+    background-color: rgb(54, 53, 53);
+}
+
+.link{
+    padding: 0;
+}
+
+.alert {
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.alert__list{
+    list-style: none;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}

@@ -23,7 +23,7 @@
     <main>
         <div class="main__container">
             <div class="auth">
-                <h1 class="auth-ttl">ログイン</h1>
+                <h1 class="auth-ttl">会員登録</h1>
                 @if ($errors->any())
                     <div class="alert alert-error">
                         <ul class="alert__list">
@@ -33,9 +33,14 @@
                         </ul>
                     </div>
                 @endif
-                <form class="form" action="/login" method="post" novalidate>
+                <form class="form" action="/register" method="post" novalidate>
                     @csrf
                     <ul class="auth__list">
+                        <li class="auth__item">
+                            <label class="auth__label" for="name">名前</label>
+                            <input class="auth__form-input" type="text" name="name" value="{{ old('name') }}" />
+                        </li>
+
                         <li class="auth__item">
                             <label class="auth__label" for="email">メールアドレス</label>
                             <input class="auth__form-input" type="email" name="email" id="email"
@@ -44,15 +49,20 @@
 
                         <li class="auth__item">
                             <label class="auth__label" for="password">パスワード</label>
-                            <input class="auth__form-input" type="password" name="password" name="password"
-                                id="password" />
+                            <input class="auth__form-input" type="password" name="password" id="password" />
+                        </li>
+
+                        <li class="auth__item">
+                            <label class="auth__label" for="password_confirmation">パスワード確認</label>
+                            <input class="auth__form-input" type="password" name="password_confirmation"
+                                id="password_confirmation" />
                         </li>
                     </ul>
-                    <button class="btn auth__btn">ログインする</button>
+                    <button class="btn auth__btn">登録する</button>
                 </form>
 
                 <div class="auth__link-box">
-                    <a class="auth__link" href="/register">会員登録はこちら</a>
+                    <a class="auth__link" href="/login">ログインはこちら</a>
                 </div>
             </div><!-- auth -->
         </div><!-- main__container -->
