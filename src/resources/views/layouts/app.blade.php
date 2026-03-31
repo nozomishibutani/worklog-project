@@ -34,7 +34,7 @@
                             <form class="header__form" action="{{ route('admin.logout') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="from" value="{{ App\Enums\Role::ADMIN->value }}">
-                                <button class="brn header__btn">ログアウト</button>
+                                <button class="btn header__btn">ログアウト</button>
                             </form>
                         </li>
                     </ul>

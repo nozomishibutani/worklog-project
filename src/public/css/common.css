@@ -86,15 +86,14 @@ header {
     margin: 0 auto;
     padding: 0;
 }
+
 .btn{
+    cursor: pointer;
     padding: 0;
 }
 
-.btn:hover {
-    background-color: rgb(54, 53, 53);
-}
-
 .link{
+    cursor: pointer;
     padding: 0;
 }
 

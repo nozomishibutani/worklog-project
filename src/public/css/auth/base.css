@@ -41,7 +41,6 @@
 .auth__link,
 .auth__btn {
     font-size: 1rem;
-    cursor: pointer;
     text-decoration: none;
 }
 
@@ -53,6 +52,10 @@
     padding: 0.7rem 0;
     border-radius: 4px;
     font-weight: bold;
+}
+
+.auth__btn:hover {
+    background-color: rgb(54, 53, 53);
 }
 
 .auth__link {
