@@ -157,7 +157,7 @@ class AttendanceFormatterService
             $work = $workTimes[$key] ?? $this->formatTime(null);
 
             $result[$key] = array_merge(
-                ['clock_in' => null, 'clock_out' => null],
+                ['attendance_id' => null, 'clock_in' => null, 'clock_out' => null],
                 $work,
                 ['display_date' => $formatDate]
             );

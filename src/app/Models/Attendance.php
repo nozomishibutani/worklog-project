@@ -16,6 +16,7 @@ class Attendance extends Model
 
     // DBから取った値を Carbon に変換する
     protected $casts = [
+    'work_date' => 'datetime',
     'clock_in' => 'datetime',
     'clock_out' => 'datetime',
     'approved_at' => 'datetime',

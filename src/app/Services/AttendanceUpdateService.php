@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Repositories\AttendanceRepository;
 use App\Services\AttendanceFormatterService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
+use App\Models\AttendanceRequest;
 use App\Models\Attendance;
 
 class AttendanceUpdateService
@@ -19,7 +19,7 @@ class AttendanceUpdateService
         $this->attendanceRepository = $attendanceRepository;
     }
 
-    public function updateAttendance(array $attendance): Attendance|\Illuminate\Http\RedirectResponse
+    public function updateAttendance(array $attendance): AttendanceRequest|\Illuminate\Http\RedirectResponse
     {
         //try {
             if (!$attendance) {

@@ -43,6 +43,7 @@ class AttendanceCalculatorService
             // 勤怠なし
             if (!$attendance) {
                 $workTimes[$userId] = [
+                    'attendance_id' => null,
                     'name'      => $user->name,
                     'clock_in'  => null,
                     'clock_out' => null,
@@ -62,6 +63,7 @@ class AttendanceCalculatorService
 
             // --- base ---
             $baseList[$userId] = [
+                'attendance_id' => $attendance->id,
                 'name'      => $user->name,
                 'clock_in'  => $clockIn->format('H:i'),
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
@@ -127,9 +129,9 @@ class AttendanceCalculatorService
     /**
      * 指定ユーザーの日時勤怠詳細を取得
      */
-    public function getUserDailyAttendance($userId, $date): array
+    public function getUserDailyAttendance($attendanceId, $userId = null, $date = null): array
     {
-        $attendances = $this->attendanceRepository->getUserDailyAttendance($userId, $date);
+        $attendance = $this->attendanceRepository->getUserDailyAttendance($attendanceId);
 
         $workTimes = [
             'attendanceId' => null,
@@ -140,30 +142,47 @@ class AttendanceCalculatorService
         ];
         $breakTimes = [];
 
-        if (!$attendances) {
+        if (is_null($attendance)) {
             $user = User::find($userId);
+            $workTimes['userId'] = $user->id;
             $workTimes['name'] = $user->name;
+            $date = Carbon::createFromFormat('Ymd', $date);
+            $workDate = [
+                        'year'  => $date->year,
+                        'month' => $date->month,
+                        'day'   => $date->day,
+                    ];
+
             return [
                 'workTimes' => $workTimes,
                 'breakTimes' => $breakTimes,
+                'workDate' => $workDate,
             ];
         }
 
         // ---  労働時間 ---
-        $clockIn  = $attendances->clock_in ? Carbon::parse($attendances->clock_in) : null;
-        $clockOut = $attendances->clock_out ? Carbon::parse($attendances->clock_out) : null;
+        $clockIn  = $attendance->clock_in ? Carbon::parse($attendance->clock_in) : null;
+        $clockOut = $attendance->clock_out ? Carbon::parse($attendance->clock_out) : null;
+        $date = $attendance->work_date;
+        $workDate = [
+                        'year'  => $date->year,
+                        'month' => $date->month,
+                        'day'   => $date->day,
+                    ];
+
         $tmp = [
-                'attendanceId' => $attendances->id,
-                'name' => $attendances->user->name,
+                'attendanceId' => $attendance->id,
+                'userId' => $attendance->user_id,
+                'name' => $attendance->user->name,
                 'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
-                'note' =>  $attendances->note,
-                'status' =>  $attendances->status,
+                'note' =>  $attendance->attendanceRequests?->note,
+                'status' =>  $attendance->attendanceRequests?->status,
                 ];
         $workTimes = array_merge($workTimes, $tmp);
 
         // ---  休憩時間 ---
-        foreach ($attendances->breakTimes as $breakTime) {
+        foreach ($attendance->breakTimes as $breakTime) {
             $clockIn  = $breakTime->clock_in ? Carbon::parse($breakTime->clock_in) : null;
             $clockOut = $breakTime->clock_out ? Carbon::parse($breakTime->clock_out) : null;
             $breakTimes[] = [
@@ -175,8 +194,10 @@ class AttendanceCalculatorService
         $sorted = collect($breakTimes)->sortBy('clock_in')->values()->all();
 
         return [
+            'userId' => $attendance->user_id,
             'workTimes' => $workTimes,
             'breakTimes' => $sorted,
+            'workDate' => $workDate,
         ];
     }
 
@@ -188,8 +209,7 @@ class AttendanceCalculatorService
         $start = $startOfMonth;
         $end   = $startOfMonth->copy()->endOfMonth();
 
-        $attendances = $this->attendanceRepository
-            ->getUserMonthlyAttendances($userId, $start, $end);
+        $attendances = $this->attendanceRepository->getUserMonthlyAttendances($userId, $start, $end);
 
         $workTimes = [];
         $breakTimes = [];
@@ -219,6 +239,7 @@ class AttendanceCalculatorService
 
             // --- base ---
             $baseList[$key] = [
+                'attendance_id' => $attendance->id,
                 'clock_in'  => $clockIn->format('H:i'),
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
             ];
@@ -257,7 +278,7 @@ class AttendanceCalculatorService
             }
         }
 
-        // --- 整形（ここが超重要） ---
+        // --- 整形 ---
         foreach ($baseList as $key => $base) {
 
             [$workTimes[$key], $breakTimes[$key]] =

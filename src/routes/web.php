@@ -30,7 +30,7 @@ Route::prefix('admin')
                     ->name('admin.index');
         Route::post('/logout', [AdminAuthenticatedSessionController::class, 'destroy'])
                     ->name('admin.logout');
-        Route::get('/attendance/{id}', [AdminController::class, 'show'])
+        Route::get('/attendance/{id?}', [AdminController::class, 'show'])
                     ->name('admin.show');
         Route::get('/staff/list', [AdminController::class, 'userIndex'])
                     ->name('admin.user.index');
@@ -41,10 +41,6 @@ Route::prefix('admin')
                     ->name('admin.session');
         Route::post('/attendance/update', [AdminController::class, 'update'])
                             ->name('admin.update');
-
-
-
-
     });
 
 

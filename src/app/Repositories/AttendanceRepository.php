@@ -6,7 +6,7 @@ use App\Models\Attendance;
 use App\Models\User;
 use App\Models\BreakTime;
 use App\Enums\AttendanceStatus;
-use Carbon\Carbon;
+use App\Models\AttendanceRequest;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,10 +18,6 @@ class AttendanceRepository
      */
     public function getAllUserDailyAttendances($date): Collection
     {
-        // return Attendance::with(['user', 'breakTimes'])
-        //                     ->where('work_date', $date)
-        //                     ->get();
-
         return User::select('id', 'name')->with([
             'attendances' => function ($query) use ($date) {
                 $query->whereDate('work_date', $date);
@@ -33,12 +29,10 @@ class AttendanceRepository
     /**
      * 特定日のユーザーの勤怠を取得
      */
-    public function getUserDailyAttendance($userId, $date)
+    public function getUserDailyAttendance($attendanceId)
     {
-        return Attendance::with(['user', 'breakTimes'])
-                            ->where('user_id', $userId)
-                            ->where('work_date', $date)
-                            ->first();
+        return Attendance::with(['user', 'breakTimes', 'attendanceRequests'])->find($attendanceId);
+
     }
 
     /**
@@ -52,7 +46,7 @@ class AttendanceRepository
                             ->get();
     }
 
-    public function updateAttendance(array $attendance, array $formatCarbonDate, $targetAttendance): Attendance
+    public function updateAttendance(array $attendance, array $formatCarbonDate, $targetAttendance): AttendanceRequest
     {
         return DB::transaction(function () use ($attendance, $formatCarbonDate, $targetAttendance) {
 
@@ -65,24 +59,12 @@ class AttendanceRepository
                     'created_by'   => Auth::id(),
                     'clock_in'     => $formatCarbonDate['work_in'],
                     'clock_out'    => $formatCarbonDate['work_out'],
-                    'note'         => $attendance['note'],
-                    'corrected_by' => Auth::id(),
-                    'corrected_at' => now(),
-                    'approved_by'  => Auth::id(),
-                    'approved_at'  => now(),
-                    'status'       => AttendanceStatus::APPROVED->value,
                 ]);
 
             } else {
                 // 更新
                 $targetAttendance->clock_in = $formatCarbonDate['work_in'];
                 $targetAttendance->clock_out = $formatCarbonDate['work_out'];
-                $targetAttendance->note = $attendance['note'];
-                $targetAttendance->corrected_by = Auth::id();
-                $targetAttendance->corrected_at = now();
-                $targetAttendance->approved_by = Auth::id();
-                $targetAttendance->approved_at =  now();
-                $targetAttendance->status =  AttendanceStatus::APPROVED->value;
                 $targetAttendance->save();
             }
 
@@ -102,7 +84,16 @@ class AttendanceRepository
                     );
                 }
             }
-            return $targetAttendance;
+            // 承認
+            return AttendanceRequest::create([
+                    'attendance_id' => $targetAttendance->id,
+                    'applied_by'    => Auth::id(),
+                    'applied_at'    => now(),
+                    'approved_by'  => Auth::id(),
+                    'approved_at'  => now(),
+                    'note'         => $attendance['note'],
+                    'status'       => AttendanceStatus::APPROVED->value,
+                ]);
         });
     }
 }

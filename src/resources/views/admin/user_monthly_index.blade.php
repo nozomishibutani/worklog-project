@@ -46,9 +46,15 @@
                     <td class="admin__data">{{ $breakTimes[$workDate]['display_total'] ?? null }}</td>
                     <td class="admin__data">{{ $value['display_total'] }}</td>
                     <td class="admin__data">
-                        <a class="admin__detail-btn"
-                            href="{{ route('admin.session', ['id' => $userId, 'date' => $workDate]) }}">詳細
-                        </a>
+                        @if (is_null($value['attendance_id']))
+                            <a class="admin__detail-btn"
+                                href="{{ route('admin.show', ['id' => '', 'user_id' => $userId, 'date' => $workDate]) }}">詳細
+                            </a>
+                        @else
+                            <a class="admin__detail-btn"
+                                href="{{ route('admin.show', ['id' => $value['attendance_id']]) }}">詳細
+                            </a>
+                        @endif
                     </td>
                 </tr>
             @endforeach

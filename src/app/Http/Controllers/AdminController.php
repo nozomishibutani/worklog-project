@@ -28,21 +28,6 @@ class AdminController extends Controller
         $this->attendanceUpdateService = $attendanceUpdateService;
         //$this->approvalService = $approvalService;
     }
-    public function clearSession()
-    {
-        // 隠しセッション削除ボタン
-        if (session()->has('admin_' . TYPE::DAILY->value)) {
-            session()->forget('admin_' . TYPE::DAILY->value);
-        }
-        if (session()->has('admin_' . TYPE::MONTHLY->value)) {
-            session()->forget('admin_' . TYPE::MONTHLY->value);
-        }
-
-        if (session()->has('admin_' . TYPE::PERSONALLY->value)) {
-            session()->forget('admin_' . TYPE::PERSONALLY->value);
-        }
-        return back();
-    }
 
     public function index(Request $request): \Illuminate\View\View
     {
@@ -73,32 +58,21 @@ class AdminController extends Controller
         ]);
     }
 
-    public function show($userId): \Illuminate\View\View
+    public function show(Request $request, $attendanceId = null): \Illuminate\View\View
     {
-        // sessionを受け取る
-        $date = session('admin_date');
-        $date = Carbon::parse($date);
+        $userId = $request->query('user_id');
+        $date =  $request->query('date');
 
         [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
+            'workDate' => $workDate,
         ]
-        = $this->attendanceCalculatorService->getUserDailyAttendance($userId, $date);
-
-        $workDate = [
-            'year'  => $date->year,
-            'month' => $date->month,
-            'day'   => $date->day,
-        ];
-
-        $breakTimeCount = count($breakTimes);
-        //dd($breakTimes);
+        = $this->attendanceCalculatorService->getUserDailyAttendance($attendanceId, $userId, $date);
         return view('admin/show', [
-            'userId' => $userId,
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
-            'breakTimeCount' => $breakTimeCount,
         ]);
     }
 
@@ -147,7 +121,7 @@ class AdminController extends Controller
         $result = $this->attendanceUpdateService->updateAttendance($attendance);
         if ($result) {
 
-            return redirect()->route('admin.show', ['id' => $result->user_id])
+            return redirect()->route('admin.show', ['id' => $result->attendance_id])
                             ->with('alert', '勤怠情報を修正しました')
                             ->with('alert-type', 'alert-success');
         }
@@ -162,7 +136,7 @@ class AdminController extends Controller
         $pending = Attendance::where('status', AttendanceStatus::PENDING)->get();
         $approved = Attendance::where('status', AttendanceStatus::APPROVED)->get();
 
-        return view('admin/application_index', compact($pending,$approved));
+        return view('admin/application_index', compact($pending, $approved));
     }
 
     /**
@@ -181,16 +155,16 @@ class AdminController extends Controller
      * @param int|null $userId ユーザーid
      * @return @return \Illuminate\Http\RedirectResponse
      */
-    public function setSession($userId, $date): \Illuminate\Http\RedirectResponse
-    {
-        if (!$userId || !$date) {
-            return redirect()->route('admin.index')
-            ->with('alert', 'システムエラーが発生しました')
-            ->with('alert-type', 'alert-error');
-        }
-        session(['admin_date' => $date]);
+    // public function setSession($userId, $date): \Illuminate\Http\RedirectResponse
+    // {
+    //     if (!$userId || !$date) {
+    //         return redirect()->route('admin.index')
+    //         ->with('alert', 'システムエラーが発生しました')
+    //         ->with('alert-type', 'alert-error');
+    //     }
+    //     session(['admin_date' => $date]);
 
-        return redirect()->route('admin.show', ['id' => $userId]);
-    }
+    //     return redirect()->route('admin.show', ['id' => $userId]);
+    // }
 
 }

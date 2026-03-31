@@ -20,7 +20,7 @@
         <form class="" action="{{ route('admin.update') }}" method="post" novalidate>
             @csrf
             {{-- hidden --}}
-            <input type="hidden" name="user_id" value="{{ $userId }}">
+            <input type="hidden" name="user_id" value="{{ $workTimes['userId'] }}">
             <input type="hidden" name="attendance_id" value="{{ $workTimes['attendanceId'] }}">
             <table class="admin__table">
                 <tr class="admin__row">
@@ -58,7 +58,7 @@
                     @enderror
                 </tr>
                 {{-- 休憩なし --}}
-                @if ($breakTimeCount == 0)
+                @if (count($breakTimes) == 0)
                     <tr class="admin__row">
                         <th class="admin__label">休憩</th>
                         <td class="admin__data">
@@ -81,9 +81,9 @@
                             </td>
                         @enderror
                     </tr>
-                @elseif ($breakTimeCount > 0)
+                @elseif (count($breakTimes) > 0)
                     {{-- 休憩がある場合 --}}
-                    @for ($i = 0; $i < $breakTimeCount; $i++)
+                    @for ($i = 0; $i < count($breakTimes); $i++)
                         <tr class="admin__row">
                             <th class="admin__label">休憩{{ $i > 1 ? $i : '' }}</th>
                             <td class="admin__data">
@@ -108,7 +108,7 @@
                         </tr>
                     @endfor
                     <tr class="admin__row">
-                        <th class="admin__label">休憩{{ $breakTimeCount + 1 }}</th>
+                        <th class="admin__label">休憩{{ count($breakTimes) + 1 }}</th>
                         <td class="admin__data">
                             <input type="time" name="break_in[{{ App\Enums\AttendanceStatus::DRAFT->value }}]"
                                 value="{{ old('break_in.' . App\Enums\AttendanceStatus::DRAFT->value) }}">
@@ -144,7 +144,8 @@
             </table>
             <div class="">
                 @if ($workTimes['status'] == App\Enums\AttendanceStatus::APPROVED->value)
-                    <button class="">承認済み</button>
+                    {{-- <button class="">承認済み</button> --}}
+                    承認済み
                 @elseif($workTimes['status'] == App\Enums\AttendanceStatus::PENDING->value)
                     {{-- <button class="">承認</button> --}}
                     *承認待ちのため修正はできません。
