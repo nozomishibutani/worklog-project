@@ -55,9 +55,9 @@ class AttendanceCalculatorService
             }
 
             $clockIn  = $attendance->clock_in ? Carbon::parse($attendance->clock_in) : null;
-            if (!$clockIn) {
-                continue;
-            }
+            // if (!$clockIn) {
+            //     continue;
+            // }
 
             $clockOut = $attendance->clock_out ? Carbon::parse($attendance->clock_out) : null;
 
@@ -65,7 +65,7 @@ class AttendanceCalculatorService
             $baseList[$userId] = [
                 'attendance_id' => $attendance->id,
                 'name'      => $user->name,
-                'clock_in'  => $clockIn->format('H:i'),
+                'clock_in'  => $clockIn ? $clockIn->format('H:i') : null,
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
             ];
 
@@ -137,8 +137,8 @@ class AttendanceCalculatorService
             'attendanceId' => null,
             'clock_in' => null,
             'clock_out' => null,
-            'note' =>  null,
-            'status' =>  null,
+            //'note' =>  null,
+            //'status' =>  null,
         ];
         $breakTimes = [];
 
@@ -157,6 +157,7 @@ class AttendanceCalculatorService
                 'workTimes' => $workTimes,
                 'breakTimes' => $breakTimes,
                 'workDate' => $workDate,
+                'attendanceApplication' => null,
             ];
         }
 
@@ -176,8 +177,8 @@ class AttendanceCalculatorService
                 'name' => $attendance->user->name,
                 'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
-                'note' =>  $attendance->attendanceRequests?->note,
-                'status' =>  $attendance->attendanceRequests?->status,
+                //'note' =>  $attendance->attendanceRequests?->note,
+                //'status' =>  $attendance->attendanceRequests?->status,
                 ];
         $workTimes = array_merge($workTimes, $tmp);
 
@@ -198,6 +199,7 @@ class AttendanceCalculatorService
             'workTimes' => $workTimes,
             'breakTimes' => $sorted,
             'workDate' => $workDate,
+            'attendanceApplication' => $attendance?->attendanceApplication,
         ];
     }
 
@@ -233,14 +235,14 @@ class AttendanceCalculatorService
             $clockIn  = $attendance->clock_in ? Carbon::parse($attendance->clock_in) : null;
             $clockOut = $attendance->clock_out ? Carbon::parse($attendance->clock_out) : null;
 
-            if (!$clockIn) {
-                continue;
-            }
+            // if (!$clockIn) {
+            //     continue;
+            // }
 
             // --- base ---
             $baseList[$key] = [
                 'attendance_id' => $attendance->id,
-                'clock_in'  => $clockIn->format('H:i'),
+                'clock_in'  => $clockIn ? $clockIn->format('H:i') : null,
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
             ];
 

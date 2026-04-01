@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use App\Enums\Type;
 use App\Enums\AttendanceStatus;
 use App\Models\AttendanceApplication;
+use App\Http\Requests\AttendanceRequest;
 
 class AdminController extends Controller
 {
@@ -67,12 +68,15 @@ class AdminController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
+            'attendanceApplication' => $attendanceApplication,
         ]
         = $this->attendanceCalculatorService->getUserDailyAttendance($attendanceId, $userId, $date);
+
         return view('admin/show', [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
+            'attendanceApplication' => $attendanceApplication,
         ]);
     }
 
@@ -87,7 +91,7 @@ class AdminController extends Controller
         $date = $request->query('date');
 
         if ($date) {
-            $startOfMonth = Carbon::createFromFormat('Ymd', $date . '01');
+            $startOfMonth = Carbon::createFromFormat('Ymd', $date . '01')->startOfMonth();
         } else {
             $startOfMonth = carbon::today()->startOfMonth();
         }
@@ -112,7 +116,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function update(AttendanceApplication $request): \Illuminate\Http\RedirectResponse
+    public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
     {
         $tmp = $request->validated();
         $attendance = $request->only('user_id', 'attendance_id', 'year', 'month', 'day');
@@ -135,30 +139,40 @@ class AdminController extends Controller
     public function applicationIndex(Request $request)
     {
         // 承認待ち
-
         $tab = $request->query('tab');
         switch ($tab) {
             case AttendanceStatus::PENDING->value:
-                $applications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::PENDING->value)->get();
-                //dd($attendances);
+                $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::PENDING->value)->get();
                 break;
             case AttendanceStatus::APPROVED->value:
-                $applications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::APPROVED->value)->get();
-                //dd($attendances);
+                $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::APPROVED->value)->get();
                 break;
             default:
-                $applications = null;
+                $attendanceApplications = null;
                 break;
         }
 
-        return view('admin/application_index', compact('applications'));
+        return view('admin/application_index', compact('attendanceApplications'));
     }
-    /**
-     * 承認済み勤怠を取得
-     */
-    public function getApproved(): array
+
+    public function showForApproval($applicationId)
     {
-        return Attendance::where('status', AttendanceStatus::APPROVED)->get();
+        $applicationAttendance = AttendanceApplication::find($applicationId);
+
+        [
+            'workTimes' => $workTimes,
+            'breakTimes' => $breakTimes,
+            'workDate' => $workDate,
+            'attendanceApplication' => $attendanceApplication,
+        ]
+        = $this->attendanceCalculatorService->getUserDailyAttendance($applicationAttendance->attendance_id);
+//dd($attendanceApplication);
+        return view('admin/approve', [
+            'workTimes' => $workTimes,
+            'breakTimes' => $breakTimes,
+            'workDate' => $workDate,
+            'attendanceApplication' => $attendanceApplication,
+        ]);
     }
 
     /**

@@ -63,18 +63,15 @@ class AttendanceRequest extends FormRequest
                 'month' => $this->month,
                 'day' => $this->day,
             ];
-            $carbonWorkIn = $attendanceFormatterService->formatCarbonDate($workDate, $this->work_in);
-            $carbonWorkOut = $attendanceFormatterService->formatCarbonDate($workDate, $this->work_out);
+            $carbonWorkIn = $this->work_in ? $attendanceFormatterService->formatCarbonDate($workDate, $this->work_in) : null;
+            $carbonWorkOut = $this->work_out ? $attendanceFormatterService->formatCarbonDate($workDate, $this->work_out) : null;
 
             // 休憩バリデーション準備
             foreach ($this->break_in as $id => $breakIn) {
-                // if ($id === AttendanceStatus::DRAFT->value && is_null($breakIn)) {
-                //     continue;
-                // }
-                if (is_null($breakIn) && is_null($this->break_out[$id])) {
+                if (is_null($breakIn) || is_null($this->break_out[$id])) {
+                    // どちらか1つでも未入力の場合はバリデーションしない
                     continue;
                 }
-
 
                 $CarbonBreakIn[$id] = $attendanceFormatterService->formatCarbonDate($workDate, $breakIn);
                 $CarbonBreakOut[$id] = $attendanceFormatterService->formatCarbonDate($workDate, $this->break_out[$id]);
@@ -86,7 +83,7 @@ class AttendanceRequest extends FormRequest
             }
 
             // 1. 出勤時間が退勤時間より後になっている場合，および退勤時間が出勤時間より前になっている場合に以下のメッセージを表示
-            if ($carbonWorkIn >= $carbonWorkOut) {
+            if (!is_null($carbonWorkIn) && !is_null($carbonWorkOut) && $carbonWorkIn >= $carbonWorkOut) {
                 if (!$validator->errors()->has('work_in') && !$validator->errors()->has('work_out')) {
                     $validator->errors()->add('work_in', '出勤時間もしくは退勤時間が不適切な値です');
                 }
@@ -100,7 +97,7 @@ class AttendanceRequest extends FormRequest
             ksort($breakTimes);
 
             foreach ($CarbonBreakIn as $id => $breakIn) {
-                if ($id === AttendanceStatus::DRAFT->value && is_null($breakIn)) {
+                if ($id === 0 && is_null($breakIn)) {
                     continue;
                 }
 
@@ -111,7 +108,7 @@ class AttendanceRequest extends FormRequest
 
             // 3.休憩終了時間が退勤時間より後になっている場合、以下のメッセージを表示
             foreach ($CarbonBreakOut as $id => $breakOut) {
-                if ($id === AttendanceStatus::DRAFT->value && is_null($breakIn)) {
+                if ($id === 0 && is_null($breakIn)) {
                     continue;
                 }
                 if ($breakOut >= $carbonWorkOut) {

@@ -14,7 +14,6 @@ class Attendance extends Model
         'created_by',
     ];
 
-    // DBから取った値を Carbon に変換する
     protected $casts = [
     'work_date' => 'datetime',
     'clock_in' => 'datetime',
@@ -37,8 +36,8 @@ class Attendance extends Model
         return $this->hasMany(BreakTime::class);
     }
 
-    public function attendanceRequests()
+    public function attendanceApplication()
     {
-        return $this->hasOne(AttendanceRequest::class);
+        return $this->hasOne(AttendanceApplication::class);
     }
 }

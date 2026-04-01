@@ -8,7 +8,6 @@ use App\Http\Controllers\AdminAuthenticatedSessionController;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 use App\Http\Middleware\SetGuard;
 
-
 // =====================
 // admin
 // =====================
@@ -37,11 +36,11 @@ Route::prefix('admin')
                     ->name('admin.user.index');
         Route::get('/attendance/staff/{id}', [AdminController::class, 'userMonthlyIndex'])
                     ->name('admin.monthly.index');
-        Route::get('/{id}/{date}', [AdminController::class, 'setSession'])
-                    ->where('date', '\d{8}')
-                    ->name('admin.session');
         Route::post('/attendance/update', [AdminController::class, 'update'])
                             ->name('admin.update');
+        Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'showForApproval'])
+                            ->name('admin.approval.show');
+
     });
 
 // =====================

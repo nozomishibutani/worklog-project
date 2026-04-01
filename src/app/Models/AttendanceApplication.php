@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\AttendanceStatus;
 
 class AttendanceApplication extends Model
 {
@@ -20,7 +21,13 @@ class AttendanceApplication extends Model
     protected $casts = [
     'corrected_at' => 'datetime',
     'approved_at' => 'datetime',
+    'status' => \App\Enums\AttendanceStatus::class,
     ];
+
+    public function isApproved(): bool
+    {
+        return $this->status === AttendanceStatus::APPROVED;
+    }
 
     public function attendance()
     {

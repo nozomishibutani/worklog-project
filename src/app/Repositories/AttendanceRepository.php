@@ -31,7 +31,7 @@ class AttendanceRepository
      */
     public function getUserDailyAttendance($attendanceId)
     {
-        return Attendance::with(['user', 'breakTimes', 'attendanceRequests'])->find($attendanceId);
+        return Attendance::with(['user', 'breakTimes', 'attendanceApplication'])->find($attendanceId);
 
     }
 
@@ -46,7 +46,7 @@ class AttendanceRepository
                             ->get();
     }
 
-    public function updateAttendance(array $attendance, array $formatCarbonDate, $targetAttendance): AttendanceApplication
+    public function updateAttendance(array $attendance, array $formatCarbonDate, ?Attendance $targetAttendance): AttendanceApplication
     {
         return DB::transaction(function () use ($attendance, $formatCarbonDate, $targetAttendance) {
 
@@ -70,7 +70,7 @@ class AttendanceRepository
 
             // 休憩
             foreach ($attendance['break_in'] as $id => $breakIn) {
-                if ($id !== AttendanceStatus::DRAFT->value && is_null($attendance['break_in'][$id]) && is_null($attendance['break_out'][$id])) {
+                if ($id !== 0 && is_null($attendance['break_in'][$id]) && is_null($attendance['break_out'][$id])) {
                     // 削除
                     BreakTime::find($id)->delete();
                 } elseif (!is_null($attendance['break_in'][$id]) && !is_null($attendance['break_out'][$id])) {
@@ -92,7 +92,7 @@ class AttendanceRepository
                     'approved_by'  => Auth::id(),
                     'approved_at'  => now(),
                     'note'         => $attendance['note'],
-                    'status'       => AttendanceStatus::APPROVED->value,
+                    'status'       => AttendanceStatus::APPROVED,
                 ]);
         });
     }

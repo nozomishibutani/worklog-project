@@ -34,8 +34,8 @@
                 <th class="admin__label">申請日時</th>
                 <th class="admin__label">詳細</th>
             </tr>
-            @if (!empty($applications))
-                @foreach ($applications as $id => $application)
+            @if (!empty($attendanceApplications))
+                @foreach ($attendanceApplications as $id => $application)
                     <tr class="admin__row">
                         <td class="admin__data">{{ $application->status }}</td>
                         <td class="admin__data">{{ $application->attendance->user->name }}</td>
@@ -44,7 +44,7 @@
                         <td class="admin__data">{{ $application->applied_at }}</td>
                         <td class="admin__data">
                             <a class="admin__detail-btn"
-                                href="{{ route('admin.show', ['id' => $application->attendance->id]) }}">詳細
+                                href="{{ route('admin.approval.show', ['attendance_correct_request_id' => $application->id]) }}">詳細
                             </a>
                         </td>
                     </tr>

@@ -5,7 +5,7 @@
 @endsection
 
 @section('title')
-    <title>勤怠詳細画面</title>
+    <title>修正申請承認画面</title>
 @endsection
 
 @section('content')
@@ -17,7 +17,7 @@
             </div>
         @endif
 
-        <form class="" action="{{ route('admin.update') }}" method="post" novalidate>
+        <form class="" action="{{-- route('admin.approval') --}}" method="post" novalidate>
             @csrf
             {{-- hidden --}}
             <input type="hidden" name="user_id" value="{{ $workTimes['userId'] }}">
@@ -123,11 +123,11 @@
                 </tr>
             </table>
             <div class="">
-                @if (is_null($attendanceApplication) || $attendanceApplication->isApproved())
-                    <button class="">修正</button>
+                @if ($attendanceApplication->isApproved())
+                    承認済み
+                    {{-- <button class="">承認済み</button> --}}
                 @elseif(!$attendanceApplication->isApproved())
-                    {{-- <button class="">承認</button> --}}
-                    *承認待ちのため修正はできません。
+                    <button class="">承認</button>
                 @endif
             </div>
         </form>

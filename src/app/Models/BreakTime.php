@@ -10,12 +10,9 @@ class BreakTime extends Model
     use SoftDeletes;
 
     protected $fillable = [
-    //'user_id',
     'attendance_id',
     'clock_in',
     'clock_out',
-    //'created_by',
-    //'corrected_by',
     'deleted_at'
     ];
 
