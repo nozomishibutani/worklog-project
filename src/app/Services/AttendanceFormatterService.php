@@ -139,7 +139,34 @@ class AttendanceFormatterService
     }
 
     /**
-     * 空レコード作成しデータを整形する
+     * 空日時レコードを作成
+     */
+    public function createDailyEmptyRecord($user, $date): array
+    {
+        $workTimes = [
+            'attendanceId' => null,
+            'clock_in' => null,
+            'clock_out' => null,
+            'userId' =>  $user->id,
+            'name' =>  $user->name,
+        ];
+
+        $date = Carbon::createFromFormat('Ymd', $date);
+        $workDate = [
+                    'year'  => $date->year,
+                    'month' => $date->month,
+                    'day'   => $date->day,
+                ];
+
+        return [
+            'workTimes' => $workTimes,
+            'breakTimes' => [],
+            'workDate' => $workDate,
+        ];
+    }
+
+    /**
+     * 空月次レコードを作成
      *
      * @param Carbon $start 取得する月の初日
      * @param Carbon $end 取得する月の最終日

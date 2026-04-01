@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\BreakTime;
 use App\Services\AttendanceCalculatorService;
 use App\Services\AttendanceUpdateService;
+use App\Services\AttendanceFormatterService;
 //use App\Services\ApprovalService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -19,14 +20,19 @@ class AdminController extends Controller
 {
     protected AttendanceCalculatorService $attendanceCalculatorService;
     protected AttendanceUpdateService $attendanceUpdateService;
+    protected AttendanceFormatterService $attendanceFormatterService;
     //protected ApprovalService $approvalService;
 
 
     //public function __construct(AttendanceCalculatorService $attendanceCalculatorService, ApprovalService $approvalService)
-    public function __construct(AttendanceCalculatorService $attendanceCalculatorService, AttendanceUpdateService $attendanceUpdateService)
-    {
+    public function __construct(
+        AttendanceCalculatorService $attendanceCalculatorService,
+        AttendanceUpdateService $attendanceUpdateService,
+        AttendanceFormatterService $attendanceFormatterService,
+    ) {
         $this->attendanceCalculatorService = $attendanceCalculatorService;
         $this->attendanceUpdateService = $attendanceUpdateService;
+        $this->attendanceFormatterService = $attendanceFormatterService;
         //$this->approvalService = $approvalService;
     }
 
@@ -64,19 +70,32 @@ class AdminController extends Controller
         $userId = $request->query('user_id');
         $date =  $request->query('date');
 
-        [
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-            'workDate' => $workDate,
-            'attendanceApplication' => $attendanceApplication,
-        ]
-        = $this->attendanceCalculatorService->getUserDailyAttendance($attendanceId, $userId, $date);
+        if ($attendanceId) {
+            $attendance = Attendance::with(['user', 'breakTimes', 'attendanceApplication'])->find($attendanceId);
 
-        return view('admin/show', [
+            [
+                'workTimes' => $workTimes,
+                'breakTimes' => $breakTimes,
+                'workDate' => $workDate,
+            ]
+            = $this->attendanceCalculatorService->getUserDailyAttendance($attendance);
+
+        } else {
+            $user = User::find($userId);
+            [
+                'workTimes' => $workTimes,
+                'breakTimes' => $breakTimes,
+                'workDate' => $workDate,
+            ]
+            = $this->attendanceFormatterService->createDailyEmptyRecord($user, $date);
+        }
+
+        return view('admin/attendance_detail', [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
-            'attendanceApplication' => $attendanceApplication,
+            'attendanceApplication' => isset($attendance) ? $attendance?->attendanceApplication : null,
+            'mode' => 'show',
         ]);
     }
 
@@ -139,8 +158,8 @@ class AdminController extends Controller
     public function applicationIndex(Request $request)
     {
         // 承認待ち
-        $tab = $request->query('tab');
-        switch ($tab) {
+        $mode = $request->query('mode');
+        switch ($mode) {
             case AttendanceStatus::PENDING->value:
                 $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::PENDING->value)->get();
                 break;
@@ -157,42 +176,27 @@ class AdminController extends Controller
 
     public function showForApproval($applicationId)
     {
-        $applicationAttendance = AttendanceApplication::find($applicationId);
+        $application = AttendanceApplication::with('attendance.user', 'attendance.breakTimes')->find($applicationId);
+
+        if (is_null($application)) {
+            return redirect()->route('admin.index')
+                                ->with('alert', 'システムエラーが発生しました')
+                                ->with('alert-type', 'alert-error');
+        }
 
         [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
-            'attendanceApplication' => $attendanceApplication,
         ]
-        = $this->attendanceCalculatorService->getUserDailyAttendance($applicationAttendance->attendance_id);
-//dd($attendanceApplication);
-        return view('admin/approve', [
+        = $this->attendanceCalculatorService->getUserDailyAttendance($application->attendance);
+
+        return view('admin/attendance_detail', [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
-            'attendanceApplication' => $attendanceApplication,
+            'attendanceApplication' => $application,
+            'mode' => 'approve',
         ]);
     }
-
-    /**
-     * 指定された勤怠の日付をsessionに保存する
-     *
-     * @param string $date
-     * @param string|null $to 遷移先
-     * @param int|null $userId ユーザーid
-     * @return @return \Illuminate\Http\RedirectResponse
-     */
-    // public function setSession($userId, $date): \Illuminate\Http\RedirectResponse
-    // {
-    //     if (!$userId || !$date) {
-    //         return redirect()->route('admin.index')
-    //         ->with('alert', 'システムエラーが発生しました')
-    //         ->with('alert-type', 'alert-error');
-    //     }
-    //     session(['admin_date' => $date]);
-
-    //     return redirect()->route('admin.show', ['id' => $userId]);
-    // }
-
 }
