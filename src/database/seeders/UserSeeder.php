@@ -16,12 +16,12 @@ class UserSeeder extends Seeder
     {
         $users = [
                 [
-                    'name' => '山田太郎',
+                    'name' => '西伶奈',
                     'email' => 'user1@test.com',
                     'role' => Role::USER,
                 ],
                 [
-                    'name' => '西伶奈',
+                    'name' => '山田太郎',
                     'email' => 'user2@test.com',
                     'role' => Role::USER,
                 ],

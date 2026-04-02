@@ -14,26 +14,13 @@ use Illuminate\Support\Facades\DB;
 class AttendanceRepository
 {
     /**
-     * 特定日の全ユーザーの勤怠を取得
-     */
-    public function getAllUserDailyAttendances($date): Collection
-    {
-        return User::select('id', 'name')->with([
-            'attendances' => function ($query) use ($date) {
-                $query->whereDate('work_date', $date);
-            },
-            'attendances.breakTimes'
-        ])->get();
-    }
-
-    /**
      * 特定日のユーザーの勤怠を取得
      */
-    public function getUserDailyAttendance($attendanceId)
-    {
-        return Attendance::with(['user', 'breakTimes', 'attendanceApplication'])->find($attendanceId);
+    // public function getUserDailyAttendance($attendanceId)
+    // {
+    //     return Attendance::with(['user', 'breakTimes', 'attendanceApplication'])->find($attendanceId);
 
-    }
+    // }
 
     /**
      * ユーザーごとの月次勤怠を取得
@@ -46,9 +33,11 @@ class AttendanceRepository
                             ->get();
     }
 
-    public function updateAttendance(array $attendance, array $formatCarbonDate, ?Attendance $targetAttendance): AttendanceApplication
+    public function updateAttendance(array $attendance, array $formatCarbonDate): AttendanceApplication
     {
-        return DB::transaction(function () use ($attendance, $formatCarbonDate, $targetAttendance) {
+        return DB::transaction(function () use ($attendance, $formatCarbonDate) {
+
+            $targetAttendance = Attendance::find($attendance['attendance_id']);
 
             // 勤怠日
             if (is_null($targetAttendance)) {
@@ -84,7 +73,7 @@ class AttendanceRepository
                     );
                 }
             }
-            // 承認
+            // 修正リクエスト作成
             return AttendanceApplication::create([
                     'attendance_id' => $targetAttendance->id,
                     'applied_by'    => Auth::id(),

@@ -33,7 +33,7 @@ class AttendanceApplicationSeeder extends Seeder
             }
 
             // ===== 修正処理 =====
-            $isCorrection =  rand(1, 100) <= 10;
+            $isCorrection =  rand(1, 100) <= 5;
 
             if ($isCorrection) {
                 if (rand(1, 100) <= 80) {

@@ -8,6 +8,8 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Attendance;
 
+use function Symfony\Component\VarDumper\Dumper\esc;
+
 class AttendanceCalculatorService
 {
     protected AttendanceRepository $attendanceRepository;
@@ -20,11 +22,13 @@ class AttendanceCalculatorService
     }
 
     /**
-     * 特定日の全ユーザーの勤怠を取得
+     * 特定日のユーザーの勤怠を取得
      */
-    public function getAllUserDailyAttendances($date): array
+    public function getUserDailyAttendances($date): array
     {
-        $users = $this->attendanceRepository->getAllUserDailyAttendances($date);
+        $attendances = Attendance::with(['user', 'breakTimes'])
+                                    ->where('work_date', $date)
+                                    ->get();
 
         $workTimes = [];
         $breakTimes = [];
@@ -36,24 +40,8 @@ class AttendanceCalculatorService
         $workMinutes = [];
         $breakMinutes = [];
 
-        foreach ($users as $user) {
-            $userId = $user->id;
-
-            $attendance = $user->attendances()->first();
-
-            // 勤怠なし
-            if (!$attendance) {
-                $workTimes[$userId] = [
-                    'attendance_id' => null,
-                    'name'      => $user->name,
-                    'clock_in'  => null,
-                    'clock_out' => null,
-                    'hours'     => null,
-                    'minutes'   => null,
-                    'display_total' => null,
-                ];
-                continue;
-            }
+        foreach ($attendances as $attendance) {
+            $userId = $attendance->user->id;
 
             $clockIn  = $attendance->clock_in ? Carbon::parse($attendance->clock_in) : null;
 
@@ -62,7 +50,7 @@ class AttendanceCalculatorService
             // --- base ---
             $baseList[$userId] = [
                 'attendance_id' => $attendance->id,
-                'name'      => $user->name,
+                'name'      => $attendance->user->name,
                 'clock_in'  => $clockIn ? $clockIn->format('H:i') : null,
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
             ];
@@ -129,6 +117,7 @@ class AttendanceCalculatorService
      */
     public function getUserDailyAttendance(Attendance $attendance): array
     {
+
         $workTimes = [
             'attendanceId' => null,
             'clock_in' => null,
@@ -196,15 +185,8 @@ class AttendanceCalculatorService
 
         $baseList = [];
 
-        if (is_null($attendances)) {
-            $user = User::find($userId);
-            $name = $user->name;
-        }
-
         foreach ($attendances as $attendance) {
-            if (!isset($name)) {
-                $name = $attendance->user->name;
-            }
+
             $workDate = Carbon::parse($attendance->work_date);
             $key = $workDate->format('Ymd');
 
@@ -271,8 +253,9 @@ class AttendanceCalculatorService
         ksort($workTimes);
         ksort($breakTimes);
 
+        $user = User::find($userId);
         return [
-            'name'       => $name,
+            'name'       => $user->name,
             'workTimes'  => $workTimes,
             'breakTimes' => $breakTimes,
         ];

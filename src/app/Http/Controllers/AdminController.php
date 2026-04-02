@@ -8,7 +8,6 @@ use App\Models\BreakTime;
 use App\Services\AttendanceCalculatorService;
 use App\Services\AttendanceUpdateService;
 use App\Services\AttendanceFormatterService;
-//use App\Services\ApprovalService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
@@ -22,10 +21,7 @@ class AdminController extends Controller
     protected AttendanceCalculatorService $attendanceCalculatorService;
     protected AttendanceUpdateService $attendanceUpdateService;
     protected AttendanceFormatterService $attendanceFormatterService;
-    //protected ApprovalService $approvalService;
 
-
-    //public function __construct(AttendanceCalculatorService $attendanceCalculatorService, ApprovalService $approvalService)
     public function __construct(
         AttendanceCalculatorService $attendanceCalculatorService,
         AttendanceUpdateService $attendanceUpdateService,
@@ -34,7 +30,6 @@ class AdminController extends Controller
         $this->attendanceCalculatorService = $attendanceCalculatorService;
         $this->attendanceUpdateService = $attendanceUpdateService;
         $this->attendanceFormatterService = $attendanceFormatterService;
-        //$this->approvalService = $approvalService;
     }
 
     public function index(Request $request): \Illuminate\View\View
@@ -51,7 +46,7 @@ class AdminController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
         ]
-        = $this->attendanceCalculatorService->getAllUserDailyAttendances($date);
+        = $this->attendanceCalculatorService->getUserDailyAttendances($date);
 
         return view('admin/index', [
             'workTimes' => $workTimes,

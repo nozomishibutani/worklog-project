@@ -33,7 +33,7 @@
                         </ul>
                     </div>
                 @endif
-                <form class="" method="post" action="{{ route('admin.login') }}">
+                <form class="" method="post" action="{{ route('admin.login') }}" novalidate>
                     @csrf
                     <ul class="auth__list">
                         <li class="auth__item">

@@ -31,7 +31,7 @@
 
         <table class="admin__table">
             <tr class="admin__row">
-                <th class="admin__label">お名前</th>
+                <th class="admin__label">名前</th>
                 <th class="admin__label">出勤</th>
                 <th class="admin__label">退勤</th>
                 <th class="admin__label">休憩</th>

@@ -22,8 +22,8 @@
         @endif
         @if ($mode === 'approve')
             <form class="" action="{{-- route('admin.approval') --}}" method="post" novalidate>
-        @elseif ($mode === 'show')
-            <form class="" action="{{ route('admin.update') }}" method="post" novalidate>
+            @elseif ($mode === 'show')
+                <form class="" action="{{ route('admin.update') }}" method="post" novalidate>
         @endif
         @csrf
         {{-- hidden --}}
@@ -62,27 +62,30 @@
             </tr>
             {{-- 休憩なし --}}
             @if (count($breakTimes) == 0)
-                <tr class="admin__row">
-                    <th class="admin__label">休憩</th>
-                    <td class="admin__data">
-                        <input type="time" name="break_in[0]" value="{{ old('break_in.0') }}">
-                    </td>
-                    <td class="admin__data">～</td>
-                    <td class="admin__data">
-                        <input type="time" name="break_out[0]" value="{{ old('break_out.0') }}">
-                    </td>
-                    @if ($errors->has('break_in.0') || $errors->has('break_out.0'))
-                        <td class="msg">
-                            {{ $errors->first('break_in.0') }}
-                            {{ $errors->first('break_out.0') }}
+                {{-- ユーザー画面の詳細では空休憩は非表示 --}}
+                {{-- @if ($mode !== 'show' && !$attendanceApplication->isApproved()) --}}
+                    <tr class="admin__row">
+                        <th class="admin__label">休憩</th>
+                        <td class="admin__data">
+                            <input type="time" name="break_in[0]" value="{{ old('break_in.0') }}">
                         </td>
-                    @endif
+                        <td class="admin__data">～</td>
+                        <td class="admin__data">
+                            <input type="time" name="break_out[0]" value="{{ old('break_out.0') }}">
+                        </td>
+                        @if ($errors->has('break_in.0') || $errors->has('break_out.0'))
+                            <td class="msg">
+                                {{ $errors->first('break_in.0') }}
+                                {{ $errors->first('break_out.0') }}
+                            </td>
+                        @endif
+                {{-- @endif --}}
                 </tr>
             @elseif (count($breakTimes) > 0)
-                {{-- 休憩があり --}}
+                {{-- 休憩あり --}}
                 @for ($i = 0; $i < count($breakTimes); $i++)
                     <tr class="admin__row">
-                        <th class="admin__label">休憩{{ $i > 1 ? $i : '' }}</th>
+                        <th class="admin__label">休憩{{ $i > 0 ? $i + 1 : '' }}</th>
                         <td class="admin__data">
                             <input type="time" name="break_in[{{ $breakTimes[$i]['id'] }}]"
                                 value="{{ old('break_in.' . $breakTimes[$i]['id'], $breakTimes[$i]['clock_in']) }}">
@@ -100,22 +103,25 @@
                         @endif
                     </tr>
                 @endfor
-                <tr class="admin__row">
-                    <th class="admin__label">休憩{{ count($breakTimes) + 1 }}</th>
-                    <td class="admin__data">
-                        <input type="time" name="break_in[0]" value="{{ old('break_in.0') }}">
-                    </td>
-                    <td class="admin__data">～</td>
-                    <td class="admin__data">
-                        <input type="time" name="break_out[0]" value="{{ old('break_out.0') }}">
-                    </td>
-                    @if ($errors->has('break_in.0') || $errors->has('break_out.0'))
-                        <td class="msg">
-                            {{ $errors->first('break_in.0') }}
-                            {{ $errors->first('break_out.0') }}
+                {{-- ユーザー画面の詳細では空休憩は非表示 --}}
+                {{-- @if ($mode !== 'show' && !$attendanceApplication->isApproved() && $from == 'user') --}}
+                    <tr class="admin__row">
+                        <th class="admin__label">休憩{{ count($breakTimes) + 1 }}</th>
+                        <td class="admin__data">
+                            <input type="time" name="break_in[0]" value="{{ old('break_in.0') }}">
                         </td>
-                    @endif
-                </tr>
+                        <td class="admin__data">～</td>
+                        <td class="admin__data">
+                            <input type="time" name="break_out[0]" value="{{ old('break_out.0') }}">
+                        </td>
+                        @if ($errors->has('break_in.0') || $errors->has('break_out.0'))
+                            <td class="msg">
+                                {{ $errors->first('break_in.0') }}
+                                {{ $errors->first('break_out.0') }}
+                            </td>
+                        @endif
+                    </tr>
+                {{-- @endif --}}
             @endif
             <tr class="admin__row">
                 <th class="admin__label">備考</th>

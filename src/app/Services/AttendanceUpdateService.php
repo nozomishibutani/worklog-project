@@ -26,8 +26,6 @@ class AttendanceUpdateService
                 throw new \Exception();
             }
 
-            $targetAttendance = Attendance::find($attendance['attendance_id']);
-
             // 日付をDBフォーマットに合わせる
             $formatCarbonDate = [
                 'work_in' => $attendance['work_in'],
@@ -58,7 +56,7 @@ class AttendanceUpdateService
             }
             $formatCarbonDate['work_date'] = $this->attendanceFormatterService->formatCarbonDate($workDay);
 
-            return $this->attendanceRepository->updateAttendance($attendance, $formatCarbonDate, $targetAttendance);
+            return $this->attendanceRepository->updateAttendance($attendance, $formatCarbonDate);
         // } catch (\Exception $e) {
         //     Log::error($e);
         //     return redirect()
