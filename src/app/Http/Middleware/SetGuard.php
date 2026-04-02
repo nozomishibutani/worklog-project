@@ -10,9 +10,9 @@ class SetGuard
     {
         if ($request->is('admin/login') || $request->is('admin/login/*')) {
             config(['fortify.guard' => 'admin']);
-        } else {
-            config(['fortify.guard' => 'web']);
-        }
+        } //else {
+        //     config(['fortify.guard' => 'web']);
+        // }
         return $next($request);
     }
 }
