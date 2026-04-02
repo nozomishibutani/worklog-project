@@ -7,6 +7,7 @@ use App\Http\Controllers\CommonController;
 use App\Http\Controllers\AdminAuthenticatedSessionController;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 use App\Http\Middleware\SetGuard;
+use App\Http\Controllers\StampCorrectionRequestController;
 
 // =====================
 // admin
@@ -46,18 +47,24 @@ Route::prefix('admin')
 // =====================
 // userとadmin 共有
 // =====================
-
-Route::middleware('auth:web')
+Route::middleware('auth:web,admin') // 両方明示することでアクセス可能
 ->group(function () {
-    Route::get('/stamp_correction_request/list', [UserController::class, 'applicationIndex'])
+    Route::get('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'applicationIndex'])
                                         ->name('application.index');
 });
 
-Route::middleware('auth:admin')
-->group(function () {
-    Route::get('/stamp_correction_request/list', [AdminController::class, 'applicationIndex'])
-                                        ->name('application.index');
-});
+
+// Route::get('/stamp_correction_request/list', function () {
+
+//     if (auth('admin')->check()) {
+//         return [AdminController::class, 'applicationIndex'];
+//     }
+
+//     if (auth('web')->check()) {
+//         //[UserController::class, 'applicationIndex'];
+//         return 'Hello Index';
+//     }
+// })->middleware('auth:admin,web')->name('application.index');
 
 
 
@@ -68,7 +75,12 @@ Route::middleware('auth:admin')
 
 Route::middleware(['web', SetGuard::class])
     ->group(function () {
+
         Route::get('/attendance', [UserController::class, 'index'])
             ->name('user.index');
 
     });
+
+Route::get('/', function () {
+    return redirect()->route('user.index');
+});

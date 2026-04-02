@@ -12,7 +12,7 @@ use App\Services\AttendanceFormatterService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
-use App\Enums\AttendanceStatus;
+
 use App\Models\AttendanceApplication;
 use App\Http\Requests\AttendanceRequest;
 
@@ -152,26 +152,6 @@ class AdminController extends Controller
         return redirect()->route('admin.index')
                     ->with('alert', 'システムエラーが発生しました')
                     ->with('alert-type', 'alert-error');
-    }
-
-
-    public function applicationIndex(Request $request)
-    {
-        // 承認待ち
-        $mode = $request->query('mode');
-        switch ($mode) {
-            case AttendanceStatus::PENDING->value:
-                $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::PENDING->value)->get();
-                break;
-            case AttendanceStatus::APPROVED->value:
-                $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::APPROVED->value)->get();
-                break;
-            default:
-                $attendanceApplications = null;
-                break;
-        }
-
-        return view('admin/application_index', compact('attendanceApplications'));
     }
 
     public function showForApproval($applicationId)
