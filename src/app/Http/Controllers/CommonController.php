@@ -8,7 +8,7 @@ use Laravel\Fortify\Contracts\LogoutResponse;
 use App\Enums\AttendanceStatus;
 use App\Models\AttendanceApplication;
 
-class StampCorrectionRequestController extends Controller
+class CommonController extends Controller
 {
     public function applicationIndex(Request $request)
     {
@@ -19,7 +19,10 @@ class StampCorrectionRequestController extends Controller
                     $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::PENDING->value)->get();
                     break;
                 case AttendanceStatus::APPROVED->value:
-                    $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::APPROVED->value)->get();
+                    $attendanceApplications = AttendanceApplication::with('attendance.user')
+                                                                    ->where('status', AttendanceStatus::APPROVED->value)
+                                                                    ->orderBy('approved_at', 'desc')
+                                                                    ->get();
                     break;
                 default:
                     $attendanceApplications = null;

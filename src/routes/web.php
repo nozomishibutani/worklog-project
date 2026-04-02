@@ -41,7 +41,8 @@ Route::prefix('admin')
                             ->name('admin.update');
         Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'showForApproval'])
                             ->name('admin.approval.show');
-
+        Route::post('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'approve'])
+                        ->name('admin.approve');
     });
 
 // =====================
@@ -49,7 +50,7 @@ Route::prefix('admin')
 // =====================
 Route::middleware('auth:web,admin') // 両方明示することでアクセス可能
 ->group(function () {
-    Route::get('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'applicationIndex'])
+    Route::get('/stamp_correction_request/list', [CommonController::class, 'applicationIndex'])
                                         ->name('application.index');
 });
 
@@ -73,13 +74,13 @@ Route::middleware('auth:web,admin') // 両方明示することでアクセス�
 // user
 // =====================
 
-Route::middleware(['web', SetGuard::class])
-    ->group(function () {
+Route::middleware('auth:web')
+        ->group(function () {
 
-        Route::get('/attendance', [UserController::class, 'index'])
-            ->name('user.index');
+            Route::get('/attendance', [UserController::class, 'index'])
+                ->name('user.index');
 
-    });
+        });
 
 Route::get('/', function () {
     return redirect()->route('user.index');

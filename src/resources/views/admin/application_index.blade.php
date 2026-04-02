@@ -11,6 +11,11 @@
 @section('content')
     <div class="application">
         <h1>申請一覧</h1>
+        @if (session('alert'))
+            <div class="alert {{ session('alert-type', 'alert-success') }}">
+                <p>{{ session('alert') }}</p>
+            </div>
+        @endif
         <div>
             <nav class="">
                 <ul class="">
@@ -37,11 +42,11 @@
             @if (!empty($attendanceApplications))
                 @foreach ($attendanceApplications as $id => $application)
                     <tr class="admin__row">
-                        <td class="admin__data">{{ $application->status }}</td>
+                        <td class="admin__data">{{ $application->status->label() }}</td>
                         <td class="admin__data">{{ $application->attendance->user->name }}</td>
-                        <td class="admin__data">{{ $application->attendance->work_date }}</td>
+                        <td class="admin__data">{{ $application->attendance->work_date->format('Y/m/d') }}</td>
                         <td class="admin__data">{{ $application->note }}</td>
-                        <td class="admin__data">{{ $application->applied_at }}</td>
+                        <td class="admin__data">{{ $application->applied_at->format('Y/m/d') }}</td>
                         <td class="admin__data">
                             <a class="admin__detail-btn"
                                 href="{{ route('admin.approval.show', ['attendance_correct_request_id' => $application->id]) }}">詳細

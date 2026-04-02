@@ -12,9 +12,10 @@ use App\Services\AttendanceFormatterService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
-
 use App\Models\AttendanceApplication;
 use App\Http\Requests\AttendanceRequest;
+use Illuminate\Support\Facades\Auth;
+use App\Enums\AttendanceStatus;
 
 class AdminController extends Controller
 {
@@ -178,5 +179,29 @@ class AdminController extends Controller
             'attendanceApplication' => $application,
             'mode' => 'approve',
         ]);
+    }
+
+    public function approve(Request $request)
+    {
+        $attendanceId = $request->input('attendance_id');
+
+        $targetAttendance = Attendance::find($attendanceId);
+        $attendanceApplication = $targetAttendance->attendanceApplication;
+
+        $attendanceApplication->approved_by = Auth::id();
+        $attendanceApplication->approved_at = now();
+        $attendanceApplication->status = AttendanceStatus::APPROVED;
+
+        $result = $attendanceApplication->save();
+
+        if ($result) {
+            return redirect()->route('application.index', ['mode' => 'approved'])
+                                            ->with('alert', '承認が完了しました')
+                                            ->with('alert-type', 'alert-success');
+        }
+        return redirect()->route('admin.index')
+                                ->with('alert', 'システムエラーが発生しました')
+                                ->with('alert-type', 'alert-error');
+
     }
 }

@@ -17,8 +17,8 @@ class AttendanceApplication extends Model
         'note',
     ];
 
-    // DBから取った値を Carbon に変換する
     protected $casts = [
+    'applied_at' => 'datetime',
     'corrected_at' => 'datetime',
     'approved_at' => 'datetime',
     'status' => \App\Enums\AttendanceStatus::class,

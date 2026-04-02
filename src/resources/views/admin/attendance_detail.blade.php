@@ -22,8 +22,8 @@
         @endif
         @if ($mode === 'approve')
             <form class="" action="{{-- route('admin.approval') --}}" method="post" novalidate>
-            @elseif ($mode === 'show')
-                <form class="" action="{{ route('admin.update') }}" method="post" novalidate>
+        @elseif ($mode === 'show')
+            <form class="" action="{{ route('admin.update') }}" method="post" novalidate>
         @endif
         @csrf
         {{-- hidden --}}
