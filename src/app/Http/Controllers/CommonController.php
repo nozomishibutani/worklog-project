@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Laravel\Fortify\Contracts\LogoutResponse;
-use App\Enums\AttendanceStatus;
+use App\Enums\ApprovalStatus;
 use App\Models\AttendanceApplication;
 
 class CommonController extends Controller
@@ -15,12 +15,12 @@ class CommonController extends Controller
         if (auth('admin')->check()) {
             $mode = $request->query('mode');
             switch ($mode) {
-                case AttendanceStatus::PENDING->value:
-                    $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::PENDING->value)->get();
+                case ApprovalStatus::PENDING->value:
+                    $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', ApprovalStatus::PENDING->value)->get();
                     break;
-                case AttendanceStatus::APPROVED->value:
+                case ApprovalStatus::APPROVED->value:
                     $attendanceApplications = AttendanceApplication::with('attendance.user')
-                                                                    ->where('status', AttendanceStatus::APPROVED->value)
+                                                                    ->where('status', ApprovalStatus::APPROVED->value)
                                                                     ->orderBy('approved_at', 'desc')
                                                                     ->get();
                     break;
@@ -34,11 +34,11 @@ class CommonController extends Controller
         if (auth('web')->check()) {
             //$mode = $request->query('mode');
             // switch ($mode) {
-            //     case AttendanceStatus::PENDING->value:
-            //         $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::PENDING->value)->get();
+            //     case ApprovalStatus::PENDING->value:
+            //         $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', ApprovalStatus::PENDING->value)->get();
             //         break;
-            //     case AttendanceStatus::APPROVED->value:
-            //         $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', AttendanceStatus::APPROVED->value)->get();
+            //     case ApprovalStatus::APPROVED->value:
+            //         $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', ApprovalStatus::APPROVED->value)->get();
             //         break;
             //     default:
             //         $attendanceApplications = null;

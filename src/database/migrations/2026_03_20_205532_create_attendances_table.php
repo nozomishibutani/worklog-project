@@ -12,7 +12,7 @@ return new class () extends Migration {
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
+            $table->foreignId('user_id')->constrained('users');
             $table->date('work_date');
             $table->unique(['user_id', 'work_date']);
             $table->dateTime('clock_in')->nullable();

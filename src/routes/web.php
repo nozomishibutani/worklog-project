@@ -80,6 +80,11 @@ Route::middleware('auth:web')
             Route::get('/attendance', [UserController::class, 'index'])
                 ->name('user.index');
 
+
+            Route::post('/attendance', [UserController::class, 'register'])
+                            ->name('user.register');
+
+
         });
 
 Route::get('/', function () {

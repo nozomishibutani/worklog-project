@@ -7,11 +7,13 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Enums\Role;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory;
+    use Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -48,6 +50,10 @@ class User extends Authenticatable
         ];
     }
 
+    protected $casts = [
+    'role' => Role::class,
+    ];
+
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
@@ -58,7 +64,8 @@ class User extends Authenticatable
         return $this->hasMany(BreakTime::class);
     }
 
-    protected $casts = [
-        'role' => \App\Enums\Role::class,
-    ];
+    public function isAdmin(): bool
+    {
+        return $this->role === role::ADMIN;
+    }
 }

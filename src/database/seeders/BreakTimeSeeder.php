@@ -101,6 +101,7 @@ class BreakTimeSeeder extends Seeder
                     'attendance_id'  => $attendance->id,
                     'clock_in'       => $break['start'],
                     'clock_out'      => $break['end'],
+                    'created_by'     => $attendance->user_id,
                     'created_at'     => $break['start'],
                     'updated_at'     => $break['end'],
                 ]);

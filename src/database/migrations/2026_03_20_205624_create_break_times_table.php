@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('break_times', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('attendance_id')->constrained();
+            $table->foreignId('attendance_id')->constrained('attendances');
             $table->dateTime('clock_in')->nullable();
             $table->dateTime('clock_out')->nullable();
+            $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
             $table->softDeletes();
         });

@@ -13,6 +13,7 @@ class BreakTime extends Model
     'attendance_id',
     'clock_in',
     'clock_out',
+    'created_by',
     'deleted_at'
     ];
 

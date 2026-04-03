@@ -107,7 +107,7 @@ class AttendanceFormatterService
     {
         $date = Carbon::parse($date);
         $weekdays = ['日','月','火','水','木','金','土'];
-        return $date->format($type) . '（' . $weekdays[$date->dayOfWeek] . '）';
+        return $date->format($type) . '(' . $weekdays[$date->dayOfWeek] . ')';
     }
 
     /**
@@ -179,7 +179,7 @@ class AttendanceFormatterService
 
         for ($i = $start->copy(); $i->lte($end); $i->addDay()) {
             $key = $i->format('Ymd');
-            $formatDate = $this->addDay($i,'m/d');
+            $formatDate = $this->addDay($i, 'm/d');
 
             $work = $workTimes[$key] ?? $this->formatTime(null);
 

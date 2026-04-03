@@ -14,7 +14,7 @@ use App\Enums\Type;
 use App\Models\AttendanceApplication;
 use App\Http\Requests\AttendanceRequest;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\AttendanceStatus;
+use App\Enums\ApprovalStatus;
 
 class AdminController extends Controller
 {
@@ -185,7 +185,7 @@ class AdminController extends Controller
 
         $attendanceApplication->approved_by = Auth::id();
         $attendanceApplication->approved_at = now();
-        $attendanceApplication->status = AttendanceStatus::APPROVED;
+        $attendanceApplication->status = ApprovalStatus::APPROVED;
 
         $result = $attendanceApplication->save();
 

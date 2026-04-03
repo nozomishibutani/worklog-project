@@ -7,6 +7,8 @@ use App\Services\AttendanceFormatterService;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Attendance;
+use App\Enums\AttendanceStatus;
+use Illuminate\Support\Facades\Auth;
 
 use function Symfony\Component\VarDumper\Dumper\esc;
 
@@ -259,5 +261,48 @@ class AttendanceCalculatorService
             'workTimes'  => $workTimes,
             'breakTimes' => $breakTimes,
         ];
+    }
+    /**
+     * ユーザーの勤怠ステータスを取得
+     */
+    public function getUserAttendanceStatus($date): array
+    {
+        $user = Auth::user();
+        /** @var \App\Models\User $user */
+        $attendance = $user->attendances()->where('work_date', $date)->first();
+        $attendanceStatus = AttendanceStatus::OFF;
+        if (is_null($attendance->clock_in) && is_null($attendance->clock_out)) {
+            // 空勤怠を作成した場合
+            $attendanceStatus = AttendanceStatus::ON_DUTY;
+        } elseif (!is_null($attendance->clock_out)) {
+            // 退勤済み
+            $attendanceStatus = AttendanceStatus::OFF_DUTY;
+        } elseif (!is_null($attendance->clock_in)) {
+            // 出勤中
+            $attendanceStatus = AttendanceStatus::ON_DUTY;
+
+            // 休憩
+            $breakTime = $attendance->breakTimes()
+                ->latest('clock_in')
+                ->first();
+            if (is_null($breakTime)) {
+                return [
+                            'attendanceStatus' => $attendanceStatus,
+                            'attendance' => $attendance,
+                            ];
+            }
+
+            if (is_null($breakTime['clock_out'])) {
+                // 休憩中
+                $attendanceStatus = AttendanceStatus::ON_BREAK;
+            } elseif (!is_null($breakTime['clock_out'])) {
+                // 休憩終了 → 出勤中
+                $attendanceStatus = AttendanceStatus::ON_DUTY;
+            }
+        }
+        return [
+            'attendanceStatus' => $attendanceStatus,
+            'attendance' => $attendance,
+            ];
     }
 }

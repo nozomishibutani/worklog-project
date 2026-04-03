@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Attendance;
-use App\Enums\AttendanceStatus;
+use App\Enums\ApprovalStatus;
 use App\Enums\Role;
 use App\Models\BreakTime;
 use Illuminate\Database\Seeder;
@@ -73,7 +73,7 @@ class AttendanceApplicationSeeder extends Seeder
 
             if ($approved) {
                 // 修正して承認済み
-                $status = AttendanceStatus::APPROVED;
+                $status = ApprovalStatus::APPROVED;
                 $approvedAt = $clockOut->copy()->addDays(rand(2, 4));
                 $updatedAt = $approvedAt;
 
@@ -83,7 +83,7 @@ class AttendanceApplicationSeeder extends Seeder
 
             } elseif (!$approved && $isCorrection) {
                 // 修正はしたけど未承認
-                $status = AttendanceStatus::PENDING;
+                $status = ApprovalStatus::PENDING;
                 $updatedAt = $clockOut->copy()->addMinutes(30);
             }
 
@@ -105,13 +105,7 @@ class AttendanceApplicationSeeder extends Seeder
             $targetAttendance = Attendance::find($attendance->id);
             $targetAttendance->updated_at = $updatedAt;
             $targetAttendance->save();
-            $targetBreakTimes = BreakTime::where('attendance_id', $attendance->id)->get();
-            if (!empty($targetBreakTimes)) {
-                foreach ($targetBreakTimes as $id => $breakTime) {
-                    $breakTime->updated_at = $updatedAt;
-                    $breakTime->save();
-                }
-            }
+            BreakTime::where('attendance_id', $attendance->id)->update(['updated_at' => $updatedAt]);
         }
     }
 }
