@@ -45,7 +45,7 @@ class LoginResponse implements LoginResponseContract
             // adminセッションが残ってたら消す
             Auth::guard(Guard::ADMIN->value)->logout();
 
-            return redirect()->route('user.index');
+            return redirect()->route('index');
         }
 
         // =====================

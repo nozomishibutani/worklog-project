@@ -46,10 +46,10 @@
                 <nav class="header__nav">
                     <ul class="header__list">
                         <li class="header__item">
-                            <a href="" class="link header__link">勤怠</a>
+                            <a href="{{ route('index') }}" class="link header__link">勤怠</a>
                         </li>
                         <li class="header__item">
-                            <a href="" class="link header__link">勤怠一覧</a>
+                            <a href="{{ route('monthly.index') }}" class="link header__link">勤怠一覧</a>
                         </li>
                         <li class="header__item">
                             <a href="{{ route('application.index') }}" class="link header__link">申請</a>

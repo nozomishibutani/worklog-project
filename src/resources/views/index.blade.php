@@ -19,7 +19,7 @@
         <div class="">{{ $day }}</div>
         <div class="">{{ $time }}</div>
         <div class="">
-            <form class="" action="{{ route('user.register') }}" method="post">
+            <form class="" action="{{ route('register') }}" method="post">
                 {{-- hidden --}}
                 <input type="hidden" name="attendance_id" value="{{ $attendance?->id }}">
                 @csrf

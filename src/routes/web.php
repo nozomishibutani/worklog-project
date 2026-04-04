@@ -76,17 +76,20 @@ Route::middleware('auth:web,admin') // 両方明示することでアクセス�
 
 Route::middleware('auth:web')
         ->group(function () {
-
             Route::get('/attendance', [UserController::class, 'index'])
-                ->name('user.index');
-
-
+                ->name('index');
             Route::post('/attendance', [UserController::class, 'register'])
-                            ->name('user.register');
-
+                ->name('register');
+            Route::get('/attendance/list', [UserController::class, 'monthlyIndex'])
+                ->name('monthly.index');
+            Route::get('/attendance/detail/{id?}', [UserController::class, 'show'])
+                ->name('show');
 
         });
 
 Route::get('/', function () {
-    return redirect()->route('user.index');
+    return redirect()->route('index');
 });
+
+
+
