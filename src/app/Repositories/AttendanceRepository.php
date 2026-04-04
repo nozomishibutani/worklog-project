@@ -13,9 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class AttendanceRepository
 {
-    /**
-     * ユーザーごとの月次勤怠を取得
-     */
     public function getUserMonthlyAttendances($userId, $start, $end): Collection
     {
         return Attendance::with(['user', 'breakTimes'])
@@ -51,6 +48,6 @@ class AttendanceRepository
 
     public function createAttendanceApplication($attendanceApplication): AttendanceApplication
     {
-        return  AttendanceApplication::create([$attendanceApplication]);
+        return AttendanceApplication::create($attendanceApplication);
     }
 }

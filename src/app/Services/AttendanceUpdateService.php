@@ -7,12 +7,14 @@ use App\Services\AttendanceFormatterService;
 use Carbon\Carbon;
 use App\Models\AttendanceApplication;
 use App\Models\Attendance;
+use App\Enums\Role;
 use App\Enums\AttendanceStatus;
 use App\Models\BreakTime;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ApprovalStatus;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 use function Symfony\Component\Clock\now;
 
@@ -28,87 +30,96 @@ class AttendanceUpdateService
     }
     public function updateAttendance($attendance): AttendanceApplication|\Illuminate\Http\RedirectResponse
     {
-        // H:iをDB登録用にフォーマット
-        $workDay = [
-                    'year' => $attendance['year'],
-                    'month' => $attendance['month'],
-                    'day' => $attendance['day'],
-                ];
-
-        $formatCarbonDate['work_in'] =  $attendance['work_in'] ? $this->attendanceFormatterService->formatCarbonDate($workDay, $attendance['work_in']) : null;
-        $formatCarbonDate['work_out'] = $attendance['work_out'] ? $this->attendanceFormatterService->formatCarbonDate($workDay, $attendance['work_out']) : null;
-        foreach ($attendance['break_in'] as $breakId => $breakTime) {
-            $formatCarbonDate['break_in'][$breakId] = $breakTime ? $this->attendanceFormatterService->formatCarbonDate($workDay, $breakTime) : null;
-            $formatCarbonDate['break_out'][$breakId]
-                = $attendance['break_out'][$breakId] ? $this->attendanceFormatterService->formatCarbonDate($workDay, $attendance['break_out'][$breakId]) : null;
-        }
-
         $targetAttendance = Attendance::find($attendance['attendance_id']);
+        $formatCarbonDate =  $this->attendanceFormatterService->buildWorkDateFromEditAttendance($attendance);
 
         return DB::transaction(function () use ($targetAttendance, $attendance, $formatCarbonDate) {
-
             try {
-                // 勤怠日
-                if (is_null($targetAttendance)) {
-                    // 新規登録
-                    $this->attendanceRepository->createAttendance([
-                        'user_id'      => $attendance['user_id'],
-                        'work_date'    => $formatCarbonDate['work_date'],
-                        'created_by'   => Auth::id(),
-                        'clock_in'     => $formatCarbonDate['work_in'],
-                        'clock_out'    => $formatCarbonDate['work_out'],
-                    ]);
-                } else {
-                    // 更新
-                    $targetAttendance->clock_in = $formatCarbonDate['work_in'];
-                    $targetAttendance->clock_out = $formatCarbonDate['work_out'];
-                    $this->attendanceRepository->updateAttendance($targetAttendance);
-                }
-
+                // 勤怠登録
+                $this->saveAttendance($targetAttendance, $attendance, $formatCarbonDate);
                 // 休憩
-                foreach ($attendance['break_in'] as $id => $breakIn) {
-                    if ($id !== 0 && is_null($breakIn) && is_null($attendance['break_out'][$id])) {
-                        // 削除
-                        $this->attendanceRepository->deleteBreakTime($id);
-                    } elseif (!is_null($breakIn)) {
-                        return match ($id) {
-                            // 新規
-                            0 => $this->attendanceRepository->createBreakTime([
-                                'attendance_id' => $targetAttendance->id,
-                                'clock_in'  => $formatCarbonDate['break_in'][$id],
-                                'clock_out' => $formatCarbonDate['break_out'][$id],
-                                'created_by' => Auth::id(),
-                            ]),
-                            // 更新
-                            default => $this->attendanceRepository->updateBreakTime(
-                                ['id' => $id,  'attendance_id' => $targetAttendance->id],
-                                [
-                                    'clock_in'  => $formatCarbonDate['break_in'][$id],
-                                    'clock_out' => $formatCarbonDate['break_out'][$id],
-                                    'updated_at' => now(),
-                                ]
-                            ),
-                        };
-                    }
-                }
+                $this->saveBreakTimes($targetAttendance, $attendance, $formatCarbonDate);
                 // 修正リクエスト作成
-                /** @var \App\Models\User $user */
-                $user = Auth::user();
-                $isAdmin = $user->isAdmin();
-                return $this->attendanceRepository->createAttendanceApplication([
-                        'attendance_id' => $targetAttendance->id,
-                        'applied_by'    => Auth::id(),
-                        'applied_at'    => now(),
-                        'approved_by'  => $isAdmin ? Auth::id() : null,
-                        'approved_at'  => $isAdmin ? now() : null,
-                        'note'         => $attendance['note'],
-                        'status'       => $isAdmin ? ApprovalStatus::APPROVED : ApprovalStatus::PENDING,
-                    ]);
-            } catch (\Throwable $e) {
-                // ログ or エラーハンドリング
-                throw $e;
+                return $this->createApplicationAttendance($targetAttendance, $attendance);
+            } catch (\Exception $e) {
+                Log::error($e);
+                if (Auth::guard('admin')->check()) {
+                    // adminでログイン中
+                    $route = Role::ADMIN->value;
+                } else {
+                    $route = Role::USER->value;
+                }
+                return redirect()
+                    ->route($route .'.index')
+                    ->with('alert', 'システムエラーが発生しました')
+                    ->with('alert-type', 'alert-error');
             }
         });
+    }
+
+    private function saveAttendance(?Attendance $targetAttendance, array $attendance, $formatCarbonDate)
+    {
+        // 勤怠日
+        if (is_null($targetAttendance)) {
+            // 新規登録
+            $this->attendanceRepository->createAttendance([
+                'user_id'      => $attendance['user_id'],
+                'work_date'    => $formatCarbonDate['work_date'],
+                'created_by'   => Auth::id(),
+                'clock_in'     => $formatCarbonDate['work_in'],
+                'clock_out'    => $formatCarbonDate['work_out'],
+            ]);
+        } else {
+            // 更新
+            $targetAttendance->clock_in = $formatCarbonDate['work_in'];
+            $targetAttendance->clock_out = $formatCarbonDate['work_out'];
+            $this->attendanceRepository->updateAttendance($targetAttendance);
+        }
+    }
+    private function saveBreakTimes(?Attendance $targetAttendance, array $attendance, $formatCarbonDate): void
+    {
+        foreach ($attendance['break_in'] as $id => $breakIn) {
+            if ($id !== 0 && is_null($breakIn) && is_null($attendance['break_out'][$id])) {
+                // 削除
+                $this->attendanceRepository->deleteBreakTime($id);
+            } elseif (!is_null($breakIn)) {
+                match ($id) {
+                    // 新規
+                    0 => $this->attendanceRepository->createBreakTime([
+                        'attendance_id' => $targetAttendance->id,
+                        'clock_in'  => $formatCarbonDate['break_in'][$id],
+                        'clock_out' => $formatCarbonDate['break_out'][$id],
+                        'created_by' => Auth::id(),
+                    ]),
+                    // 更新
+                    default => $this->attendanceRepository->updateBreakTime(
+                        ['id' => $id,  'attendance_id' => $targetAttendance->id],
+                        [
+                            'clock_in'  => $formatCarbonDate['break_in'][$id],
+                            'clock_out' => $formatCarbonDate['break_out'][$id],
+                            'updated_at' => now(),
+                        ]
+                    ),
+                };
+            }
+        }
+    }
+
+    private function createApplicationAttendance(?Attendance $targetAttendance, array $attendance): AttendanceApplication
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $isAdmin = $user->isAdmin();
+        return $this->attendanceRepository->createAttendanceApplication([
+                'attendance_id' => $targetAttendance->id,
+                'applied_by'    => Auth::id(),
+                'applied_at'    => now(),
+                'approved_by'  => $isAdmin ? Auth::id() : null,
+                'approved_at'  => $isAdmin ? now() : null,
+                'note'         => $attendance['note'],
+                'status'       => $isAdmin ? ApprovalStatus::APPROVED : ApprovalStatus::PENDING,
+            ]);
+
     }
 
     public function attendanceRegister($action, $attendanceId)

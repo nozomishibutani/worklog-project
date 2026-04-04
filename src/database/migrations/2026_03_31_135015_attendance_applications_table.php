@@ -12,7 +12,7 @@ return new class () extends Migration {
     {
         Schema::create('attendance_applications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('attendance_id')->constrained();
+            $table->foreignId('attendance_id')->constrained('attendances');
             $table->foreignId('applied_by')->nullable()->constrained('users');
             $table->dateTime('applied_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users');

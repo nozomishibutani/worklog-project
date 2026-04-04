@@ -270,33 +270,33 @@ class AttendanceCalculatorService
         $user = Auth::user();
         /** @var \App\Models\User $user */
         $attendance = $user->attendances()->where('work_date', $date)->first();
-        $attendanceStatus = AttendanceStatus::OFF;
-        if (is_null($attendance->clock_in) && is_null($attendance->clock_out)) {
-            // 空勤怠を作成した場合
-            $attendanceStatus = AttendanceStatus::ON_DUTY;
-        } elseif (!is_null($attendance->clock_out)) {
+
+        if (is_null($attendance)) {
+            // 勤務開始
+            return [
+                'attendanceStatus' => AttendanceStatus::OFF,
+                'attendance' => $attendance,
+            ];
+        }
+
+        if (!is_null($attendance->clock_out)) {
             // 退勤済み
-            $attendanceStatus = AttendanceStatus::OFF_DUTY;
-        } elseif (!is_null($attendance->clock_in)) {
-            // 出勤中
-            $attendanceStatus = AttendanceStatus::ON_DUTY;
+            return [
+                'attendanceStatus' => AttendanceStatus::OFF_DUTY,
+                'attendance' => $attendance,
+            ];
+        }
 
-            // 休憩
-            $breakTime = $attendance->breakTimes()
-                ->latest('clock_in')
-                ->first();
+        if (!is_null($attendance->clock_in)) {
+            $breakTime = $attendance->breakTimes()->latest('clock_in')->first();
             if (is_null($breakTime)) {
-                return [
-                            'attendanceStatus' => $attendanceStatus,
-                            'attendance' => $attendance,
-                            ];
-            }
-
-            if (is_null($breakTime['clock_out'])) {
+                // 休憩入もしくは退勤を選択
+                $attendanceStatus = AttendanceStatus::ON_DUTY;
+            } elseif (is_null($breakTime['clock_out'])) {
                 // 休憩中
                 $attendanceStatus = AttendanceStatus::ON_BREAK;
             } elseif (!is_null($breakTime['clock_out'])) {
-                // 休憩終了 → 出勤中
+                // 休憩戻 → 休憩入もしくは退勤を選択
                 $attendanceStatus = AttendanceStatus::ON_DUTY;
             }
         }
