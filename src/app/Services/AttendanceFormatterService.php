@@ -153,14 +153,17 @@ class AttendanceFormatterService
                     'month' => $attendance['month'],
                     'day' => $attendance['day'],
                 ];
-
         $formatCarbonDate['work_in'] =  $attendance['work_in'] ? $this->formatCarbonDate($workDay, $attendance['work_in']) : null;
         $formatCarbonDate['work_out'] = $attendance['work_out'] ? $this->formatCarbonDate($workDay, $attendance['work_out']) : null;
+        if (!isset($attendance['break_in'])) {
+            return $formatCarbonDate;
+        }
         foreach ($attendance['break_in'] as $breakId => $breakTime) {
             $formatCarbonDate['break_in'][$breakId] = $breakTime ? $this->formatCarbonDate($workDay, $breakTime) : null;
             $formatCarbonDate['break_out'][$breakId]
                 = $attendance['break_out'][$breakId] ? $this->formatCarbonDate($workDay, $attendance['break_out'][$breakId]) : null;
         }
+
         return $formatCarbonDate;
     }
 

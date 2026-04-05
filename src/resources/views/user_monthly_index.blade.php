@@ -48,11 +48,11 @@
                     <td class="admin__data">
                         @if (is_null($value['attendance_id']))
                             <a class="admin__detail-btn"
-                                href="{{ route('show', ['id' => null, 'date' => $workDate]) }}">詳細!
+                                href="{{ route($route, ['id' => '', 'date' => $workDate]) }}">詳細
                             </a>
                         @else
                             <a class="admin__detail-btn"
-                                href="{{ route('show', ['id' => $value['attendance_id']]) }}">詳細
+                                href="{{ route($route, ['id' => $value['attendance_id']]) }}">詳細
                             </a>
                         @endif
                     </td>

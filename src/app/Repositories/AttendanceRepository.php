@@ -50,4 +50,9 @@ class AttendanceRepository
     {
         return AttendanceApplication::create($attendanceApplication);
     }
+
+    public function approveAttendanceApplication($attendanceApplication): bool
+    {
+        return  $attendanceApplication->save();
+    }
 }

@@ -37,8 +37,7 @@ Route::prefix('admin')
                     ->name('admin.user.index');
         Route::get('/attendance/staff/{id}', [AdminController::class, 'userMonthlyIndex'])
                     ->name('admin.monthly.index');
-        Route::post('/attendance/update', [AdminController::class, 'update'])
-                            ->name('admin.update');
+
         Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'showForApproval'])
                             ->name('admin.approval.show');
         Route::post('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'approve'])
@@ -52,6 +51,10 @@ Route::middleware('auth:web,admin') // 両方明示することでアクセス�
 ->group(function () {
     Route::get('/stamp_correction_request/list', [CommonController::class, 'applicationIndex'])
                                         ->name('application.index');
+
+    Route::post('/attendance/update', [CommonController::class, 'update'])
+                                ->name('update');
+
 });
 
 
@@ -78,8 +81,8 @@ Route::middleware('auth:web')
         ->group(function () {
             Route::get('/attendance', [UserController::class, 'index'])
                 ->name('index');
-            Route::post('/attendance', [UserController::class, 'register'])
-                ->name('register');
+            Route::post('/attendance', [UserController::class, 'logAttendance'])
+                ->name('log');
             Route::get('/attendance/list', [UserController::class, 'monthlyIndex'])
                 ->name('monthly.index');
             Route::get('/attendance/detail/{id?}', [UserController::class, 'show'])
@@ -90,6 +93,3 @@ Route::middleware('auth:web')
 Route::get('/', function () {
     return redirect()->route('index');
 });
-
-
-

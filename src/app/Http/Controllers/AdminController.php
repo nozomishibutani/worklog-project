@@ -14,7 +14,7 @@ use App\Enums\Type;
 use App\Models\AttendanceApplication;
 use App\Http\Requests\AttendanceRequest;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\ApprovalStatus;
+use App\Enums\Role;
 
 class AdminController extends Controller
 {
@@ -67,7 +67,7 @@ class AdminController extends Controller
         $date =  $request->query('date');
 
         if ($attendanceId) {
-            $attendance = Attendance::with(['user', 'breakTimes', 'attendanceApplication'])->find($attendanceId);
+            $attendance = Attendance::with(['user', 'breakTimes'])->find($attendanceId);
 
             [
                 'workTimes' => $workTimes,
@@ -86,12 +86,12 @@ class AdminController extends Controller
             = $this->attendanceFormatterService->createDailyEmptyRecord($user, $date);
         }
 
-        return view('admin/attendance_detail', [
+        return view('show', [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
-            'attendanceApplication' => isset($attendance) ? $attendance?->attendanceApplication : null,
-            'mode' => 'show',
+            'route' => Role::ADMIN->value. '.show',
+            'attendanceApplication' => isset($attendance) ? $attendance?->latestAttendanceApplication : null,
         ]);
     }
 
@@ -131,25 +131,6 @@ class AdminController extends Controller
         ]);
     }
 
-    public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
-    {
-        $tmp = $request->validated();
-        $attendance = $request->only('user_id', 'attendance_id', 'year', 'month', 'day');
-        $attendance = array_merge($attendance, $tmp);
-
-        $result = $this->attendanceUpdateService->updateAttendance($attendance);
-        if ($result) {
-
-            return redirect()->route('admin.show', ['id' => $result->attendance_id])
-                            ->with('alert', '勤怠情報を修正しました')
-                            ->with('alert-type', 'alert-success');
-        }
-
-        return redirect()->route('admin.index')
-                    ->with('alert', 'システムエラーが発生しました')
-                    ->with('alert-type', 'alert-error');
-    }
-
     public function showForApproval($applicationId)
     {
         $application = AttendanceApplication::with('attendance.user', 'attendance.breakTimes')->find($applicationId);
@@ -167,27 +148,17 @@ class AdminController extends Controller
         ]
         = $this->attendanceCalculatorService->getUserDailyAttendance($application->attendance);
 
-        return view('admin/attendance_detail', [
+        return view('admin/approval', [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
             'attendanceApplication' => $application,
-            'mode' => 'approve',
         ]);
     }
 
-    public function approve(Request $request)
+    public function approve($attendanceApplicationId)
     {
-        $attendanceId = $request->input('attendance_id');
-
-        $targetAttendance = Attendance::find($attendanceId);
-        $attendanceApplication = $targetAttendance->attendanceApplication;
-
-        $attendanceApplication->approved_by = Auth::id();
-        $attendanceApplication->approved_at = now();
-        $attendanceApplication->status = ApprovalStatus::APPROVED;
-
-        $result = $attendanceApplication->save();
+        $result = $this->attendanceUpdateService->approveAttendanceApplication($attendanceApplicationId);
 
         if ($result) {
             return redirect()->route('application.index', ['mode' => 'approved'])

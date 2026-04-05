@@ -66,7 +66,19 @@ class AttendanceRequest extends FormRequest
             $carbonWorkIn = $this->work_in ? $attendanceFormatterService->formatCarbonDate($workDate, $this->work_in) : null;
             $carbonWorkOut = $this->work_out ? $attendanceFormatterService->formatCarbonDate($workDate, $this->work_out) : null;
 
-            // 休憩バリデーション準備
+            // 1. 出勤時間が退勤時間より後になっている場合，および退勤時間が出勤時間より前になっている場合に以下のメッセージを表示
+            if (!is_null($carbonWorkIn) && !is_null($carbonWorkOut) && $carbonWorkIn >= $carbonWorkOut) {
+                if (!$validator->errors()->has('work_in') && !$validator->errors()->has('work_out')) {
+                    $validator->errors()->add('work_in', '出勤時間もしくは退勤時間が不適切な値です');
+                }
+            }
+
+            // 2. 休憩開始時間が出勤時間より前になっている場合及び退勤時間より後になっている場合、以下のメッセージを表示
+
+            if (is_null($this->break_in)) {
+                // 休憩レコードが存在しない
+                return;
+            };
             foreach ($this->break_in as $id => $breakIn) {
                 if (is_null($breakIn) || is_null($this->break_out[$id])) {
                     // どちらか1つでも未入力の場合はバリデーションしない
@@ -82,16 +94,8 @@ class AttendanceRequest extends FormRequest
                 ];
             }
 
-            // 1. 出勤時間が退勤時間より後になっている場合，および退勤時間が出勤時間より前になっている場合に以下のメッセージを表示
-            if (!is_null($carbonWorkIn) && !is_null($carbonWorkOut) && $carbonWorkIn >= $carbonWorkOut) {
-                if (!$validator->errors()->has('work_in') && !$validator->errors()->has('work_out')) {
-                    $validator->errors()->add('work_in', '出勤時間もしくは退勤時間が不適切な値です');
-                }
-            }
-
-            // 2. 休憩開始時間が出勤時間より前になっている場合及び退勤時間より後になっている場合、以下のメッセージを表示
             if (empty($breakTimes)) {
-                // 休憩レコードが存在しない
+                // バリデーション対象の休憩レコードが存在しない
                 return;
             }
             ksort($breakTimes);

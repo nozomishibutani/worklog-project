@@ -21,11 +21,11 @@
                 <ul class="">
                     <li class="">
                         <a class=""
-                            href="{{ route('application.index', ['mode' => App\Enums\AttendanceStatus::PENDING->value]) }}">承認待ち</a>
+                            href="{{ route('application.index', ['mode' => App\Enums\ApprovalStatus::PENDING->value]) }}">承認待ち</a>
                     </li>
                     <li class="">
                         <a class=""
-                            href="{{ route('application.index', ['mode' => App\Enums\AttendanceStatus::APPROVED->value]) }}">承認済み</a>
+                            href="{{ route('application.index', ['mode' => App\Enums\ApprovalStatus::APPROVED->value]) }}">承認済み</a>
                     </li>
                 </ul>
             </nav>
@@ -48,9 +48,14 @@
                         <td class="admin__data">{{ $application->note }}</td>
                         <td class="admin__data">{{ $application->applied_at->format('Y/m/d') }}</td>
                         <td class="admin__data">
-                            <a class="admin__detail-btn"
-                                href="{{ route('admin.approval.show', ['attendance_correct_request_id' => $application->id]) }}">詳細
-                            </a>
+                            @if (auth('web')->check())
+                                <a class="admin__detail-btn" href="{{ route('show', ['id' => $application->attendance->id]) }}">詳細
+                                </a>
+                            @elseif(auth('admin')->check())
+                                <a class="admin__detail-btn"
+                                    href="{{ route('admin.approval.show', ['attendance_correct_request_id' => $application->id]) }}">詳細
+                                </a>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

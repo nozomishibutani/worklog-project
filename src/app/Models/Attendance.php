@@ -38,6 +38,11 @@ class Attendance extends Model
 
     public function attendanceApplication()
     {
-        return $this->hasOne(AttendanceApplication::class);
+        return $this->hasMany(AttendanceApplication::class);
+    }
+
+    public function latestAttendanceApplication()
+    {
+        return $this->hasOne(AttendanceApplication::class)->latestOfMany();
     }
 }

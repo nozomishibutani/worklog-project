@@ -15,6 +15,7 @@ use App\Models\AttendanceApplication;
 use App\Http\Requests\AttendanceRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ApprovalStatus;
+use App\Enums\Role;
 
 use function Symfony\Component\Clock\now;
 
@@ -46,7 +47,7 @@ class UserController extends Controller
         return view('index', compact('attendanceStatus', 'attendance', 'time', 'day'));
     }
 
-    public function register(Request $request)
+    public function logAttendance(Request $request)
     {
         $attendanceId = $request->input('attendance_id');
         if (isset($_POST['action'])) {
@@ -83,6 +84,7 @@ class UserController extends Controller
             'name' => $name,
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
+            'route' => 'show',
             'date' => [
                 'label' => $startOfMonth->copy()->format('Y/m'),
                 'prev' => $startOfMonth->copy()->subMonth()->format('Ym'),
@@ -90,14 +92,13 @@ class UserController extends Controller
             ],
         ]);
     }
+
     public function show(Request $request, $attendanceId = null): \Illuminate\View\View
     {
-        dd('here');
-
         $date =  $request->query('date');
 
         if ($attendanceId) {
-            $attendance = Attendance::with(['user', 'breakTimes', 'attendanceApplication'])->find($attendanceId);
+            $attendance = Attendance::with(['user', 'breakTimes'])->find($attendanceId);
 
             [
                 'workTimes' => $workTimes,
@@ -116,12 +117,13 @@ class UserController extends Controller
             = $this->attendanceFormatterService->createDailyEmptyRecord($user, $date);
         }
 
-        return view('admin/attendance_detail', [
+        return view('show', [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
-            'attendanceApplication' => isset($attendance) ? $attendance?->attendanceApplication : null,
-            'mode' => 'show',
+            'route' => Role::ADMIN->value. '.show',
+            'attendanceApplication' => isset($attendance) ? $attendance?->latestAttendanceApplication : null,
         ]);
     }
+
 }

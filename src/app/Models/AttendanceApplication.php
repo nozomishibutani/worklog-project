@@ -33,4 +33,9 @@ class AttendanceApplication extends Model
     {
         return $this->belongsTo(Attendance::class);
     }
+
+    public function latestAttendanceApplication()
+    {
+        return $this->belongsTo(Attendance::class);
+    }
 }
