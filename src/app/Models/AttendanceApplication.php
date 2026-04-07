@@ -9,6 +9,7 @@ class AttendanceApplication extends Model
 {
     protected $fillable = [
         'attendance_id',
+        'attendance_history_id',
         'applied_by',
         'applied_at',
         'approved_by',
@@ -40,6 +41,11 @@ class AttendanceApplication extends Model
     }
 
     public function latestAttendanceApplication()
+    {
+        return $this->belongsTo(Attendance::class);
+    }
+
+    public function attendanceHistories()
     {
         return $this->belongsTo(Attendance::class);
     }

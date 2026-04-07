@@ -40,7 +40,6 @@ class AttendanceUpdateService
             // 休憩
             $this->saveBreakTimes($saveAttendance, $attendance, $formatCarbonDate);
             // 修正リクエスト作成
-            //return $this->createApplicationAttendance($targetAttendance, $attendance);
             return $this->createApplicationAttendance($saveAttendance, $attendance);
             // } catch (\Exception $e) {
             //     Log::error($e);

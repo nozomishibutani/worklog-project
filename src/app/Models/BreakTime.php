@@ -17,7 +17,6 @@ class BreakTime extends Model
     'deleted_at'
     ];
 
-    // DBから取った値を Carbon に変換する
     protected $casts = [
     'clock_in' => 'datetime',
     'clock_out' => 'datetime',
