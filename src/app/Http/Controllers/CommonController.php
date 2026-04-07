@@ -38,7 +38,7 @@ class CommonController extends Controller
             $mode = $request->query('mode');
             switch ($mode) {
                 case ApprovalStatus::PENDING->value:
-                    $attendanceApplications = AttendanceApplication::with('attendance.user')
+                    $attendanceApplications = AttendanceApplication::with('attendance.user', 'attendanceHistory')
                                                                     ->whereNull('approved_by')
                                                                     ->whereNull('approved_at')
                                                                     ->orderBy('applied_at', 'asc')
@@ -80,6 +80,7 @@ class CommonController extends Controller
                                                             ->whereNotNull('approved_at');
                                                         })
                                                         ->with('latestAttendanceApplication')
+                                                        ->orderBy('updated_at','desc')
                                                         ->get();
                     break;
 
@@ -106,7 +107,7 @@ class CommonController extends Controller
         $route = auth('admin')->check() ? Role::ADMIN->value . '.' : 'user.';
 
         if ($result) {
-            return redirect()->route($route . 'show', ['id' => $result->attendance_id])
+            return redirect()->route('show', ['id' => $result->attendance_id])
                             ->with('alert', '勤怠情報を修正しました')
                             ->with('alert-type', 'alert-success');
         }

@@ -45,8 +45,8 @@ class AttendanceApplication extends Model
         return $this->belongsTo(Attendance::class);
     }
 
-    public function attendanceHistories()
+    public function attendanceHistory()
     {
-        return $this->belongsTo(Attendance::class);
+        return $this->belongsTo(AttendanceHistory::class);
     }
 }

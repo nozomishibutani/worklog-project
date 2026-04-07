@@ -18,7 +18,6 @@ class Attendance extends Model
     'work_date' => 'datetime',
     'clock_in' => 'datetime',
     'clock_out' => 'datetime',
-    'approved_at' => 'datetime',
     ];
 
     public function user()

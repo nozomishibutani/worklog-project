@@ -12,7 +12,7 @@ return new class () extends Migration {
     {
         Schema::create('break_time_histories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('attendance_histories_id')->constrained('attendance_histories');
+            $table->foreignId('attendance_history_id')->constrained('attendance_histories');
             $table->dateTime('clock_in')->nullable();
             $table->dateTime('clock_out')->nullable();
             $table->foreignId('created_by')->constrained('users');

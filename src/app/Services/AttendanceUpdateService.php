@@ -12,6 +12,8 @@ use App\Enums\AttendanceStatus;
 use App\Models\BreakTime;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ApprovalStatus;
+use App\Models\AttendanceHistory;
+use App\Models\BreakTimeHistory;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
@@ -35,12 +37,20 @@ class AttendanceUpdateService
 
         return DB::transaction(function () use ($targetAttendance, $attendance, $formatCarbonDate) {
             //try {
+            // 履歴を作成
+            if (!is_null($targetAttendance)) {
+                $attendanceHistory = $this->createHistory($targetAttendance, $attendance, $formatCarbonDate);
+            } else {
+                // 空レコードの場合
+                $attendanceHistory = null;
+            }
             // 勤怠登録
             $saveAttendance = $this->saveAttendance($targetAttendance, $attendance, $formatCarbonDate);
             // 休憩
             $this->saveBreakTimes($saveAttendance, $attendance, $formatCarbonDate);
+
             // 修正リクエスト作成
-            return $this->createApplicationAttendance($saveAttendance, $attendance);
+            return $this->createApplicationAttendance($saveAttendance, $attendance, $attendanceHistory);
             // } catch (\Exception $e) {
             //     Log::error($e);
             //     $route = auth('admin')->check() ? Role::ADMIN->value . '.' : null;
@@ -104,20 +114,50 @@ class AttendanceUpdateService
         }
     }
 
-    private function createApplicationAttendance(Attendance $saveAttendance, array $attendance): AttendanceApplication
+    private function createApplicationAttendance(Attendance $saveAttendance, array $attendance, AttendanceHistory|null $attendanceHistory): AttendanceApplication
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $isAdmin = $user->isAdmin();
         return $this->attendanceRepository->createAttendanceApplication([
                 'attendance_id' => $saveAttendance->id,
+                'attendance_history_id' => $attendanceHistory?->id ? $attendanceHistory->id : null ,
                 'applied_by'    => Auth::id(),
                 'applied_at'    => now(),
                 'approved_by'  => $isAdmin ? Auth::id() : null,
                 'approved_at'  => $isAdmin ? now() : null,
                 'note'         => $attendance['note'],
             ]);
+    }
 
+    public function createHistory($targetAttendance): AttendanceHistory
+    {
+        $attendanceHistory = $this->attendanceRepository->createAttendanceHistory([
+                        'user_id'  => $targetAttendance->user_id,
+                        'work_date'  => $targetAttendance->work_date,
+                        'clock_in'  => $targetAttendance->clock_in,
+                        'clock_out' => $targetAttendance->clock_out,
+                        'created_by' => $targetAttendance->created_by,
+                    ]);
+
+        if ($targetAttendance->breakTimes) {
+            $this->createBreakTimeHistory($targetAttendance, $attendanceHistory);
+        }
+
+        return $attendanceHistory;
+    }
+
+    private function createBreakTimeHistory($targetAttendance, $attendanceHistory)
+    {
+        foreach ($targetAttendance->breakTimes as $breakTime) {
+            $this->attendanceRepository->createBreakTimeHistory([
+                                        'attendance_history_id' => $attendanceHistory->id,
+                                        'clock_in'  => $breakTime->clock_in,
+                                        'clock_out' => $breakTime->clock_out,
+                                        'created_by' => Auth::id(),
+                                        'created_at' => $breakTime->created_at,
+                                    ]);
+        }
     }
 
     public function approveAttendanceApplication($applicationAttendanceId): bool

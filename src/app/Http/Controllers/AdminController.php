@@ -133,12 +133,19 @@ class AdminController extends Controller
 
     public function showForApproval($applicationId)
     {
-        $application = AttendanceApplication::with('attendance.user', 'attendance.breakTimes')->find($applicationId);
-
+        $application = AttendanceApplication::with('attendance.user', 'attendance.breakTimes', 'attendanceHistory')->find($applicationId);
         if (is_null($application)) {
             return redirect()->route('admin.index')
                                 ->with('alert', 'システムエラーが発生しました')
                                 ->with('alert-type', 'alert-error');
+        }
+        if ($application->isApproved()) {
+            // 履歴表示
+            $attendance = $application->attendanceHistory;
+
+        } else {
+            // 最新
+            $attendance = $application->attendance;
         }
 
         [
@@ -146,7 +153,7 @@ class AdminController extends Controller
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
         ]
-        = $this->attendanceCalculatorService->getUserDailyAttendance($application->attendance);
+        = $this->attendanceCalculatorService->getUserDailyAttendance($attendance);
 
         return view('admin/approval', [
             'workTimes' => $workTimes,

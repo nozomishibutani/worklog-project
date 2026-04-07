@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Enums\AttendanceStatus;
+use App\Models\AttendanceHistory;
 use Illuminate\Support\Facades\Auth;
 
 use function Symfony\Component\VarDumper\Dumper\esc;
@@ -117,7 +118,7 @@ class AttendanceCalculatorService
     /**
      * 指定ユーザーの日時勤怠詳細を取得(勤怠レコードが存在する場合)
      */
-    public function getUserDailyAttendance(Attendance $attendance): array
+    public function getUserDailyAttendance(Attendance|AttendanceHistory $attendance): array
     {
 
         $workTimes = [
@@ -140,22 +141,35 @@ class AttendanceCalculatorService
         $tmp = [
                 'attendanceId' => $attendance->id,
                 'userId' => $attendance->user_id,
-                'name' => $attendance->user->name,
+                'name' => $attendance->user?->name ? $attendance->user->name : $attendance->attendanceApplication->attendance->user->name,
                 'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
                 ];
         $workTimes = array_merge($workTimes, $tmp);
 
         // ---  休憩時間 ---
-        foreach ($attendance->breakTimes as $breakTime) {
-            $clockIn  = $breakTime->clock_in ? Carbon::parse($breakTime->clock_in) : null;
-            $clockOut = $breakTime->clock_out ? Carbon::parse($breakTime->clock_out) : null;
-            $breakTimes[] = [
-                'id' => $breakTime->id,
-                'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
-                'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
-            ];
-        }
+        $breakTimes = $attendance->breakTimes ?? $attendance->breakTimeHistories;
+        //if (!is_null($attendance->breakTimes)) {
+            foreach ($breakTimes as $breakTime) {
+                $clockIn  = $breakTime->clock_in ? Carbon::parse($breakTime->clock_in) : null;
+                $clockOut = $breakTime->clock_out ? Carbon::parse($breakTime->clock_out) : null;
+                $breakTimes[] = [
+                    'id' => $breakTime->id,
+                    'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
+                    'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
+                ];
+            }
+        // } elseif (!is_null($attendance->breakTimeHistories)) {
+        //     foreach ($attendance->breakTimeHistories as $breakTime) {
+        //         $clockIn  = $breakTime->clock_in ? Carbon::parse($breakTime->clock_in) : null;
+        //         $clockOut = $breakTime->clock_out ? Carbon::parse($breakTime->clock_out) : null;
+        //         $breakTimes[] = [
+        //             'id' => $breakTime->id,
+        //             'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
+        //             'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
+        //         ];
+        //     }
+        // }
         $sorted = collect($breakTimes)->sortBy('clock_in')->values()->all();
 
         return [
