@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use \App\Enums\ApprovalStatus;
+use App\Enums\ApprovalStatus;
 
 class AttendanceApplication extends Model
 {
@@ -13,7 +13,6 @@ class AttendanceApplication extends Model
         'applied_at',
         'approved_by',
         'approved_at',
-        'status',
         'note',
     ];
 
@@ -21,12 +20,18 @@ class AttendanceApplication extends Model
     'applied_at' => 'datetime',
     'corrected_at' => 'datetime',
     'approved_at' => 'datetime',
-    'status' => ApprovalStatus::class,
     ];
 
     public function isApproved(): bool
     {
-        return $this->status === ApprovalStatus::APPROVED;
+        return $this->approved_by !== null && $this->approved_at !== null;
+    }
+
+    public function approvalStatus(): ApprovalStatus
+    {
+        return $this->isApproved()
+            ? ApprovalStatus::APPROVED
+            : ApprovalStatus::PENDING;
     }
 
     public function attendance()

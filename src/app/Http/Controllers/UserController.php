@@ -44,7 +44,7 @@ class UserController extends Controller
         $time = now()->format('H:i');
         $day = $this->attendanceFormatterService->addDay(now(), 'Y年n月j日');
 
-        return view('index', compact('attendanceStatus', 'attendance', 'time', 'day'));
+        return view('user.index', compact('attendanceStatus', 'attendance', 'time', 'day'));
     }
 
     public function logAttendance(Request $request)
@@ -79,7 +79,7 @@ class UserController extends Controller
         ]
         = $this->attendanceCalculatorService->getUserMonthlyAttendances(Auth::id(), $startOfMonth);
 
-        return view('user_monthly_index', [
+        return view('user.monthly_index', [
             'userId' => Auth::id(),
             'name' => $name,
             'workTimes' => $workTimes,
@@ -121,7 +121,7 @@ class UserController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
-            'route' => Role::ADMIN->value. '.show',
+            //'route' => Role::ADMIN->value. '.show',
             'attendanceApplication' => isset($attendance) ? $attendance?->latestAttendanceApplication : null,
         ]);
     }

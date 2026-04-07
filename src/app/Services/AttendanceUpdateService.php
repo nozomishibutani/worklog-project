@@ -117,7 +117,6 @@ class AttendanceUpdateService
                 'approved_by'  => $isAdmin ? Auth::id() : null,
                 'approved_at'  => $isAdmin ? now() : null,
                 'note'         => $attendance['note'],
-                'status'       => $isAdmin ? ApprovalStatus::APPROVED : ApprovalStatus::PENDING,
             ]);
 
     }
@@ -127,7 +126,6 @@ class AttendanceUpdateService
         $attendanceApplication = AttendanceApplication::find($applicationAttendanceId);
         $attendanceApplication->approved_by = Auth::id();
         $attendanceApplication->approved_at = now();
-        $attendanceApplication->status = ApprovalStatus::APPROVED;
         return $this->attendanceRepository->approveAttendanceApplication($attendanceApplication);
     }
 

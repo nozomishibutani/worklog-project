@@ -13,15 +13,12 @@ return new class () extends Migration {
         Schema::create('attendance_applications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('attendance_id')->constrained('attendances');
-            $table->foreignId('applied_by')->nullable()->constrained('users');
-            $table->dateTime('applied_at')->nullable();
-            $table->foreignId('approved_by')->nullable()->constrained('users');
-            $table->dateTime('approved_at')->nullable();
-            $table->string('status', 10)->default('pending')
-                ->comment('pending=承認待ち, approved=承認済み');
+            $table->foreignId('applied_by')->nullable()->constrained('users')->default(null);
+            $table->dateTime('applied_at')->nullable()->default(null);
+            $table->foreignId('approved_by')->nullable()->constrained('users')->default(null);
+            $table->dateTime('approved_at')->nullable()->default(null);;
             $table->string('note', 255)->nullable();
             $table->timestamps();
-            $table->index('status');
         });
     }
 

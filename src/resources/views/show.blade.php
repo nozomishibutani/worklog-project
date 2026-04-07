@@ -52,26 +52,67 @@
                         </td>
                     @endif
                 </tr>
-                {{-- 休憩なし --}}
-                @if (count($breakTimes) == 0)
-                    <tr class="admin__row">
-                        <th class="admin__label">休憩</th>
-                        <td class="admin__data">
-                            <input type="time" name="break_in[0]" value="{{ old('break_in.0') }}">
-                        </td>
-                        <td class="admin__data">～</td>
-                        <td class="admin__data">
-                            <input type="time" name="break_out[0]" value="{{ old('break_out.0') }}">
-                        </td>
-                        @if ($errors->has('break_in.0') || $errors->has('break_out.0'))
-                            <td class="msg">
-                                {{ $errors->first('break_in.0') }}
-                                {{ $errors->first('break_out.0') }}
+                {{-- 修正可能 --}}
+                @if (is_null($attendanceApplication) || $attendanceApplication->isApproved())
+                    {{-- 休憩なし --}}
+                    @if (count($breakTimes) == 0)
+                        <tr class="admin__row">
+                            <th class="admin__label">休憩</th>
+                            <td class="admin__data">
+                                <input type="time" name="break_in[0]" value="{{ old('break_in.0') }}">
                             </td>
-                        @endif
-                    </tr>
-                @elseif (count($breakTimes) > 0)
-                    {{-- 休憩あり --}}
+                            <td class="admin__data">～</td>
+                            <td class="admin__data">
+                                <input type="time" name="break_out[0]" value="{{ old('break_out.0') }}">
+                            </td>
+                            @if ($errors->has('break_in.0') || $errors->has('break_out.0'))
+                                <td class="msg">
+                                    {{ $errors->first('break_in.0') }}
+                                    {{ $errors->first('break_out.0') }}
+                                </td>
+                            @endif
+                        </tr>
+                    @elseif (count($breakTimes) > 0)
+                        {{-- 休憩あり --}}
+                        @for ($i = 0; $i < count($breakTimes); $i++)
+                            <tr class="admin__row">
+                                <th class="admin__label">休憩{{ $i > 0 ? $i + 1 : '' }}</th>
+                                <td class="admin__data">
+                                    <input type="time" name="break_in[{{ $breakTimes[$i]['id'] }}]"
+                                        value="{{ old('break_in.' . $breakTimes[$i]['id'], $breakTimes[$i]['clock_in']) }}">
+                                </td>
+                                <td class="admin__data">～</td>
+                                <td class="admin__data">
+                                    <input type="time" name="break_out[{{ $breakTimes[$i]['id'] }}]"
+                                        value="{{ old('break_out.' . $breakTimes[$i]['id'], $breakTimes[$i]['clock_out']) }}">
+                                </td>
+                                @if ($errors->has('break_in.' . $breakTimes[$i]['id']) || $errors->has('break_out.' . $breakTimes[$i]['id']))
+                                    <td class="msg">
+                                        {{ $errors->first('break_in.' . $breakTimes[$i]['id']) }}
+                                        {{ $errors->first('break_out.' . $breakTimes[$i]['id']) }}
+                                    </td>
+                                @endif
+                            </tr>
+                        @endfor
+                        <tr class="admin__row">
+                            <th class="admin__label">休憩{{ count($breakTimes) + 1 }}</th>
+                            <td class="admin__data">
+                                <input type="time" name="break_in[0]" value="{{ old('break_in.0') }}">
+                            </td>
+                            <td class="admin__data">～</td>
+                            <td class="admin__data">
+                                <input type="time" name="break_out[0]" value="{{ old('break_out.0') }}">
+                            </td>
+                            @if ($errors->has('break_in.0') || $errors->has('break_out.0'))
+                                <td class="msg">
+                                    {{ $errors->first('break_in.0') }}
+                                    {{ $errors->first('break_out.0') }}
+                                </td>
+                            @endif
+                        </tr>
+                    @endif
+                {{-- 休憩分のレコード表示 --}}
+                @elseif(!$attendanceApplication->isApproved())
                     @for ($i = 0; $i < count($breakTimes); $i++)
                         <tr class="admin__row">
                             <th class="admin__label">休憩{{ $i > 0 ? $i + 1 : '' }}</th>
@@ -92,22 +133,6 @@
                             @endif
                         </tr>
                     @endfor
-                    <tr class="admin__row">
-                        <th class="admin__label">休憩{{ count($breakTimes) + 1 }}</th>
-                        <td class="admin__data">
-                            <input type="time" name="break_in[0]" value="{{ old('break_in.0') }}">
-                        </td>
-                        <td class="admin__data">～</td>
-                        <td class="admin__data">
-                            <input type="time" name="break_out[0]" value="{{ old('break_out.0') }}">
-                        </td>
-                        @if ($errors->has('break_in.0') || $errors->has('break_out.0'))
-                            <td class="msg">
-                                {{ $errors->first('break_in.0') }}
-                                {{ $errors->first('break_out.0') }}
-                            </td>
-                        @endif
-                    </tr>
                 @endif
                 <tr class="admin__row">
                     <th class="admin__label">備考</th>
@@ -125,7 +150,6 @@
                 @if (is_null($attendanceApplication) || $attendanceApplication->isApproved())
                     <button class="">修正</button>
                 @elseif(!$attendanceApplication->isApproved())
-                    {{-- <button class="">承認</button> --}}
                     *承認待ちのため修正はできません。
                 @endif
             </div>

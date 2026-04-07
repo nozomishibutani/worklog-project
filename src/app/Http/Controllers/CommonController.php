@@ -38,11 +38,17 @@ class CommonController extends Controller
             $mode = $request->query('mode');
             switch ($mode) {
                 case ApprovalStatus::PENDING->value:
-                    $attendanceApplications = AttendanceApplication::with('attendance.user')->where('status', ApprovalStatus::PENDING->value)->get();
+                    $attendanceApplications = AttendanceApplication::with('attendance.user')
+                                                                    ->whereNull('approved_by')
+                                                                    ->whereNull('approved_at')
+                                                                    ->orderBy('applied_at', 'asc')
+                                                                    ->get();
                     break;
                 case ApprovalStatus::APPROVED->value:
+                    // 同日に複数回承認していても全部取得する
                     $attendanceApplications = AttendanceApplication::with('attendance.user')
-                                                                    ->where('status', ApprovalStatus::APPROVED->value)
+                                                                    ->whereNotNull('approved_by')
+                                                                    ->whereNotNull('approved_at')
                                                                     ->orderBy('approved_at', 'desc')
                                                                     ->get();
                     break;
@@ -50,33 +56,39 @@ class CommonController extends Controller
                     $attendanceApplications = null;
                     break;
             }
-            return view('admin/application_index', compact('attendanceApplications'));
+            return view('application_index', compact('attendanceApplications'));
         }
 
         if (auth('web')->check()) {
             $mode = $request->query('mode');
             switch ($mode) {
                 case ApprovalStatus::PENDING->value:
-
-                    $attendanceApplications = AttendanceApplication::where('status', ApprovalStatus::PENDING->value)
-                                                                    ->whereRelation('attendance', 'user_id', Auth::id())
-                                                                    ->with('attendance')
-                                                                    ->get();
+                    $attendances = Attendance::where('user_id', Auth::id())
+                                                        ->whereHas('latestAttendanceApplication', function ($q) {
+                                                            $q->whereNull('approved_by')
+                                                            ->whereNull('approved_at');
+                                                        })
+                                                        ->with('latestAttendanceApplication')
+                                                        ->get();
                     break;
+
                 case ApprovalStatus::APPROVED->value:
 
-                    $attendanceApplications = AttendanceApplication::where('status', ApprovalStatus::APPROVED->value)
-                                                                                        ->whereRelation('attendance', 'user_id', Auth::id())
-                                                                                        ->with('attendance')
-                                                                                        ->get();
+                    $attendances = Attendance::where('user_id', Auth::id())
+                                                        ->whereHas('latestAttendanceApplication', function ($q) {
+                                                            $q->whereNotNull('approved_by')
+                                                            ->whereNotNull('approved_at');
+                                                        })
+                                                        ->with('latestAttendanceApplication')
+                                                        ->get();
                     break;
 
                 default:
-                    $attendanceApplications = null;
+                    $attendances = null;
                     break;
             }
 
-            return view('admin/application_index', compact('attendanceApplications'));
+            return view('application_index', compact('attendances'));
 
         }
 
@@ -91,7 +103,7 @@ class CommonController extends Controller
 
         $result = $this->attendanceUpdateService->updateAttendance($attendance);
 
-        $route = auth('admin')->check() ? Role::ADMIN->value . '.' : null;
+        $route = auth('admin')->check() ? Role::ADMIN->value . '.' : 'user.';
 
         if ($result) {
             return redirect()->route($route . 'show', ['id' => $result->attendance_id])

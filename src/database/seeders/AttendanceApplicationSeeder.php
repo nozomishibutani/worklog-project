@@ -73,7 +73,6 @@ class AttendanceApplicationSeeder extends Seeder
 
             if ($approved) {
                 // 修正して承認済み
-                $status = ApprovalStatus::APPROVED;
                 $approvedAt = $clockOut->copy()->addDays(rand(2, 4));
                 $updatedAt = $approvedAt;
 
@@ -82,8 +81,6 @@ class AttendanceApplicationSeeder extends Seeder
                 }
 
             } elseif (!$approved && $isCorrection) {
-                // 修正はしたけど未承認
-                $status = ApprovalStatus::PENDING;
                 $updatedAt = $clockOut->copy()->addMinutes(30);
             }
 
@@ -95,7 +92,6 @@ class AttendanceApplicationSeeder extends Seeder
                 'applied_at' => $appliedAt,
                 'approved_by' => $admin?->id,
                 'approved_at' => $approvedAt,
-                'status' => $status,
                 'note' => $note,
                 'created_at' => $clockIn,
                 'updated_at' => $updatedAt,

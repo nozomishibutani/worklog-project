@@ -26,17 +26,12 @@ class Attendance extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
     public function breakTimes()
     {
         return $this->hasMany(BreakTime::class);
     }
 
-    public function attendanceApplication()
+    public function attendanceApplications()
     {
         return $this->hasMany(AttendanceApplication::class);
     }
