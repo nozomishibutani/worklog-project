@@ -38,19 +38,19 @@ class AttendanceUpdateService
         return DB::transaction(function () use ($targetAttendance, $attendance, $formatCarbonDate) {
             //try {
             // 履歴を作成
-            if (!is_null($targetAttendance)) {
-                $attendanceHistory = $this->createHistory($targetAttendance, $attendance, $formatCarbonDate);
-            } else {
-                // 空レコードの場合
-                $attendanceHistory = null;
-            }
+            // if (!is_null($targetAttendance)) {
+            //     $attendanceHistory = $this->createHistory($targetAttendance, $attendance, $formatCarbonDate);
+            // } else {
+            //     // 空レコードの場合
+            //     $attendanceHistory = null;
+            // }
             // 勤怠登録
             $saveAttendance = $this->saveAttendance($targetAttendance, $attendance, $formatCarbonDate);
             // 休憩
             $this->saveBreakTimes($saveAttendance, $attendance, $formatCarbonDate);
 
             // 修正リクエスト作成
-            return $this->createApplicationAttendance($saveAttendance, $attendance, $attendanceHistory);
+            return $this->createApplicationAttendance($saveAttendance, $attendance);
             // } catch (\Exception $e) {
             //     Log::error($e);
             //     $route = auth('admin')->check() ? Role::ADMIN->value . '.' : null;
@@ -114,14 +114,13 @@ class AttendanceUpdateService
         }
     }
 
-    private function createApplicationAttendance(Attendance $saveAttendance, array $attendance, AttendanceHistory|null $attendanceHistory): AttendanceApplication
+    private function createApplicationAttendance(Attendance $saveAttendance, array $attendance): AttendanceApplication
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $isAdmin = $user->isAdmin();
         return $this->attendanceRepository->createAttendanceApplication([
                 'attendance_id' => $saveAttendance->id,
-                'attendance_history_id' => $attendanceHistory?->id ? $attendanceHistory->id : null ,
                 'applied_by'    => Auth::id(),
                 'applied_at'    => now(),
                 'approved_by'  => $isAdmin ? Auth::id() : null,
@@ -163,8 +162,11 @@ class AttendanceUpdateService
     public function approveAttendanceApplication($applicationAttendanceId): bool
     {
         $attendanceApplication = AttendanceApplication::find($applicationAttendanceId);
+        // 承認する内容を保存
+        $applicationHistory = $this->createHistory($attendanceApplication->attendance);
         $attendanceApplication->approved_by = Auth::id();
         $attendanceApplication->approved_at = now();
+        $attendanceApplication->attendance_history_id = $applicationHistory->id;
         return $this->attendanceRepository->approveAttendanceApplication($attendanceApplication);
     }
 

@@ -59,9 +59,9 @@ class User extends Authenticatable
         return $this->hasMany(Attendance::class);
     }
 
-    public function breakTimes()
+        public function AttendanceHistories()
     {
-        return $this->hasMany(BreakTime::class);
+        return $this->hasMany(AttendanceHistory::class);
     }
 
     public function isAdmin(): bool

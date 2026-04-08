@@ -139,14 +139,8 @@ class AdminController extends Controller
                                 ->with('alert', 'システムエラーが発生しました')
                                 ->with('alert-type', 'alert-error');
         }
-        if ($application->isApproved()) {
-            // 履歴表示
-            $attendance = $application->attendanceHistory;
 
-        } else {
-            // 最新
-            $attendance = $application->attendance;
-        }
+        $attendance = $application->isApproved() ? $application->attendanceHistory : $application->attendance;
 
         [
             'workTimes' => $workTimes,

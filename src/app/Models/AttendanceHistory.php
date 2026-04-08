@@ -20,13 +20,16 @@ class AttendanceHistory extends Model
     'clock_out' => 'datetime',
     ];
 
-
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
     public function attendanceApplication()
     {
         return $this->HasOne(AttendanceApplication::class);
     }
     public function breakTimeHistories()
     {
-        return $this->HasMany(AttendanceApplication::class);
+        return $this->HasMany(BreakTimeHistory::class);
     }
 }

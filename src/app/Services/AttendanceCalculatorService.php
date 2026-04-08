@@ -141,16 +141,16 @@ class AttendanceCalculatorService
         $tmp = [
                 'attendanceId' => $attendance->id,
                 'userId' => $attendance->user_id,
-                'name' => $attendance->user?->name ? $attendance->user->name : $attendance->attendanceApplication->attendance->user->name,
+                'name' => $attendance->user->name,
                 'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
                 ];
         $workTimes = array_merge($workTimes, $tmp);
 
         // ---  休憩時間 ---
-        $breakTimes = $attendance->breakTimes ?? $attendance->breakTimeHistories;
-        //if (!is_null($attendance->breakTimes)) {
-            foreach ($breakTimes as $breakTime) {
+        $arr = $attendance->breakTimes ?? $attendance->breakTimeHistories;
+        if (!empty($arr)) {
+            foreach ($arr as $breakTime) {
                 $clockIn  = $breakTime->clock_in ? Carbon::parse($breakTime->clock_in) : null;
                 $clockOut = $breakTime->clock_out ? Carbon::parse($breakTime->clock_out) : null;
                 $breakTimes[] = [
@@ -159,17 +159,7 @@ class AttendanceCalculatorService
                     'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
                 ];
             }
-        // } elseif (!is_null($attendance->breakTimeHistories)) {
-        //     foreach ($attendance->breakTimeHistories as $breakTime) {
-        //         $clockIn  = $breakTime->clock_in ? Carbon::parse($breakTime->clock_in) : null;
-        //         $clockOut = $breakTime->clock_out ? Carbon::parse($breakTime->clock_out) : null;
-        //         $breakTimes[] = [
-        //             'id' => $breakTime->id,
-        //             'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
-        //             'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
-        //         ];
-        //     }
-        // }
+        }
         $sorted = collect($breakTimes)->sortBy('clock_in')->values()->all();
 
         return [

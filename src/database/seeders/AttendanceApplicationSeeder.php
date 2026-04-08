@@ -57,7 +57,7 @@ class AttendanceApplicationSeeder extends Seeder
             }
 
             // ===== 承認処理 =====
-            $approved = $isCorrection && rand(1, 100) <= 90;
+            $approved = $isCorrection && rand(1, 100) <= 50;
             if ($approved) {
                 if ($attendance->user->role == Role::ADMIN) {
                     $admin = $admins->where('id', '!=', $attendance->user->id)->first();

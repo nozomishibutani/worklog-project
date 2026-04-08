@@ -22,11 +22,6 @@ class BreakTime extends Model
     'clock_out' => 'datetime',
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function attendance()
     {
         return $this->belongsTo(Attendance::class);
