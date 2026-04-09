@@ -16,6 +16,8 @@ use App\Http\Requests\AttendanceRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ApprovalStatus;
 use App\Enums\Role;
+use App\Models\AttendanceApproval;
+use App\Models\AttendanceChange;
 
 class CommonController extends Controller
 {
@@ -34,8 +36,9 @@ class CommonController extends Controller
     }
     public function applicationIndex(Request $request)
     {
+        $mode = $request->query('mode');
+        $approvalStatus = ApprovalStatus::tryFrom($mode);
         if (auth('admin')->check()) {
-            $mode = $request->query('mode');
             switch ($mode) {
                 case ApprovalStatus::PENDING->value:
                     //$attendanceApplications = AttendanceApplication::with('attendance.user', 'attendanceHistory')
@@ -91,45 +94,32 @@ class CommonController extends Controller
         }
 
         if (auth('web')->check()) {
-            $mode = $request->query('mode');
+            $attendances = null;
             switch ($mode) {
                 case ApprovalStatus::PENDING->value:
-                    $attendances = Attendance::where('user_id', Auth::id())
-                                                        ->whereHas('latestAttendanceApplication', function ($q) {
-                                                            $q->whereNull('approved_by')
-                                                            ->whereNull('approved_at');
-                                                        })
-                                                        ->with('latestAttendanceApplication')
+                    $attendances = Attendance::with('latestAttendanceChange')
+                                                        ->where('user_id', Auth::id())
                                                         ->get();
                     break;
 
                 case ApprovalStatus::APPROVED->value:
-
-                    $attendances = Attendance::where('user_id', Auth::id())
-                                                        ->whereHas('latestAttendanceApplication', function ($q) {
-                                                            $q->whereNotNull('approved_by')
-                                                            ->whereNotNull('approved_at');
-                                                        })
-                                                        ->with('latestAttendanceApplication')
-                                                        ->orderBy('updated_at', 'desc')
-                                                        ->get();
-                    break;
-
-                default:
-                    $attendances = null;
+                    $attendances = AttendanceApproval::with('AttendanceChange')
+                                            ->where('user_id', Auth::id())
+                                            ->orderBy('approved_at', 'desc')
+                                            ->get();
                     break;
             }
-            return view('application_index', compact('attendances'));
+            return view('application_index', compact('attendances', 'approvalStatus'));
         }
     }
 
     public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
     {
         $tmp = $request->validated();
-        $attendance = $request->only('user_id', 'attendance_id', 'year', 'month', 'day');
+        $attendance = $request->only('user_id', 'attendance_id', 'current_attendance_status', 'year', 'month', 'day');
         $attendance = array_merge($attendance, $tmp);
 
-        $result = $this->attendanceUpdateService->updateAttendance($attendance);
+        $result = $this->attendanceUpdateService->applyAttendance($attendance);
 
         $isAdmin = auth('admin')->check();
 

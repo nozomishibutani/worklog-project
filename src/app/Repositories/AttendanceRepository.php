@@ -3,6 +3,8 @@
 namespace App\Repositories;
 
 use App\Models\Attendance;
+use App\Models\AttendanceChange;
+use App\Models\BreakTimeChange;
 use App\Models\User;
 use App\Models\BreakTime;
 use App\Enums\ApprovalStatus;
@@ -15,17 +17,21 @@ use Illuminate\Support\Facades\DB;
 
 class AttendanceRepository
 {
-    public function getUserMonthlyAttendances($userId, $start, $end): Collection
-    {
-        return Attendance::with(['user', 'breakTimes'])
-                            ->where('user_id', $userId)
-                            ->whereBetween('work_date', [$start, $end])
-                            ->get();
-    }
+    // public function getUserMonthlyAttendances($userId, $start, $end): Collection
+    // {
+    //     return Attendance::where('user_id', $userId)
+    //                         ->whereBetween('work_date', [$start, $end])
+    //                         ->get('id');
+    // }
 
     public function createAttendance($attendance): Attendance
     {
         return  Attendance::create($attendance);
+    }
+
+    public function createAttendanceChange($attendance): AttendanceChange
+    {
+        return  AttendanceChange::create($attendance);
     }
 
     public function updateAttendance($targetAttendance): bool
@@ -33,19 +39,19 @@ class AttendanceRepository
         return  $targetAttendance->save();
     }
 
-    public function createBreakTime(array $breakTime): BreakTime
-    {
-        return BreakTime::create($breakTime);
-    }
-
     public function updateBreakTime(array $conditions, array $data): int
     {
         return BreakTime::where($conditions)->update($data);
     }
 
-    public function deleteBreakTime($breakTimeId): bool
+    public function createBreakTime(array $breakTime): BreakTime
     {
-        return  BreakTime::find($breakTimeId)->delete();
+        return BreakTime::create($breakTime);
+    }
+
+    public function createBreakTimeChanges(array $breakTime): BreakTimeChange
+    {
+        return BreakTimeChange::create($breakTime);
     }
 
     public function createAttendanceApplication($attendanceApplication): AttendanceApplication

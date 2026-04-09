@@ -59,14 +59,16 @@
                 {{-- ユーザー画面 --}}
                 @foreach ($attendances as $id => $attendance)
                     <tr class="admin__row">
-                        <td class="admin__data">{{ $attendance->latestAttendanceApplication->approvalStatus()->label() }}</td>
+                        <td class="admin__data">{{ $approvalStatus->label() }}</td>
                         <td class="admin__data">{{ $attendance->user->name }}</td>
                         <td class="admin__data">{{ $attendance->work_date->format('Y/m/d') }}</td>
-                        <td class="admin__data">{{ $attendance->latestAttendanceApplication->note }}</td>
-                        <td class="admin__data">{{ $attendance->latestAttendanceApplication->applied_at->format('Y/m/d') }}</td>
                         <td class="admin__data">
-                            <a class="admin__detail-btn"
-                                href="{{ route('show', ['id' => $attendance->id]) }}">詳細
+                            {{ $attendance->latestAttendanceChange->note ?? $attendance->AttendanceChange->note }}</td>
+                        <td class="admin__data">
+                            {{ $attendance->latestAttendanceChange->applied_at->format('Y/m/d') ?? $attendance->AttendanceChange->applied_at->format('Y/m/d') }}
+                        </td>
+                        <td class="admin__data">
+                            <a class="admin__detail-btn" href="{{ route('show', ['id' => $attendance->id]) }}">詳細
                             </a>
                         </td>
                     </tr>

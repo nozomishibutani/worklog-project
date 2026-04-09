@@ -42,6 +42,10 @@ Route::prefix('admin')
                             ->name('admin.approval.show');
         Route::post('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'approve'])
                         ->name('admin.approve');
+
+        Route::post('/attendance/update', [CommonController::class, 'update'])
+                                    ->name('admin.update');
+
     });
 
 // =====================
@@ -52,8 +56,7 @@ Route::middleware('auth:web,admin') // 両方明示することでアクセス�
     Route::get('/stamp_correction_request/list', [CommonController::class, 'applicationIndex'])
                                         ->name('application.index');
 
-    Route::post('/attendance/update', [CommonController::class, 'update'])
-                                ->name('update');
+
 
 });
 
@@ -87,6 +90,8 @@ Route::middleware('auth:web')
                 ->name('monthly.index');
             Route::get('/attendance/detail/{id?}', [UserController::class, 'show'])
                 ->name('show');
+            Route::post('/attendance/update', [UserController::class, 'update'])
+                ->name('update');
 
         });
 

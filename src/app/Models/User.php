@@ -59,9 +59,14 @@ class User extends Authenticatable
         return $this->hasMany(Attendance::class);
     }
 
-        public function AttendanceHistories()
+    public function attendanceChanges()
     {
-        return $this->hasMany(AttendanceHistory::class);
+        return $this->hasMany(AttendanceChange::class);
+    }
+
+    public function attendanceApprovals()
+    {
+        return $this->hasMany(AttendanceApproval::class);
     }
 
     public function isAdmin(): bool

@@ -10,14 +10,17 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        Schema::create('break_time_histories', function (Blueprint $table) {
+        Schema::create('attendance_changes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('attendance_history_id')->constrained('attendance_histories');
+            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('attendance_id')->constrained('attendances');
+            $table->date('work_date');
             $table->dateTime('clock_in')->nullable();
             $table->dateTime('clock_out')->nullable();
-            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('applied_by')->constrained('users');
+            $table->dateTime('applied_at');
+            $table->string('note', 255)->nullable();
             $table->timestamps();
-            //$table->softDeletes();
         });
     }
 

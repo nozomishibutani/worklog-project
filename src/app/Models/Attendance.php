@@ -11,7 +11,6 @@ class Attendance extends Model
         'work_date',
         'clock_in',
         'clock_out',
-        'created_by',
     ];
 
     protected $casts = [
@@ -30,13 +29,13 @@ class Attendance extends Model
         return $this->hasMany(BreakTime::class);
     }
 
-    public function attendanceApplications()
+    public function attendanceChanges()
     {
-        return $this->hasMany(AttendanceApplication::class);
+        return $this->hasMany(AttendanceChange::class);
     }
 
-    public function latestAttendanceApplication()
+    public function latestAttendanceChange()
     {
-        return $this->hasOne(AttendanceApplication::class)->latestOfMany();
+        return $this->hasOne(AttendanceChange::class)->latestOfMany();
     }
 }

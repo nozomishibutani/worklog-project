@@ -4,10 +4,13 @@ namespace App\Services;
 
 use App\Repositories\AttendanceRepository;
 use App\Services\AttendanceFormatterService;
+use App\Services\AttendanceResolverService;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Enums\AttendanceStatus;
+use App\Models\AttendanceApproval;
+use App\Models\AttendanceChange;
 use App\Models\AttendanceHistory;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,11 +20,16 @@ class AttendanceCalculatorService
 {
     protected AttendanceRepository $attendanceRepository;
     protected AttendanceFormatterService $attendanceFormatterService;
+    protected AttendanceResolverService $attendanceResolverService;
 
-    public function __construct(AttendanceFormatterService $attendanceFormatterService, AttendanceRepository $attendanceRepository)
-    {
+    public function __construct(
+        AttendanceFormatterService $attendanceFormatterService,
+        AttendanceRepository $attendanceRepository,
+        AttendanceResolverService $attendanceResolverService,
+    ) {
         $this->attendanceFormatterService = $attendanceFormatterService;
         $this->attendanceRepository = $attendanceRepository;
+        $this->attendanceResolverService =  $attendanceResolverService;
     }
 
     /**
@@ -118,9 +126,8 @@ class AttendanceCalculatorService
     /**
      * 指定ユーザーの日時勤怠詳細を取得(勤怠レコードが存在する場合)
      */
-    public function getUserDailyAttendance(Attendance|AttendanceHistory $attendance): array
+    public function getUserDailyAttendance(Attendance|AttendanceChange|AttendanceApproval $attendance): array
     {
-
         $workTimes = [
             'attendanceId' => null,
             'clock_in' => null,
@@ -175,11 +182,6 @@ class AttendanceCalculatorService
      */
     public function getUserMonthlyAttendances($userId, Carbon $startOfMonth): array
     {
-        $start = $startOfMonth;
-        $end   = $startOfMonth->copy()->endOfMonth();
-
-        $attendances = $this->attendanceRepository->getUserMonthlyAttendances($userId, $start, $end);
-
         $workTimes = [];
         $breakTimes = [];
 
@@ -191,13 +193,25 @@ class AttendanceCalculatorService
 
         $baseList = [];
 
-        foreach ($attendances as $attendance) {
+        $start = $startOfMonth;
+        $end   = $startOfMonth->copy()->endOfMonth();
 
-            $workDate = Carbon::parse($attendance->work_date);
+        $attendances = Attendance::where('user_id', $userId)
+                            ->whereBetween('work_date', [$start, $end])
+                            ->get('id');
+
+        foreach ($attendances as $attendance) {
+            [
+                'currentAttendanceStatus' => $currentAttendanceStatus,
+                'currentAttendance' => $currentAttendance,
+            ]
+            = $this->attendanceResolverService->getCurrentAttendance($attendance->id, null);
+
+            $workDate = Carbon::parse($currentAttendance->work_date);
             $key = $workDate->format('Ymd');
 
-            $clockIn  = $attendance->clock_in ? Carbon::parse($attendance->clock_in) : null;
-            $clockOut = $attendance->clock_out ? Carbon::parse($attendance->clock_out) : null;
+            $clockIn  = $currentAttendance->clock_in ? Carbon::parse($currentAttendance->clock_in) : null;
+            $clockOut = $currentAttendance->clock_out ? Carbon::parse($currentAttendance->clock_out) : null;
 
             // --- base ---
             $baseList[$key] = [
@@ -210,7 +224,7 @@ class AttendanceCalculatorService
             $breakDiff = 0;
             $hasBreak = false;
 
-            foreach ($attendance->breakTimes as $breakTime) {
+            foreach ($currentAttendance->breakTimes as $breakTime) {
                 if (!$breakTime->clock_out) {
                     $invalidBreakUsers[$key] = true;
                     break;
@@ -265,48 +279,5 @@ class AttendanceCalculatorService
             'workTimes'  => $workTimes,
             'breakTimes' => $breakTimes,
         ];
-    }
-    /**
-     * ユーザーの勤怠ステータスを取得
-     */
-    public function getUserAttendanceStatus($date): array
-    {
-        $user = Auth::user();
-        /** @var \App\Models\User $user */
-        $attendance = $user->attendances()->where('work_date', $date)->first();
-
-        if (is_null($attendance)) {
-            // 勤務開始
-            return [
-                'attendanceStatus' => AttendanceStatus::OFF,
-                'attendance' => $attendance,
-            ];
-        }
-
-        if (!is_null($attendance->clock_out)) {
-            // 退勤済み
-            return [
-                'attendanceStatus' => AttendanceStatus::OFF_DUTY,
-                'attendance' => $attendance,
-            ];
-        }
-
-        if (!is_null($attendance->clock_in)) {
-            $breakTime = $attendance->breakTimes()->latest('clock_in')->first();
-            if (is_null($breakTime)) {
-                // 休憩入もしくは退勤を選択
-                $attendanceStatus = AttendanceStatus::ON_DUTY;
-            } elseif (is_null($breakTime['clock_out'])) {
-                // 休憩中
-                $attendanceStatus = AttendanceStatus::ON_BREAK;
-            } elseif (!is_null($breakTime['clock_out'])) {
-                // 休憩戻 → 休憩入もしくは退勤を選択
-                $attendanceStatus = AttendanceStatus::ON_DUTY;
-            }
-        }
-        return [
-            'attendanceStatus' => $attendanceStatus,
-            'attendance' => $attendance,
-            ];
     }
 }

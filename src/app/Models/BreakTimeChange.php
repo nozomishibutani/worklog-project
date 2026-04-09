@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class BreakTime extends Model
+class BreakTimeChange extends Model
 {
+
     protected $fillable = [
-    'attendance_id',
+    'attendance_change_id',
     'clock_in',
     'clock_out',
-    'deleted_at'
     ];
 
     protected $casts = [
@@ -20,6 +20,6 @@ class BreakTime extends Model
 
     public function attendance()
     {
-        return $this->belongsTo(Attendance::class);
+        return $this->belongsTo(AttendanceChange::class);
     }
 }
