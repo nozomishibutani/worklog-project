@@ -38,25 +38,56 @@ class CommonController extends Controller
             $mode = $request->query('mode');
             switch ($mode) {
                 case ApprovalStatus::PENDING->value:
-                    $attendanceApplications = AttendanceApplication::with('attendance.user', 'attendanceHistory')
+                    //$attendanceApplications = AttendanceApplication::with('attendance.user', 'attendanceHistory')
+                    $attendanceApplications = AttendanceApplication::with('attendance.user')
                                                                     ->whereNull('approved_by')
                                                                     ->whereNull('approved_at')
                                                                     ->orderBy('applied_at', 'asc')
                                                                     ->get();
+
+                    return view('application_index', compact('attendanceApplications'));
+
                     break;
                 case ApprovalStatus::APPROVED->value:
-                    // 同日に複数回承認していても全部取得する
                     $attendanceApplications = AttendanceApplication::with('attendance.user')
                                                                     ->whereNotNull('approved_by')
                                                                     ->whereNotNull('approved_at')
                                                                     ->orderBy('approved_at', 'desc')
                                                                     ->get();
+
+                    // $attendances = Attendance::whereHas('latestAttendanceApplication', function ($q) {
+                    //     $q->whereNotNull('approved_by')
+                    //     ->whereNotNull('approved_at');
+                    // })
+                    // ->with('latestAttendanceApplication')
+                    // ->get();
+
+                    // 同日に複数回承認していても表示は最新の勤怠のみ
+                    // $attendances = Attendance::whereHas('latestAttendanceApplication', function ($q) {
+                    //     $q->whereNotNull('approved_by')
+                    //     ->whereNotNull('approved_at');
+                    // })
+                    // ->with('latestAttendanceApplication')
+                    // ->orderByDesc(
+                    //     AttendanceApplication::select('approved_at')
+                    //                 ->whereColumn('attendance_applications.attendance_id', 'attendances.id')
+                    //                 ->whereNotNull('approved_by')
+                    //                 ->whereNotNull('approved_at')
+                    //                 ->latest('approved_at')
+                    //                 ->limit(1)
+                    // )
+                    // ->get();
+
+                    //return view('application_index', compact('attendances'));
+                    //return view('application_index', compact('attendanceApplications'));
                     break;
                 default:
                     $attendanceApplications = null;
                     break;
             }
+
             return view('application_index', compact('attendanceApplications'));
+
         }
 
         if (auth('web')->check()) {
@@ -80,7 +111,7 @@ class CommonController extends Controller
                                                             ->whereNotNull('approved_at');
                                                         })
                                                         ->with('latestAttendanceApplication')
-                                                        ->orderBy('updated_at','desc')
+                                                        ->orderBy('updated_at', 'desc')
                                                         ->get();
                     break;
 
@@ -88,14 +119,10 @@ class CommonController extends Controller
                     $attendances = null;
                     break;
             }
-
             return view('application_index', compact('attendances'));
-
         }
-
-
-
     }
+
     public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
     {
         $tmp = $request->validated();
@@ -104,15 +131,22 @@ class CommonController extends Controller
 
         $result = $this->attendanceUpdateService->updateAttendance($attendance);
 
-        $route = auth('admin')->check() ? Role::ADMIN->value . '.' : 'user.';
+        $isAdmin = auth('admin')->check();
+
+        $routePrefix = $isAdmin ? Role::ADMIN->value . '.' : '';
+        $routeName = $isAdmin ? $routePrefix . 'show' : 'show';
 
         if ($result) {
-            return redirect()->route('show', ['id' => $result->attendance_id])
-                            ->with('alert', '勤怠情報を修正しました')
-                            ->with('alert-type', 'alert-success');
+            return redirect()
+                ->route($routeName, ['id' => $result->attendance_id])
+                ->with('alert', '勤怠情報を修正しました')
+                ->with('alert-type', 'alert-success');
         }
-        return redirect()->route($route . 'index')
-                    ->with('alert', 'システムエラーが発生しました')
-                    ->with('alert-type', 'alert-error');
+
+        return redirect()
+            ->route($isAdmin ? $routePrefix . 'index' : 'user.index')
+            ->with('alert', 'システムエラーが発生しました')
+            ->with('alert-type', 'alert-error');
+
     }
 }

@@ -17,8 +17,9 @@ return new class () extends Migration {
             $table->foreignId('applied_by')->nullable()->constrained('users')->default(null);
             $table->dateTime('applied_at')->nullable()->default(null);
             $table->foreignId('approved_by')->nullable()->constrained('users')->default(null);
-            $table->dateTime('approved_at')->nullable()->default(null);;
+            $table->dateTime('approved_at')->nullable()->default(null);
             $table->string('note', 255)->nullable();
+            $table->boolean('is_current')->default(false)->comment('1=現在 0=過去');
             $table->timestamps();
         });
     }

@@ -17,6 +17,8 @@ use App\Models\BreakTimeHistory;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use App\Enums\Guard;
+use Database\Seeders\AttendanceHistorySeeder;
 
 use function Symfony\Component\Clock\now;
 
@@ -36,29 +38,26 @@ class AttendanceUpdateService
         $formatCarbonDate =  $this->attendanceFormatterService->buildWorkDateFromEditAttendance($attendance);
 
         return DB::transaction(function () use ($targetAttendance, $attendance, $formatCarbonDate) {
-            //try {
-            // 履歴を作成
-            // if (!is_null($targetAttendance)) {
-            //     $attendanceHistory = $this->createHistory($targetAttendance, $attendance, $formatCarbonDate);
-            // } else {
-            //     // 空レコードの場合
-            //     $attendanceHistory = null;
-            // }
-            // 勤怠登録
-            $saveAttendance = $this->saveAttendance($targetAttendance, $attendance, $formatCarbonDate);
-            // 休憩
-            $this->saveBreakTimes($saveAttendance, $attendance, $formatCarbonDate);
+            try {
+                // 履歴作成
+                if (!is_null($targetAttendance)) {
+                    $createHistory = $this->createHistory($targetAttendance);
+                }
+                // 勤怠登録
+                $saveAttendance = $this->saveAttendance($targetAttendance, $attendance, $formatCarbonDate);
+                // 休憩
+                $this->saveBreakTimes($saveAttendance, $attendance, $formatCarbonDate);
 
-            // 修正リクエスト作成
-            return $this->createApplicationAttendance($saveAttendance, $attendance);
-            // } catch (\Exception $e) {
-            //     Log::error($e);
-            //     $route = auth('admin')->check() ? Role::ADMIN->value . '.' : null;
-            //     return redirect()
-            //         ->route($route .'index')
-            //         ->with('alert', 'システムエラーが発生しました')
-            //         ->with('alert-type', 'alert-error');
-            // }
+                // 修正リクエスト作成
+                return $this->createApplicationAttendance($saveAttendance, $attendance, $createHistory);
+            } catch (\Exception $e) {
+                Log::error($e);
+                $route = auth('admin')->check() ? Role::ADMIN->value . '.' : null;
+                return redirect()
+                    ->route($route .'index')
+                    ->with('alert', 'システムエラーが発生しました')
+                    ->with('alert-type', 'alert-error');
+            }
         });
     }
 
@@ -114,22 +113,46 @@ class AttendanceUpdateService
         }
     }
 
-    private function createApplicationAttendance(Attendance $saveAttendance, array $attendance): AttendanceApplication
+    private function createApplicationAttendance(Attendance $saveAttendance, array $attendance, $createHistory = null): AttendanceApplication
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        $isAdmin = $user->isAdmin();
-        return $this->attendanceRepository->createAttendanceApplication([
-                'attendance_id' => $saveAttendance->id,
-                'applied_by'    => Auth::id(),
-                'applied_at'    => now(),
-                'approved_by'  => $isAdmin ? Auth::id() : null,
-                'approved_at'  => $isAdmin ? now() : null,
-                'note'         => $attendance['note'],
-            ]);
+        // 現在フラグをfalseにする
+        $this->setIsCurrentFlag($saveAttendance);
+
+        if (auth('admin')->check()) {
+            // 管理画面から管理者が修正した場合、承認プロセスを省く
+            //$attendanceHistory = $this->createHistory($saveAttendance);
+            return $this->attendanceRepository->createAttendanceApplication([
+                            'attendance_id' => $saveAttendance->id,
+                            'attendance_history_id' => $createHistory?->id, //勤怠登録ない場合は履歴残さない
+                            'applied_by'    => Auth::id(),
+                            'applied_at'    => now(),
+                            'approved_by'  => Auth::id(),
+                            'approved_at'  => now(),
+                            'note'         => $attendance['note'],
+                            'is_current' => true,
+                        ]);
+        } else {
+            //一般画面からユーザーが修正した
+            return $this->attendanceRepository->createAttendanceApplication([
+                            'attendance_id' => $saveAttendance->id,
+                            'attendance_history_id' => $createHistory?->id, //勤怠登録ない場合は履歴残さない
+                            'applied_by'    => Auth::id(),
+                            'applied_at'    => now(),
+                            'approved_by'  => null,
+                            'approved_at'  => null,
+                            'note'         => $attendance['note'],
+                            'is_current' => true,
+                        ]);
+        }
     }
 
-    public function createHistory($targetAttendance): AttendanceHistory
+    private function setIsCurrentFlag(Attendance $saveAttendance): bool
+    {
+        $saveAttendance->latestAttendanceApplication->is_current = false;
+        return $saveAttendance->save();
+    }
+
+    private function createHistory($targetAttendance): AttendanceHistory
     {
         $attendanceHistory = $this->attendanceRepository->createAttendanceHistory([
                         'user_id'  => $targetAttendance->user_id,
@@ -137,6 +160,8 @@ class AttendanceUpdateService
                         'clock_in'  => $targetAttendance->clock_in,
                         'clock_out' => $targetAttendance->clock_out,
                         'created_by' => $targetAttendance->created_by,
+                        'created_at' => $targetAttendance->created_at,
+                        'updated_at' => $targetAttendance->updated_at,
                     ]);
 
         if ($targetAttendance->breakTimes) {
@@ -153,8 +178,9 @@ class AttendanceUpdateService
                                         'attendance_history_id' => $attendanceHistory->id,
                                         'clock_in'  => $breakTime->clock_in,
                                         'clock_out' => $breakTime->clock_out,
-                                        'created_by' => Auth::id(),
+                                        'created_by' => $breakTime->created_by,
                                         'created_at' => $breakTime->created_at,
+                                        'updated_at' => $breakTime->updated_at,
                                     ]);
         }
     }
@@ -163,10 +189,10 @@ class AttendanceUpdateService
     {
         $attendanceApplication = AttendanceApplication::find($applicationAttendanceId);
         // 承認する内容を保存
-        $applicationHistory = $this->createHistory($attendanceApplication->attendance);
+        //$applicationHistory = $this->createHistory($attendanceApplication->attendance);
         $attendanceApplication->approved_by = Auth::id();
         $attendanceApplication->approved_at = now();
-        $attendanceApplication->attendance_history_id = $applicationHistory->id;
+        //$attendanceApplication->attendance_history_id = $applicationHistory->id;
         return $this->attendanceRepository->approveAttendanceApplication($attendanceApplication);
     }
 

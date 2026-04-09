@@ -148,7 +148,7 @@
             </table>
             <div class="">
                 @if (is_null($attendanceApplication) || $attendanceApplication->isApproved())
-                    <button class="">修正</button>
+                    <button class="">修正!</button>
                 @elseif(!$attendanceApplication->isApproved())
                     *承認待ちのため修正はできません。
                 @endif

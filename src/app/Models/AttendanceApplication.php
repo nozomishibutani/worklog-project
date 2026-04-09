@@ -21,6 +21,7 @@ class AttendanceApplication extends Model
     'applied_at' => 'datetime',
     'corrected_at' => 'datetime',
     'approved_at' => 'datetime',
+    'is_current' => 'boolean',
     ];
 
     public function isApproved(): bool

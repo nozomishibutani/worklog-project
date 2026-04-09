@@ -9,6 +9,9 @@ use App\Enums\Role;
 use App\Models\BreakTime;
 use Illuminate\Database\Seeder;
 use App\Models\AttendanceApplication;
+use App\Models\AttendanceHistory;
+use App\Models\BreakTimeHistory;
+use Carbon\Carbon;
 
 class AttendanceApplicationSeeder extends Seeder
 {
@@ -28,7 +31,8 @@ class AttendanceApplicationSeeder extends Seeder
             $appliedBy = null;
 
             // 打刻漏れスキップ
-            if (!$clockIn || !$clockOut) {
+            // 本日の勤怠もスキップ
+            if (!$clockIn || !$clockOut || $clockIn->isToday()) {
                 continue;
             }
 
@@ -36,12 +40,38 @@ class AttendanceApplicationSeeder extends Seeder
             $isCorrection =  rand(1, 100) <= 3;
 
             if ($isCorrection) {
+                // 修正履歴を作成
+                $attendanceHistory = AttendanceHistory::create([
+                    'user_id' => $attendance->user_id,
+                    'work_date' => $attendance->work_date,
+                    'clock_in' => $clockIn,
+                    'clock_out' => $clockOut,
+                    'created_by' => $attendance->created_by,
+                    'created_at' => $attendance->created_at,
+                    'updated_at' => $attendance->updated_at,
+                ]);
+
+                $breakTimes = BreakTime::where('attendance_id', $attendance->id)->get();
+                if (!empty($breakTimes)) {
+                    foreach ($breakTimes as $breakTime) {
+                        BreakTimeHistory::create([
+                        'attendance_history_id' => $attendanceHistory->id,
+                        'clock_in' => $breakTime['clock_in'],
+                        'clock_out' => $breakTime['clock_out'],
+                        'created_by' => $breakTime['created_by'],
+                        'created_at' => $breakTime['created_at'],
+                        'updated_at' => $breakTime['updated_at'],
+                    ]);
+                    }
+                }
+
+
                 if (rand(1, 100) <= 80) {
                     // 自分で修正
-                    $appliedBy = $attendance->user->id;
+                    $appliedBy = $attendance->user_id;
                 } else {
                     // 管理者が修正
-                    $$appliedBy = $admins->random()->id;
+                    $appliedBy = $admins->random()->id;
                 }
 
                 $notes = [
@@ -52,8 +82,17 @@ class AttendanceApplicationSeeder extends Seeder
                     'リモートワークに変更'
                 ];
 
-                $note = $notes[array_rand($notes)];
-
+                $key = array_rand($notes);
+                // ===== 修正勤務時間生成 =====
+                if ($key == 0  || $key == 1 || $key == 4) {
+                    $clockIn = $clockIn->copy()->setTime(rand(5, 8), rand(0, 5) * 10);
+                    $clockOut = $clockOut->copy()->setTime(rand(11, 20), rand(0, 5) * 10);
+                } elseif ($key ==  2) {
+                    $clockOut = $clockOut->copy()->subMinute(rand(0, 5) * 10);
+                } elseif ($key == 3) {
+                    $clockIn = $clockIn->copy()->addMinute(rand(0, 5) * 10);
+                }
+                $note = $notes[$key];
             }
 
             // ===== 承認処理 =====
@@ -71,6 +110,8 @@ class AttendanceApplicationSeeder extends Seeder
                 continue;
             }
 
+            $appliedAt = $clockOut->copy()->addHour(1);
+
             if ($approved) {
                 // 修正して承認済み
                 $approvedAt = $clockOut->copy()->addDays(rand(2, 4));
@@ -81,27 +122,29 @@ class AttendanceApplicationSeeder extends Seeder
                 }
 
             } elseif (!$approved && $isCorrection) {
-                $updatedAt = $clockOut->copy()->addMinutes(30);
+                $updatedAt = $appliedAt;
             }
-
-            $appliedAt = $clockOut->copy()->addHour(1);
 
             AttendanceApplication::create([
                 'attendance_id' => $attendance->id,
+                'attendance_history_id' => $attendanceHistory->id,
                 'applied_by' => $appliedBy,
                 'applied_at' => $appliedAt,
                 'approved_by' => $admin?->id,
                 'approved_at' => $approvedAt,
                 'note' => $note,
-                'created_at' => $clockIn,
+                'is_current' => true,
+                'created_at' => $appliedAt,
                 'updated_at' => $updatedAt,
             ]);
 
             // attendance breakTimes それぞれ更新する
             $targetAttendance = Attendance::find($attendance->id);
-            $targetAttendance->updated_at = $updatedAt;
+            $targetAttendance->clock_in = $clockIn;
+            $targetAttendance->clock_out = $clockOut;
+            $targetAttendance->updated_at = $appliedAt;
             $targetAttendance->save();
-            BreakTime::where('attendance_id', $attendance->id)->update(['updated_at' => $updatedAt]);
+            BreakTime::where('attendance_id', $attendance->id)->update(['updated_at' => $appliedAt]);
         }
     }
 }

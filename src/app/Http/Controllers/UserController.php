@@ -59,8 +59,8 @@ class UserController extends Controller
         }
 
         return redirect()->route('index')
-                                        ->with('alert', 'システムエラーが発生しました')
-                                        ->with('alert-type', 'alert-error');
+                        ->with('alert', 'システムエラーが発生しました')
+                        ->with('alert-type', 'alert-error');
     }
     public function monthlyIndex(Request $request)
     {
@@ -121,7 +121,6 @@ class UserController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
-            //'route' => Role::ADMIN->value. '.show',
             'attendanceApplication' => isset($attendance) ? $attendance?->latestAttendanceApplication : null,
         ]);
     }

@@ -73,10 +73,15 @@ class AttendanceSeeder extends Seeder
                     }
 
                     // ===== 打刻忘れ =====
-                    $isForgot = rand(1, 100) <= 10;
+                    if ($isToday) {
+                        $isForgot = rand(1, 100) <= 50;
+                    } else {
+                        $isForgot = rand(1, 100) <= 10;
+                    }
                     if ($isForgot) {
                         $clockOut = null;
                     }
+
 
                     Attendance::create([
                         'user_id' => $user->id,

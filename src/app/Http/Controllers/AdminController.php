@@ -133,14 +133,15 @@ class AdminController extends Controller
 
     public function showForApproval($applicationId)
     {
-        $application = AttendanceApplication::with('attendance.user', 'attendance.breakTimes', 'attendanceHistory')->find($applicationId);
+        $application = AttendanceApplication::with('attendance.user', 'attendance.breakTimes', 'attendanceHistory.user')->find($applicationId);
         if (is_null($application)) {
             return redirect()->route('admin.index')
                                 ->with('alert', 'システムエラーが発生しました')
                                 ->with('alert-type', 'alert-error');
         }
 
-        $attendance = $application->isApproved() ? $application->attendanceHistory : $application->attendance;
+        $attendance = $application->is_current ? $application->attendance : $application->attendanceHistory;
+        //$attendance = $application->attendance;
 
         [
             'workTimes' => $workTimes,
