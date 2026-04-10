@@ -11,19 +11,15 @@ use App\Enums\ApprovalStatus;
 use App\Models\AttendanceApplication;
 use App\Models\AttendanceHistory;
 use App\Models\BreakTimeHistory;
+use App\Models\AttendanceApproval;
+use App\Models\BreakTimeApproval;
+;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AttendanceRepository
 {
-    // public function getUserMonthlyAttendances($userId, $start, $end): Collection
-    // {
-    //     return Attendance::where('user_id', $userId)
-    //                         ->whereBetween('work_date', [$start, $end])
-    //                         ->get('id');
-    // }
-
     public function createAttendance($attendance): Attendance
     {
         return  Attendance::create($attendance);
@@ -34,14 +30,9 @@ class AttendanceRepository
         return  AttendanceChange::create($attendance);
     }
 
-    public function updateAttendance($targetAttendance): bool
+    public function createAttendanceApproval($attendance): AttendanceApproval
     {
-        return  $targetAttendance->save();
-    }
-
-    public function updateBreakTime(array $conditions, array $data): int
-    {
-        return BreakTime::where($conditions)->update($data);
+        return  AttendanceApproval::create($attendance);
     }
 
     public function createBreakTime(array $breakTime): BreakTime
@@ -54,23 +45,19 @@ class AttendanceRepository
         return BreakTimeChange::create($breakTime);
     }
 
-    public function createAttendanceApplication($attendanceApplication): AttendanceApplication
+    public function createBreakTimeApprovals(array $breakTime): BreakTimeApproval
     {
-        return AttendanceApplication::create($attendanceApplication);
+        return BreakTimeApproval::create($breakTime);
     }
 
-    public function createAttendanceHistory($attendanceHistory): AttendanceHistory
+
+    public function updateAttendance($targetAttendance): bool
     {
-        return  AttendanceHistory::create($attendanceHistory);
+        return  $targetAttendance->save();
     }
 
-    public function createBreakTimeHistory($breakTimeHistory): BreakTimeHistory
+    public function updateBreakTime(array $conditions, array $data): int
     {
-        return  BreakTimeHistory::create($breakTimeHistory);
-    }
-
-    public function approveAttendanceApplication($attendanceApplication): bool
-    {
-        return  $attendanceApplication->save();
+        return BreakTime::where($conditions)->update($data);
     }
 }

@@ -37,10 +37,6 @@ class AttendanceCalculatorService
      */
     public function getUserDailyAttendances($date): array
     {
-        $attendances = Attendance::with(['user', 'breakTimes'])
-                                    ->where('work_date', $date)
-                                    ->get();
-
         $workTimes = [];
         $breakTimes = [];
         $baseList = [];
@@ -51,12 +47,20 @@ class AttendanceCalculatorService
         $workMinutes = [];
         $breakMinutes = [];
 
+        $attendances = Attendance::with(['user', 'breakTimes'])
+                                            ->where('work_date', $date)
+                                            ->get();
+
         foreach ($attendances as $attendance) {
+            [
+                'currentAttendanceStatus' => $currentAttendanceStatus,
+                'currentAttendance' => $currentAttendance,
+            ]
+            = $this->attendanceResolverService->getCurrentAttendance($attendance->id, null);
+
             $userId = $attendance->user->id;
-
-            $clockIn  = $attendance->clock_in ? Carbon::parse($attendance->clock_in) : null;
-
-            $clockOut = $attendance->clock_out ? Carbon::parse($attendance->clock_out) : null;
+            $clockIn  = $currentAttendance->clock_in ? Carbon::parse($currentAttendance->clock_in) : null;
+            $clockOut = $currentAttendance->clock_out ? Carbon::parse($currentAttendance->clock_out) : null;
 
             // --- base ---
             $baseList[$userId] = [
@@ -70,7 +74,7 @@ class AttendanceCalculatorService
             $breakDiff = 0;
             $hasBreak = false;
 
-            foreach ($attendance->breakTimes as $breakTime) {
+            foreach ($currentAttendance->breakTimes as $breakTime) {
                 if (!$breakTime->clock_out) {
                     $invalidBreakUsers[$userId] = true;
                     break;
@@ -124,21 +128,28 @@ class AttendanceCalculatorService
     }
 
     /**
-     * 指定ユーザーの日時勤怠詳細を取得(勤怠レコードが存在する場合)
+     * 指定ユーザーの打刻レコード詳細を取得
      */
-    public function getUserDailyAttendance(Attendance|AttendanceChange|AttendanceApproval $attendance): array
+    public function getUserDailyAttendance($attendanceId, $attendanceChangeId): array
     {
         $workTimes = [
-            'attendanceId' => null,
+            //'attendanceId' => null,
             'clock_in' => null,
             'clock_out' => null,
         ];
         $breakTimes = [];
 
+        // ---  最新の勤怠を取得 ---
+        [
+            'currentAttendanceStatus' => $currentAttendanceStatus,
+            'currentAttendance' => $currentAttendance,
+        ]
+        = $this->attendanceResolverService->getCurrentAttendance($attendanceId, $attendanceChangeId);
+
         // ---  労働時間 ---
-        $clockIn  = $attendance->clock_in ? Carbon::parse($attendance->clock_in) : null;
-        $clockOut = $attendance->clock_out ? Carbon::parse($attendance->clock_out) : null;
-        $date = $attendance->work_date;
+        $clockIn  = $currentAttendance->clock_in ? Carbon::parse($currentAttendance->clock_in) : null;
+        $clockOut = $currentAttendance->clock_out ? Carbon::parse($currentAttendance->clock_out) : null;
+        $date = $currentAttendance->work_date;
         $workDate = [
                         'year'  => $date->year,
                         'month' => $date->month,
@@ -146,16 +157,16 @@ class AttendanceCalculatorService
                     ];
 
         $tmp = [
-                'attendanceId' => $attendance->id,
-                'userId' => $attendance->user_id,
-                'name' => $attendance->user->name,
+                //'attendanceId' => $attendance->id,
+                'userId' => $currentAttendance->user_id,
+                'name' => $currentAttendance->user->name,
                 'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
                 'clock_out' => $clockOut ? $clockOut->format('H:i') : null,
                 ];
         $workTimes = array_merge($workTimes, $tmp);
 
         // ---  休憩時間 ---
-        $arr = $attendance->breakTimes ?? $attendance->breakTimeHistories;
+        $arr = $currentAttendance->breakTimes;
         if (!empty($arr)) {
             foreach ($arr as $breakTime) {
                 $clockIn  = $breakTime->clock_in ? Carbon::parse($breakTime->clock_in) : null;
@@ -170,10 +181,12 @@ class AttendanceCalculatorService
         $sorted = collect($breakTimes)->sortBy('clock_in')->values()->all();
 
         return [
-            'userId' => $attendance->user_id,
+            //'userId' => $currentAttendance->user_id,
             'workTimes' => $workTimes,
             'breakTimes' => $sorted,
             'workDate' => $workDate,
+            'currentAttendanceStatus' => $currentAttendanceStatus ?? null,
+            'note' => $currentAttendance->note ?? null,
         ];
     }
 

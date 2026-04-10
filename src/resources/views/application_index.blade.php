@@ -39,40 +39,45 @@
                 <th class="admin__label">申請日時</th>
                 <th class="admin__label">詳細</th>
             </tr>
-            @if (!empty($attendanceApplications))
-                {{-- 管理画面 --}}
-                @foreach ($attendanceApplications as $id => $application)
-                    <tr class="admin__row">
-                        <td class="admin__data">{{ $application->approvalStatus()->label() }}</td>
-                        <td class="admin__data">{{ $application->attendance->user->name }}</td>
-                        <td class="admin__data">{{ $application->attendance->work_date->format('Y/m/d') }}</td>
-                        <td class="admin__data">{{ $application->note }}</td>
-                        <td class="admin__data">{{ $application->applied_at->format('Y/m/d') }}</td>
-                        <td class="admin__data">
-                            <a class="admin__detail-btn"
-                                href="{{ route('admin.approval.show', ['attendance_correct_request_id' => $application->id]) }}">詳細
-                            </a>
-                        </td>
-                    </tr>
-                @endforeach
-            @elseif (!empty($attendances))
-                {{-- ユーザー画面 --}}
-                @foreach ($attendances as $id => $attendance)
-                    <tr class="admin__row">
-                        <td class="admin__data">{{ $approvalStatus->label() }}</td>
-                        <td class="admin__data">{{ $attendance->user->name }}</td>
-                        <td class="admin__data">{{ $attendance->work_date->format('Y/m/d') }}</td>
-                        <td class="admin__data">
-                            {{ $attendance->latestAttendanceChange->note ?? $attendance->AttendanceChange->note }}</td>
-                        <td class="admin__data">
-                            {{ $attendance->latestAttendanceChange->applied_at->format('Y/m/d') ?? $attendance->AttendanceChange->applied_at->format('Y/m/d') }}
-                        </td>
-                        <td class="admin__data">
-                            <a class="admin__detail-btn" href="{{ route('show', ['id' => $attendance->id]) }}">詳細
-                            </a>
-                        </td>
-                    </tr>
-                @endforeach
+            @if (!empty($attendances))
+                @if (auth('admin')->check())
+                    @foreach ($attendances as $id => $attendance)
+                        <tr class="admin__row">
+                            <td class="admin__data">{{ $approvalStatus->label() }}</td>
+                            <td class="admin__data">{{ $attendance->user->name }}</td>
+                            <td class="admin__data">{{ $attendance->work_date->format('Y/m/d') }}</td>
+                            <td class="admin__data">
+                                {{ $attendance->note }}</td>
+                            <td class="admin__data">
+                                {{ $attendance->applied_at?->format('Y/m/d') ?? $attendance->attendanceChange->applied_at->format('Y/m/d') }}
+                            </td>
+                            <td class="admin__data">
+                                <a class="admin__detail-btn"
+                                    href="{{ route('admin.approval.show', ['attendance_correct_request_id' => $attendance->AttendanceChange?->id ?? $attendance->id]) }}">詳細
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                @elseif(auth('web')->check())
+                    @foreach ($attendances as $id => $attendance)
+                        <tr class="admin__row">
+                            <td class="admin__data">{{ $approvalStatus->label() }}</td>
+                            <td class="admin__data">{{ $attendance->user->name }}</td>
+                            <td class="admin__data">{{ $attendance->work_date->format('Y/m/d') }}</td>
+                            <td class="admin__data">
+                                {{ $attendance->latestAttendanceChange->note }}
+                            </td>
+                            <td class="admin__data">
+                                {{ $attendance->latestAttendanceChange->applied_at->format('Y/m/d') }}
+                            </td>
+                            <td class="admin__data">
+                                <a class="admin__detail-btn"
+                                    href="{{ route('show', ['id' => $attendance->id]) }}">詳細
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                @endif
             @endif
         </table>
     </div><!-- application -->

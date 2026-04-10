@@ -42,9 +42,10 @@ Route::prefix('admin')
                             ->name('admin.approval.show');
         Route::post('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'approve'])
                         ->name('admin.approve');
-
-        Route::post('/attendance/update', [CommonController::class, 'update'])
+        Route::post('/attendance/update', [AdminController::class, 'update'])
                                     ->name('admin.update');
+        Route::get('/attendance/export/{user_id}/{date}', [AdminController::class, 'export'])
+        ->name('admin.export');
 
     });
 
@@ -59,22 +60,6 @@ Route::middleware('auth:web,admin') // 両方明示することでアクセス�
 
 
 });
-
-
-// Route::get('/stamp_correction_request/list', function () {
-
-//     if (auth('admin')->check()) {
-//         return [AdminController::class, 'applicationIndex'];
-//     }
-
-//     if (auth('web')->check()) {
-//         //[UserController::class, 'applicationIndex'];
-//         return 'Hello Index';
-//     }
-// })->middleware('auth:admin,web')->name('application.index');
-
-
-
 
 // =====================
 // user

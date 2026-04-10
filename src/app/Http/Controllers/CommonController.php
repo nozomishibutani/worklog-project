@@ -38,105 +38,52 @@ class CommonController extends Controller
     {
         $mode = $request->query('mode');
         $approvalStatus = ApprovalStatus::tryFrom($mode);
+        $attendances = null;
         if (auth('admin')->check()) {
             switch ($mode) {
                 case ApprovalStatus::PENDING->value:
-                    //$attendanceApplications = AttendanceApplication::with('attendance.user', 'attendanceHistory')
-                    $attendanceApplications = AttendanceApplication::with('attendance.user')
-                                                                    ->whereNull('approved_by')
-                                                                    ->whereNull('approved_at')
-                                                                    ->orderBy('applied_at', 'asc')
-                                                                    ->get();
-
-                    return view('application_index', compact('attendanceApplications'));
-
+                    $attendances = AttendanceChange::doesntHave('attendanceApproval')
+                                                    ->orderBy('applied_at', 'asc')
+                                                    ->get();
                     break;
                 case ApprovalStatus::APPROVED->value:
-                    $attendanceApplications = AttendanceApplication::with('attendance.user')
-                                                                    ->whereNotNull('approved_by')
-                                                                    ->whereNotNull('approved_at')
-                                                                    ->orderBy('approved_at', 'desc')
-                                                                    ->get();
-
-                    // $attendances = Attendance::whereHas('latestAttendanceApplication', function ($q) {
-                    //     $q->whereNotNull('approved_by')
-                    //     ->whereNotNull('approved_at');
-                    // })
-                    // ->with('latestAttendanceApplication')
-                    // ->get();
-
-                    // 同日に複数回承認していても表示は最新の勤怠のみ
-                    // $attendances = Attendance::whereHas('latestAttendanceApplication', function ($q) {
-                    //     $q->whereNotNull('approved_by')
-                    //     ->whereNotNull('approved_at');
-                    // })
-                    // ->with('latestAttendanceApplication')
-                    // ->orderByDesc(
-                    //     AttendanceApplication::select('approved_at')
-                    //                 ->whereColumn('attendance_applications.attendance_id', 'attendances.id')
-                    //                 ->whereNotNull('approved_by')
-                    //                 ->whereNotNull('approved_at')
-                    //                 ->latest('approved_at')
-                    //                 ->limit(1)
-                    // )
-                    // ->get();
-
-                    //return view('application_index', compact('attendances'));
-                    //return view('application_index', compact('attendanceApplications'));
-                    break;
-                default:
-                    $attendanceApplications = null;
+                    $attendances = AttendanceApproval::with('attendanceChange')
+                                                    ->orderBy('approved_at', 'desc')
+                                                    ->get();
                     break;
             }
-
-            return view('application_index', compact('attendanceApplications'));
-
         }
-
         if (auth('web')->check()) {
-            $attendances = null;
             switch ($mode) {
+                // 同日に複数回承認・修正を繰り返していても最新1件のみ表示
                 case ApprovalStatus::PENDING->value:
-                    $attendances = Attendance::with('latestAttendanceChange')
-                                                        ->where('user_id', Auth::id())
-                                                        ->get();
+                    $attendances = Attendance::with('latestAttendanceChange.attendanceApproval')
+                                                ->whereHas('latestAttendanceChange')
+                                                ->doesntHave('latestAttendanceChange.attendanceApproval')
+                                                ->where('user_id', Auth::id())
+                                                ->orderBy(
+                                                    AttendanceChange::select('applied_at')
+                                                    ->whereColumn('attendance_changes.attendance_id', 'attendances.id')
+                                                    ->latest()
+                                                    ->limit(1)
+                                                )
+                                                ->get();
                     break;
 
                 case ApprovalStatus::APPROVED->value:
-                    $attendances = AttendanceApproval::with('AttendanceChange')
-                                            ->where('user_id', Auth::id())
-                                            ->orderBy('approved_at', 'desc')
-                                            ->get();
+                    $attendances = Attendance::with('latestAttendanceChange.attendanceApproval')
+                                                ->whereHas('latestAttendanceChange.attendanceApproval')
+                                                ->where('user_id', Auth::id())
+                                                ->orderBy(
+                                                    AttendanceChange::select('applied_at')
+                                                    ->whereColumn('attendance_changes.attendance_id', 'attendances.id')
+                                                    ->latest()
+                                                    ->limit(1)
+                                                )
+                                                ->get();
                     break;
             }
-            return view('application_index', compact('attendances', 'approvalStatus'));
         }
-    }
-
-    public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
-    {
-        $tmp = $request->validated();
-        $attendance = $request->only('user_id', 'attendance_id', 'current_attendance_status', 'year', 'month', 'day');
-        $attendance = array_merge($attendance, $tmp);
-
-        $result = $this->attendanceUpdateService->applyAttendance($attendance);
-
-        $isAdmin = auth('admin')->check();
-
-        $routePrefix = $isAdmin ? Role::ADMIN->value . '.' : '';
-        $routeName = $isAdmin ? $routePrefix . 'show' : 'show';
-
-        if ($result) {
-            return redirect()
-                ->route($routeName, ['id' => $result->attendance_id])
-                ->with('alert', '勤怠情報を修正しました')
-                ->with('alert-type', 'alert-success');
-        }
-
-        return redirect()
-            ->route($isAdmin ? $routePrefix . 'index' : 'user.index')
-            ->with('alert', 'システムエラーが発生しました')
-            ->with('alert-type', 'alert-error');
-
+        return view('application_index', compact('attendances', 'approvalStatus'));
     }
 }

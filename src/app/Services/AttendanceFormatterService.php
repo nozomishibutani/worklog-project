@@ -163,6 +163,7 @@ class AttendanceFormatterService
             $formatCarbonDate['break_out'][$breakId]
                 = $attendance['break_out'][$breakId] ? $this->formatCarbonDate($workDay, $attendance['break_out'][$breakId]) : null;
         }
+        $formatCarbonDate['work_date'] = $this->formatCarbonDate($workDay, null);
 
         return $formatCarbonDate;
     }
@@ -221,5 +222,22 @@ class AttendanceFormatterService
 
         ksort($result);
         return $result;
+    }
+
+    public function makeCsvData($workTimes, $breakTimes): array
+    {
+        $rows = [];
+
+        foreach ($workTimes as $workDate => $value) {
+            $rows[] = [
+                $value['display_date'],
+                $value['clock_in'],
+                $value['clock_out'],
+                $breakTimes[$workDate]['display_total'] ?? '',
+                $value['display_total'],
+            ];
+        }
+
+        return $rows;
     }
 }

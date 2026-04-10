@@ -16,8 +16,7 @@
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
-        <form class=""
-            action="{{ route('admin.approve', ['attendance_correct_request_id' => $attendanceApplication->id]) }}"
+        <form class="" action="{{ route('admin.approve', ['attendance_correct_request_id' => $attendanceChangeId]) }}"
             method="post" novalidate>
             @csrf
             <table class="admin__table">
@@ -110,7 +109,7 @@
                 <tr class="admin__row">
                     <th class="admin__label">備考</th>
                     <td class="admin__data">
-                        <textarea name="note">{{ old('note', $attendanceApplication?->note) }}</textarea>
+                        <textarea name="note">{{ old('note', $note) }}</textarea>
                     </td>
                     @error('note')
                         <td class="msg">
@@ -120,10 +119,10 @@
                 </tr>
             </table>
             <div class="">
-                @if ($attendanceApplication->isApproved())
+                @if ($currentAttendanceStatus === App\Enums\ApprovalStatus::APPROVED->value)
                     承認済み
                     {{-- <button class="">承認済み</button> --}}
-                @elseif(!$attendanceApplication->isApproved())
+                @elseif($currentAttendanceStatus === App\Enums\ApprovalStatus::PENDING->value)
                     <button class="">承認</button>
                 @endif
             </div>

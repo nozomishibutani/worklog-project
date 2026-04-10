@@ -59,5 +59,10 @@
                 </tr>
             @endforeach
         </table>
+        <div class="export">
+            <a class="" href="{{ route('admin.export', ['user_id' => $userId, 'date' => $date['export']]) }}">
+                <button class="export__btn btn" type="submit">CSV出力</button>
+            </a>
+        </div>
     </div><!-- admin-->
 @endsection

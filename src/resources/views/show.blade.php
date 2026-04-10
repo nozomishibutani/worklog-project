@@ -24,7 +24,7 @@
         @csrf
         {{-- hidden --}}
         <input type="hidden" name="user_id" value="{{ $workTimes['userId'] }}">
-        <input type="hidden" name="attendance_id" value="{{ $workTimes['attendanceId'] }}">
+        <input type="hidden" name="attendance_id" value="{{ $attendanceId }}">
         <input type="hidden" name="current_attendance_status" value="{{ $currentAttendanceStatus }}">
         <table class="admin__table">
             <tr class="admin__row">
@@ -153,7 +153,7 @@
         </table>
         <div class="">
             @if (is_null($currentAttendanceStatus) || $currentAttendanceStatus === App\Enums\ApprovalStatus::APPROVED->value)
-                <button class="">修正!</button>
+                <button class="">修正!!</button>
             @else
                 *承認待ちのため修正はできません。
             @endif

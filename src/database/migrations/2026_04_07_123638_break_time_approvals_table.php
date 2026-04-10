@@ -15,7 +15,6 @@ return new class () extends Migration {
             $table->foreignId('attendance_approval_id')->constrained('attendance_approvals');
             $table->dateTime('clock_in')->nullable();
             $table->dateTime('clock_out')->nullable();
-            $table->timestamps();
         });
     }
 

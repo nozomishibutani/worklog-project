@@ -37,11 +37,15 @@ class AttendanceResolverService
     public function getCurrentAttendance($attendanceId, $attendanceChangeId): ?array
     {
         if ($attendanceChangeId) {
-            $change = AttendanceChange::with('attendance.breakTimes')->find($attendanceChangeId);
-            if ($change->attendance) {
+            $change = AttendanceChange::with([
+                'breakTimes',
+                'attendanceApproval.breakTimes'
+                ])->find($attendanceChangeId);
+
+            if ($change->attendanceApproval) {
                 return [
                     'currentAttendanceStatus' => ApprovalStatus::APPROVED->value,
-                    'currentAttendance' => $change->attendance,
+                    'currentAttendance' => $change->attendanceApproval,
                 ];
             }
             return [
@@ -49,7 +53,6 @@ class AttendanceResolverService
                 'currentAttendance' => $change,
             ];
         }
-
 
         if ($attendanceId) {
             $attendance = Attendance::with([

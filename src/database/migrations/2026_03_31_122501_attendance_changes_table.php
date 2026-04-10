@@ -20,7 +20,6 @@ return new class () extends Migration {
             $table->foreignId('applied_by')->constrained('users');
             $table->dateTime('applied_at');
             $table->string('note', 255)->nullable();
-            $table->timestamps();
         });
     }
 

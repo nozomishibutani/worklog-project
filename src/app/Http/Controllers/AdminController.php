@@ -8,6 +8,7 @@ use App\Models\BreakTime;
 use App\Services\AttendanceCalculatorService;
 use App\Services\AttendanceUpdateService;
 use App\Services\AttendanceFormatterService;
+use App\Services\AttendanceResolverService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
@@ -15,21 +16,25 @@ use App\Models\AttendanceApplication;
 use App\Http\Requests\AttendanceRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\Role;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
     protected AttendanceCalculatorService $attendanceCalculatorService;
     protected AttendanceUpdateService $attendanceUpdateService;
     protected AttendanceFormatterService $attendanceFormatterService;
+    protected AttendanceResolverService $attendanceResolverService;
 
     public function __construct(
         AttendanceCalculatorService $attendanceCalculatorService,
         AttendanceUpdateService $attendanceUpdateService,
         AttendanceFormatterService $attendanceFormatterService,
+        AttendanceResolverService $attendanceResolverService,
     ) {
         $this->attendanceCalculatorService = $attendanceCalculatorService;
         $this->attendanceUpdateService = $attendanceUpdateService;
         $this->attendanceFormatterService = $attendanceFormatterService;
+        $this->attendanceResolverService =  $attendanceResolverService;
     }
 
     public function index(Request $request): \Illuminate\View\View
@@ -67,15 +72,14 @@ class AdminController extends Controller
         $date =  $request->query('date');
 
         if ($attendanceId) {
-            $attendance = Attendance::with(['user', 'breakTimes'])->find($attendanceId);
-
             [
                 'workTimes' => $workTimes,
                 'breakTimes' => $breakTimes,
                 'workDate' => $workDate,
+                'currentAttendanceStatus' => $currentAttendanceStatus,
+                'note' => $note,
             ]
-            = $this->attendanceCalculatorService->getUserDailyAttendance($attendance);
-
+            = $this->attendanceCalculatorService->getUserDailyAttendance($attendanceId, null);
         } else {
             $user = User::find($userId);
             [
@@ -87,11 +91,12 @@ class AdminController extends Controller
         }
 
         return view('show', [
+            'attendanceId' => $attendanceId,
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
-            'route' => Role::ADMIN->value. '.show',
-            'attendanceApplication' => isset($attendance) ? $attendance?->latestAttendanceApplication : null,
+            'currentAttendanceStatus' => $currentAttendanceStatus ?? null,
+            'note' => $note ?? null,
         ]);
     }
 
@@ -127,49 +132,90 @@ class AdminController extends Controller
                 'label' => $startOfMonth->copy()->format('Y/m'),
                 'prev' => $startOfMonth->copy()->subMonth()->format('Ym'),
                 'next' => $startOfMonth->copy()->addMonth()->format('Ym'),
+                'export' => $startOfMonth->copy()->format('Ym'),
             ],
         ]);
     }
 
-    public function showForApproval($applicationId)
+    public function showForApproval($attendanceChangeId)
     {
-        $application = AttendanceApplication::with('attendance.user', 'attendance.breakTimes', 'attendanceHistory.user')->find($applicationId);
-        if (is_null($application)) {
-            return redirect()->route('admin.index')
-                                ->with('alert', 'システムエラーが発生しました')
-                                ->with('alert-type', 'alert-error');
-        }
-
-        $attendance = $application->is_current ? $application->attendance : $application->attendanceHistory;
-        //$attendance = $application->attendance;
-
         [
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
+            'currentAttendanceStatus' => $currentAttendanceStatus,
+            'note' => $note,
         ]
-        = $this->attendanceCalculatorService->getUserDailyAttendance($attendance);
+        = $this->attendanceCalculatorService->getUserDailyAttendance(null, $attendanceChangeId);
 
         return view('admin/approval', [
+            'attendanceChangeId' => $attendanceChangeId,
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
-            'attendanceApplication' => $application,
+            'currentAttendanceStatus' => $currentAttendanceStatus,
+            'note' => $note,
         ]);
     }
 
-    public function approve($attendanceApplicationId)
+    public function approve($attendanceChangeId)
     {
-        $result = $this->attendanceUpdateService->approveAttendanceApplication($attendanceApplicationId);
+        $this->attendanceUpdateService->approveAttendance($attendanceChangeId);
 
-        if ($result) {
-            return redirect()->route('application.index', ['mode' => 'approved'])
-                                            ->with('alert', '承認が完了しました')
-                                            ->with('alert-type', 'alert-success');
-        }
-        return redirect()->route('admin.index')
-                                ->with('alert', 'システムエラーが発生しました')
-                                ->with('alert-type', 'alert-error');
+        return redirect()->route('admin.approval.show', ['attendance_correct_request_id' => $attendanceChangeId])
+                                        ->with('alert', '承認が完了しました')
+                                        ->with('alert-type', 'alert-success');
+    }
 
+    public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
+    {
+        $input = $request->validated();
+        $hidden = $request->only('user_id', 'attendance_id', 'current_attendance_status', 'year', 'month', 'day');
+        $applyAttendance = array_merge($hidden, $input);
+
+        $result = $this->attendanceUpdateService->applyAttendance($applyAttendance);
+        // 管理者が直接修正した場合は承認フェーズを省く
+        $this->attendanceUpdateService->approveAttendance($result->id);
+
+        return redirect()
+            ->route('admin.show', ['id' => $result->attendance_id])
+            ->with('alert', '勤怠情報を修正しました')
+            ->with('alert-type', 'alert-success');
+    }
+
+    public function export($userId, $date)
+    {
+        $startOfMonth = Carbon::createFromFormat('Ymd', $date . '01')->startOfMonth();
+        [
+            'name' => $name,
+            'workTimes' => $workTimes,
+            'breakTimes' => $breakTimes,
+        ]
+        = $this->attendanceCalculatorService->getUserMonthlyAttendances($userId, $startOfMonth);
+
+        $csvHeader = [
+            '日付', '出勤', '退勤', '休憩', '合計'
+        ];
+        $filename = "{$name}_{$date}.csv";
+
+        $rows = $this->attendanceFormatterService->makeCsvData($workTimes, $breakTimes);
+
+        $response = new StreamedResponse(function () use ($rows, $csvHeader) {
+            $createCsvFile = fopen('php://output', 'w');
+            mb_convert_variables('SJIS-win', 'UTF-8', $csvHeader);
+
+            fputcsv($createCsvFile, $csvHeader);
+
+            foreach ($rows as $row) {
+                mb_convert_variables('SJIS-win', 'UTF-8', $row);
+                fputcsv($createCsvFile, $row);
+            }
+
+            fclose($createCsvFile);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=SJIS-win',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+        return $response;
     }
 }

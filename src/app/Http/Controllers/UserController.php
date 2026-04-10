@@ -63,11 +63,8 @@ class UserController extends Controller
                 return redirect()->route('index');
             }
         }
-
-        return redirect()->route('index')
-                        ->with('alert', 'システムエラーが発生しました')
-                        ->with('alert-type', 'alert-error');
     }
+
     public function monthlyIndex(Request $request)
     {
         $date = $request->query('date');
@@ -104,17 +101,13 @@ class UserController extends Controller
         $date =  $request->query('date');
         if ($attendanceId) {
             [
-                'currentAttendanceStatus' => $currentAttendanceStatus,
-                'currentAttendance' => $currentAttendance,
-            ]
-            = $this->attendanceResolverService->getCurrentAttendance($attendanceId, null);
-
-            [
                 'workTimes' => $workTimes,
                 'breakTimes' => $breakTimes,
                 'workDate' => $workDate,
+                'currentAttendanceStatus' => $currentAttendanceStatus,
+                'note' => $note,
             ]
-            = $this->attendanceCalculatorService->getUserDailyAttendance($currentAttendance);
+            = $this->attendanceCalculatorService->getUserDailyAttendance($attendanceId, null);
 
         } else {
             $user = Auth::user();
@@ -127,33 +120,26 @@ class UserController extends Controller
         }
 
         return view('show', [
+            'attendanceId' => $attendanceId,
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'workDate' => $workDate,
             'currentAttendanceStatus' => $currentAttendanceStatus ?? null,
-            'note' => $currentAttendance->note ?? null,
+            'note' => $note ?? null,
         ]);
     }
     public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
     {
-        $tmp = $request->validated();
-        $attendance = $request->only('user_id', 'attendance_id', 'current_attendance_status', 'year', 'month', 'day');
-        $attendance = array_merge($attendance, $tmp);
+        $input = $request->validated();
+        $hidden = $request->only('user_id', 'attendance_id', 'current_attendance_status', 'year', 'month', 'day');
+        $applyAttendance = array_merge($hidden, $input);
 
-        $result = $this->attendanceUpdateService->applyAttendance($attendance);
-
-        if ($result) {
-            return redirect()
-                ->route('show', ['id' => $result->attendance_id])
-                ->with('alert', '勤怠情報を修正しました')
-                ->with('alert-type', 'alert-success');
-        }
+        $result = $this->attendanceUpdateService->applyAttendance($applyAttendance);
 
         return redirect()
-            ->route('index')
-            ->with('alert', 'システムエラーが発生しました')
-            ->with('alert-type', 'alert-error');
-
+            ->route('show', ['id' => $result->attendance_id])
+            ->with('alert', '勤怠情報を修正しました')
+            ->with('alert-type', 'alert-success');
     }
 
 }
