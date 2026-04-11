@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class BreakTimeChange extends Model
 {
+    public $timestamps = false;
 
     protected $fillable = [
     'attendance_change_id',

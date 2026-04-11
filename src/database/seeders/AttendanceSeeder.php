@@ -82,13 +82,11 @@ class AttendanceSeeder extends Seeder
                         $clockOut = null;
                     }
 
-
                     Attendance::create([
                         'user_id' => $user->id,
                         'work_date' => $currentDate->toDateString(),
                         'clock_in' => $clockIn,
                         'clock_out' => $clockOut,
-                        'created_by' => $user->id,
                         'created_at' => $clockIn,
                         'updated_at' => $clockOut,
                     ]);

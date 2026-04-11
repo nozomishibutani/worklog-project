@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UserSeeder::class);
         $this->call(AttendanceSeeder::class);
         $this->call(BreakTimeSeeder::class);
-        $this->call(AttendanceApplicationSeeder::class);
-        //$this->call(AttendanceHistorySeeder::class);
+        $this->call(AttendanceChangeSeeder::class);
+        $this->call(AttendanceApprovalSeeder::class);
     }
 }

@@ -46,11 +46,6 @@ class UserSeeder extends Seeder
                     'role' => Role::USER,
                 ],
                 [
-                    'name' => '山田一郎',
-                    'email' => 'user7@test.com',
-                    'role' => Role::USER,
-                ],
-                [
                     'name' => '佐藤一二三',
                     'email' => 'admin1@test.com',
                     'role' => Role::ADMIN,

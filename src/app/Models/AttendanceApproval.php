@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendanceApproval extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         'user_id',
         'attendance_change_id',
