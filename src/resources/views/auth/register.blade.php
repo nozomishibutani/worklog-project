@@ -33,7 +33,7 @@
                         </ul>
                     </div>
                 @endif
-                <form class="form" action="/register" method="post" novalidate>
+                <form class="form" action="/register" method="POST" novalidate>
                     @csrf
                     <ul class="auth__list">
                         <li class="auth__item">

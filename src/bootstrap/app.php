@@ -3,8 +3,9 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\SetGuard;
+use App\Http\Middleware\CheckSessionValue;
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\CheckAdmin;
 use App\Providers\FortifyServiceProvider;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -17,9 +18,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [
-            SetGuard::class,
-        ]);
         $middleware->alias([
         'auth' => Authenticate::class,
         ]);

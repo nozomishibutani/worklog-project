@@ -96,6 +96,7 @@ class AttendanceResolverService
     public function getUserAttendanceStatus($date): array
     {
         $user = Auth::user();
+
         /** @var \App\Models\User $user */
         $attendance = $user->attendances()->where('work_date', $date)->first();
 
