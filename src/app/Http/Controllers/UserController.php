@@ -12,14 +12,11 @@ use App\Services\AttendanceResolverService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
-use App\Models\AttendanceApplication;
 use App\Http\Requests\AttendanceRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ApprovalStatus;
 use App\Enums\Role;
 use App\Models\AttendanceChange;
-
-use function Symfony\Component\Clock\now;
 
 class UserController extends Controller
 {
@@ -128,6 +125,7 @@ class UserController extends Controller
             'note' => $note ?? null,
         ]);
     }
+
     public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
     {
         $input = $request->validated();
@@ -141,5 +139,4 @@ class UserController extends Controller
             ->with('alert', '勤怠情報を修正しました')
             ->with('alert-type', 'alert-success');
     }
-
 }

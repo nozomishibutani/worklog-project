@@ -12,14 +12,11 @@ use App\Enums\AttendanceStatus;
 use App\Models\BreakTime;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ApprovalStatus;
-use App\Models\AttendanceHistory;
-use App\Models\BreakTimeHistory;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use App\Enums\Guard;
 use App\Models\AttendanceApproval;
-use Database\Seeders\AttendanceHistorySeeder;
 
 use function Symfony\Component\Clock\now;
 
@@ -34,6 +31,9 @@ class AttendanceResolverService
         $this->attendanceRepository = $attendanceRepository;
     }
 
+    /**
+     * 指定日の勤怠の最新状態を取得
+     */
     public function getCurrentAttendance($attendanceId, $attendanceChangeId): ?array
     {
         if ($attendanceChangeId) {
@@ -89,6 +89,7 @@ class AttendanceResolverService
         ];
 
     }
+
     /**
      * ユーザーの打刻状態を取得
      */

@@ -6,24 +6,18 @@ use App\Repositories\AttendanceRepository;
 use App\Services\AttendanceFormatterService;
 use App\Services\AttendanceResolverService;
 use Carbon\Carbon;
-use App\Models\AttendanceApplication;
 use App\Models\Attendance;
 use App\Enums\Role;
 use App\Enums\AttendanceStatus;
 use App\Models\BreakTime;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ApprovalStatus;
-use App\Models\AttendanceHistory;
-use App\Models\BreakTimeHistory;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use App\Enums\Guard;
 use App\Models\AttendanceApproval;
 use App\Models\AttendanceChange;
-use Database\Seeders\AttendanceHistorySeeder;
-
-use function Symfony\Component\Clock\now;
 
 class AttendanceUpdateService
 {
@@ -46,27 +40,27 @@ class AttendanceUpdateService
         $formatCarbonDate =  $this->attendanceFormatterService->buildWorkDateFromEditAttendance($applyAttendance);
 
         return DB::transaction(function () use ($targetAttendance, $applyAttendance, $formatCarbonDate) {
-            //try {
-            // 修正勤怠登録
-            if (is_null($targetAttendance)) {
-                // 打刻ない場合は空レコード作成
-                $createAttendance = $this->createAttendance($applyAttendance, $formatCarbonDate);
-                $applyAttendance['attendance_id'] = $createAttendance->id;
+            try {
+                // 修正登録
+                if (is_null($targetAttendance)) {
+                    // 打刻ない場合は空レコード作成
+                    $createAttendance = $this->createAttendance($applyAttendance, $formatCarbonDate);
+                    $applyAttendance['attendance_id'] = $createAttendance->id;
+                }
+                $createAttendanceChange = $this->createAttendanceChange($applyAttendance, $formatCarbonDate);
+                // 休憩
+                if (isset($applyAttendance['break_in'])) {
+                    $this->createBreakTimeChanges($createAttendanceChange, $applyAttendance, $formatCarbonDate);
+                }
+                return $createAttendanceChange;
+            } catch (\Exception $e) {
+                Log::error($e);
+                $route = auth('admin')->check() ? Role::ADMIN->value . '.' : null;
+                return redirect()
+                    ->route($route .'index')
+                    ->with('alert', 'システムエラーが発生しました')
+                    ->with('alert-type', 'alert-error');
             }
-            $createAttendanceChange = $this->createAttendanceChange($applyAttendance, $formatCarbonDate);
-            // 休憩
-            if (isset($applyAttendance['break_in'])) {
-                $this->createBreakTimeChanges($createAttendanceChange, $applyAttendance, $formatCarbonDate);
-            }
-            return $createAttendanceChange;
-            // } catch (\Exception $e) {
-            //     Log::error($e);
-            //     $route = auth('admin')->check() ? Role::ADMIN->value . '.' : null;
-            //     return redirect()
-            //         ->route($route .'index')
-            //         ->with('alert', 'システムエラーが発生しました')
-            //         ->with('alert-type', 'alert-error');
-            // }
         });
     }
 
@@ -80,6 +74,7 @@ class AttendanceUpdateService
             'clock_out'    => null,
         ]);
     }
+
     private function createAttendanceChange($applyAttendance, $formatCarbonDate): AttendanceChange
     {
         // 修正
@@ -143,16 +138,6 @@ class AttendanceUpdateService
                             ->with('alert-type', 'alert-error');
         }
     }
-
-
-
-
-
-
-
-
-
-
 
     public function attendanceRegister($action, $attendanceId)
     {

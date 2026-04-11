@@ -12,7 +12,6 @@ use App\Services\AttendanceResolverService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
-use App\Models\AttendanceApplication;
 use App\Http\Requests\AttendanceRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\Role;
@@ -196,7 +195,6 @@ class AdminController extends Controller
         $csvHeader = [
             '日付', '出勤', '退勤', '休憩', '合計'
         ];
-        $filename = "{$name}_{$date}.csv";
 
         $rows = $this->attendanceFormatterService->makeCsvData($workTimes, $breakTimes);
 
@@ -214,7 +212,7 @@ class AdminController extends Controller
             fclose($createCsvFile);
         }, 200, [
             'Content-Type' => 'text/csv; charset=SJIS-win',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Content-Disposition' => "attachment; filename=\"{$name}_{$date}.csv\"",
         ]);
         return $response;
     }

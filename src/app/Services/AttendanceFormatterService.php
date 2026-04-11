@@ -101,6 +101,7 @@ class AttendanceFormatterService
      * 日付に曜日を追加する
      *
      * @param string $date フォーマットしたい日付
+     * @param string $type フォーマットの型（例: Y月m日）
      * @return string フォーマット済みの日付文字列（例: 03月06日（木））
      */
     public function addDay($date, $type): string
@@ -148,22 +149,22 @@ class AttendanceFormatterService
     public function buildWorkDateFromEditAttendance(array $attendance): array
     {
         // H:iをY-m-d H:iにフォーマット
-        $workDay = [
+        $workDate = [
                     'year' => $attendance['year'],
                     'month' => $attendance['month'],
                     'day' => $attendance['day'],
                 ];
-        $formatCarbonDate['work_in'] =  $attendance['work_in'] ? $this->formatCarbonDate($workDay, $attendance['work_in']) : null;
-        $formatCarbonDate['work_out'] = $attendance['work_out'] ? $this->formatCarbonDate($workDay, $attendance['work_out']) : null;
+        $formatCarbonDate['work_in'] =  $attendance['work_in'] ? $this->formatCarbonDate($workDate, $attendance['work_in']) : null;
+        $formatCarbonDate['work_out'] = $attendance['work_out'] ? $this->formatCarbonDate($workDate, $attendance['work_out']) : null;
         if (!isset($attendance['break_in'])) {
             return $formatCarbonDate;
         }
         foreach ($attendance['break_in'] as $breakId => $breakTime) {
-            $formatCarbonDate['break_in'][$breakId] = $breakTime ? $this->formatCarbonDate($workDay, $breakTime) : null;
+            $formatCarbonDate['break_in'][$breakId] = $breakTime ? $this->formatCarbonDate($workDate, $breakTime) : null;
             $formatCarbonDate['break_out'][$breakId]
-                = $attendance['break_out'][$breakId] ? $this->formatCarbonDate($workDay, $attendance['break_out'][$breakId]) : null;
+                = $attendance['break_out'][$breakId] ? $this->formatCarbonDate($workDate, $attendance['break_out'][$breakId]) : null;
         }
-        $formatCarbonDate['work_date'] = $this->formatCarbonDate($workDay, null);
+        $formatCarbonDate['work_date'] = $this->formatCarbonDate($workDate, null);
 
         return $formatCarbonDate;
     }

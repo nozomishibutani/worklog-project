@@ -11,10 +11,7 @@ use App\Models\Attendance;
 use App\Enums\AttendanceStatus;
 use App\Models\AttendanceApproval;
 use App\Models\AttendanceChange;
-use App\Models\AttendanceHistory;
 use Illuminate\Support\Facades\Auth;
-
-use function Symfony\Component\VarDumper\Dumper\esc;
 
 class AttendanceCalculatorService
 {
@@ -133,7 +130,6 @@ class AttendanceCalculatorService
     public function getUserDailyAttendance($attendanceId, $attendanceChangeId): array
     {
         $workTimes = [
-            //'attendanceId' => null,
             'clock_in' => null,
             'clock_out' => null,
         ];
@@ -157,7 +153,6 @@ class AttendanceCalculatorService
                     ];
 
         $tmp = [
-                //'attendanceId' => $attendance->id,
                 'userId' => $currentAttendance->user_id,
                 'name' => $currentAttendance->user->name,
                 'clock_in' => $clockIn ? $clockIn->format('H:i') : null,
@@ -181,7 +176,6 @@ class AttendanceCalculatorService
         $sorted = collect($breakTimes)->sortBy('clock_in')->values()->all();
 
         return [
-            //'userId' => $currentAttendance->user_id,
             'workTimes' => $workTimes,
             'breakTimes' => $sorted,
             'workDate' => $workDate,

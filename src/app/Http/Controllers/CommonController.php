@@ -11,7 +11,6 @@ use App\Services\AttendanceFormatterService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
-use App\Models\AttendanceApplication;
 use App\Http\Requests\AttendanceRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ApprovalStatus;
