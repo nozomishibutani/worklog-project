@@ -5,12 +5,12 @@
 @endsection
 
 @section('title')
-    <title>スタッフ別勤怠一覧</title>
+    <title>月次勤怠一覧</title>
 @endsection
 
 @section('content')
     <div class="admin">
-        <h1>{{ $name }}さんの勤怠</h1>
+        <h1>勤怠一覧</h1>
         <div>
             <nav class="">
                 <ul class="">

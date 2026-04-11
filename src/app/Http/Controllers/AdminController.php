@@ -56,7 +56,7 @@ class AdminController extends Controller
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
             'date' => [
-                'title' => $date->copy()->format('Y年m月d日'),
+                'title' => $date->copy()->format('Y年n月j日'),
                 'label' => $date->copy()->format('Y/m/d'),
                 'prev' => $date->copy()->subDay()->format('Ymd'),
                 'next' => $date->copy()->addDay()->format('Ymd'),

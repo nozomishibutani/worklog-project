@@ -2,10 +2,10 @@
 
 namespace App\Actions\Fortify;
 
+use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+use App\Http\Requests\RegisterRequest;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
@@ -22,21 +22,13 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
-        Validator::make($input, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique(User::class),
-            ],
-            'password' => $this->passwordRules(),
-        ])->validate();
+        // 会員登録時のバリデーションはRegisterRequestを使用
+        app(RegisterRequest::class)->validateResolved();
 
         return User::create([
             'name' => $input['name'],
             'email' => $input['email'],
+            'role' => Role::USER->value,
             'password' => Hash::make($input['password']),
         ]);
     }
