@@ -17,10 +17,10 @@
                     <img src="{{ asset('header_logo.png') }}" alt="ヘッダーロゴ画像">
                 </a>
             </div>
-            <!-- 管理画面 -->
-            @if (Auth::guard('admin')->check() && !Auth::guard('web')->check())
-                <nav class="header__nav">
-                    <ul class="header__list">
+            <nav class="header__nav">
+                <ul class="header__list">
+                    <!-- 管理画面 -->
+                    @if (session('role') === App\Enums\Role::ADMIN->value)
                         <li class="header__item">
                             <a href="{{ route('admin.index') }}" class="link header__link">勤怠一覧</a>
                         </li>
@@ -30,21 +30,9 @@
                         <li class="header__item">
                             <a href="{{ route('application.index') }}" class="link header__link">申請一覧</a>
                         </li>
-                        <li class="header__item">
-                            <form class="header__form" action="{{ route('admin.logout') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="from" value="{{ App\Enums\Role::ADMIN->value }}">
-                                <button class="btn header__btn">ログアウト</button>
-                            </form>
-                        </li>
-                    </ul>
-                </nav>
-            @endif
-
-            <!-- ユーザー画面 -->
-            @if (!Auth::guard('admin')->check() && Auth::guard('web')->check())
-                <nav class="header__nav">
-                    <ul class="header__list">
+                    @endif
+                    <!-- ユーザー画面 -->
+                    @if (session('role') === App\Enums\Role::USER->value)
                         <li class="header__item">
                             <a href="{{ route('index') }}" class="link header__link">勤怠</a>
                         </li>
@@ -54,18 +42,15 @@
                         <li class="header__item">
                             <a href="{{ route('application.index') }}" class="link header__link">申請</a>
                         </li>
-                        <li class="header__item">
-                        <li class="header__item">
-                            <form class="header__form" action="{{ route('logout') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="from" value="{{ App\Enums\Role::USER->value }}">
-                                <button class="btn header__btn">ログアウト</button>
-                            </form>
-                        </li>
-                        </li>
-                    </ul>
-                </nav>
-            @endif
+                    @endif
+                    <li class="header__item">
+                        <form class="header__form" action="/logout" method="POST">
+                            @csrf
+                            <input type="hidden" name="from" value="{{ session('role') }}">
+                            <button class="btn header__btn">ログアウト</button>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </header>
 

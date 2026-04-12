@@ -17,8 +17,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use App\Enums\Guard;
 use App\Models\AttendanceApproval;
+use Illuminate\Database\Eloquent\Collection;
 
-use function Symfony\Component\Clock\now;
 
 class AttendanceResolverService
 {
@@ -133,5 +133,63 @@ class AttendanceResolverService
             'attendanceStatus' => $attendanceStatus,
             'attendance' => $attendance,
             ];
+    }
+
+    /**
+     * ユーザーの勤怠の申請状態を取得
+     */
+    public function getUserApplicationIndex($mode): ?Collection
+    {
+        switch ($mode) {
+            // 同日に複数回承認・修正を繰り返していても最新1件のみ表示
+            case ApprovalStatus::PENDING->value:
+                $attendances = Attendance::with('latestAttendanceChange.attendanceApproval')
+                                            ->whereHas('latestAttendanceChange')
+                                            ->doesntHave('latestAttendanceChange.attendanceApproval')
+                                            ->where('user_id', Auth::id())
+                                            ->orderBy(
+                                                AttendanceChange::select('applied_at')
+                                                ->whereColumn('attendance_changes.attendance_id', 'attendances.id')
+                                                ->latest()
+                                                ->limit(1)
+                                            )
+                                            ->get();
+                break;
+
+            case ApprovalStatus::APPROVED->value:
+                $attendances = Attendance::with('latestAttendanceChange.attendanceApproval')
+                                            ->whereHas('latestAttendanceChange.attendanceApproval')
+                                            ->where('user_id', Auth::id())
+                                            ->orderBy(
+                                                AttendanceChange::select('applied_at')
+                                                ->whereColumn('attendance_changes.attendance_id', 'attendances.id')
+                                                ->latest()
+                                                ->limit(1)
+                                            )
+                                            ->get();
+                break;
+
+        }
+        return  $attendances;
+    }
+
+    /**
+     * 全ユーザーの勤怠の申請状態を取得
+     */
+    public function getAllUserApplicationIndex($mode): ?Collection
+    {
+        switch ($mode) {
+            case ApprovalStatus::PENDING->value:
+                $attendances = AttendanceChange::doesntHave('attendanceApproval')
+                                                ->orderBy('applied_at', 'asc')
+                                                ->get();
+                break;
+            case ApprovalStatus::APPROVED->value:
+                $attendances = AttendanceApproval::with('attendanceChange')
+                                                ->orderBy('approved_at', 'desc')
+                                                ->get();
+                break;
+        }
+        return  $attendances;
     }
 }

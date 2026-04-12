@@ -73,9 +73,7 @@ return [
     |
     */
 
-    //'home' => '/home',
-    'home' => '/attendance',
-    //'home' => App\Providers\AppServiceProvider::HOME,
+    'home' => '/home',
 
     /*
     |--------------------------------------------------------------------------

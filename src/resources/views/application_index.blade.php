@@ -40,7 +40,7 @@
                 <th class="admin__label">詳細</th>
             </tr>
             @if (!empty($attendances))
-                @if (auth('admin')->check())
+                @if (session('role') === App\Enums\Role::ADMIN->value)
                     @foreach ($attendances as $id => $attendance)
                         <tr class="admin__row">
                             <td class="admin__data">{{ $approvalStatus->label() }}</td>
@@ -58,7 +58,7 @@
                             </td>
                         </tr>
                     @endforeach
-                @elseif(auth('web')->check())
+                @elseif (session('role') === App\Enums\Role::USER->value)
                     @foreach ($attendances as $id => $attendance)
                         <tr class="admin__row">
                             <td class="admin__data">{{ $approvalStatus->label() }}</td>
@@ -71,8 +71,7 @@
                                 {{ $attendance->latestAttendanceChange->applied_at->format('Y/m/d') }}
                             </td>
                             <td class="admin__data">
-                                <a class="admin__detail-btn"
-                                    href="{{ route('show', ['id' => $attendance->id]) }}">詳細
+                                <a class="admin__detail-btn" href="{{ route('show', ['id' => $attendance->id]) }}">詳細
                                 </a>
                             </td>
                         </tr>

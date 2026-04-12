@@ -21,7 +21,6 @@ class CheckSessionValue
         ************************************************************************/
 
         if ($request->routeIs('admin.*')) {
-            //dd(gettype(session('role')), gettype(Role::ADMIN->value));
             if (session('role') !== Role::ADMIN->value || session('user_id') !== $request->user()->id) {
                 return redirect()->route('admin.login')
                                     ->with('alert', '管理者権限が必要です')
@@ -29,7 +28,7 @@ class CheckSessionValue
             }
         } else {
             if (session('role') !== Role::USER->value || session('user_id') !== $request->user()->id) {
-                dd("here");
+
                 return redirect()->route('login');
             }
         }

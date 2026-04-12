@@ -8,6 +8,7 @@ use App\Models\BreakTime;
 use App\Services\AttendanceCalculatorService;
 use App\Services\AttendanceUpdateService;
 use App\Services\AttendanceFormatterService;
+use App\Services\AttendanceResolverService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Enums\Type;
@@ -23,66 +24,35 @@ class CommonController extends Controller
     protected AttendanceCalculatorService $attendanceCalculatorService;
     protected AttendanceUpdateService $attendanceUpdateService;
     protected AttendanceFormatterService $attendanceFormatterService;
+    protected AttendanceResolverService $attendanceResolverService;
 
     public function __construct(
         AttendanceCalculatorService $attendanceCalculatorService,
         AttendanceUpdateService $attendanceUpdateService,
         AttendanceFormatterService $attendanceFormatterService,
+        AttendanceResolverService $attendanceResolverService,
     ) {
         $this->attendanceCalculatorService = $attendanceCalculatorService;
         $this->attendanceUpdateService = $attendanceUpdateService;
         $this->attendanceFormatterService = $attendanceFormatterService;
+        $this->attendanceResolverService =  $attendanceResolverService;
     }
+
     public function applicationIndex(Request $request)
     {
         $mode = $request->query('mode');
         $approvalStatus = ApprovalStatus::tryFrom($mode);
         $attendances = null;
-        if (auth('admin')->check()) {
-            switch ($mode) {
-                case ApprovalStatus::PENDING->value:
-                    $attendances = AttendanceChange::doesntHave('attendanceApproval')
-                                                    ->orderBy('applied_at', 'asc')
-                                                    ->get();
-                    break;
-                case ApprovalStatus::APPROVED->value:
-                    $attendances = AttendanceApproval::with('attendanceChange')
-                                                    ->orderBy('approved_at', 'desc')
-                                                    ->get();
-                    break;
-            }
-        }
-        if (auth('web')->check()) {
-            switch ($mode) {
-                // 同日に複数回承認・修正を繰り返していても最新1件のみ表示
-                case ApprovalStatus::PENDING->value:
-                    $attendances = Attendance::with('latestAttendanceChange.attendanceApproval')
-                                                ->whereHas('latestAttendanceChange')
-                                                ->doesntHave('latestAttendanceChange.attendanceApproval')
-                                                ->where('user_id', Auth::id())
-                                                ->orderBy(
-                                                    AttendanceChange::select('applied_at')
-                                                    ->whereColumn('attendance_changes.attendance_id', 'attendances.id')
-                                                    ->latest()
-                                                    ->limit(1)
-                                                )
-                                                ->get();
-                    break;
 
-                case ApprovalStatus::APPROVED->value:
-                    $attendances = Attendance::with('latestAttendanceChange.attendanceApproval')
-                                                ->whereHas('latestAttendanceChange.attendanceApproval')
-                                                ->where('user_id', Auth::id())
-                                                ->orderBy(
-                                                    AttendanceChange::select('applied_at')
-                                                    ->whereColumn('attendance_changes.attendance_id', 'attendances.id')
-                                                    ->latest()
-                                                    ->limit(1)
-                                                )
-                                                ->get();
-                    break;
-            }
+        if (is_null($mode)) {
+            return view('application_index', compact('attendances', 'approvalStatus'));
         }
+        if (session('role') === Role::ADMIN->value) {
+            $attendances = $this->attendanceResolverService->getAllUserApplicationIndex($mode);
+        } elseif (session('role') === Role::USER->value) {
+            $attendances =  $this->attendanceResolverService->getUserApplicationIndex($mode);
+        }
+
         return view('application_index', compact('attendances', 'approvalStatus'));
     }
 }
