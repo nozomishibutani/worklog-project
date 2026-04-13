@@ -7,6 +7,7 @@ use App\Http\Middleware\CheckSessionValue;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\CheckAdmin;
 use App\Providers\FortifyServiceProvider;
+use App\Http\Middleware\RedirectIfAuthenticated;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
@@ -20,7 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
         'auth' => Authenticate::class,
-        ]);
+        'guest' => RedirectIfAuthenticated::class,
+    ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -16,10 +16,10 @@
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
-        @if (auth('admin')->check())
-            <form class="" action="{{ route('admin.update') }}" method="post" novalidate>
-            @elseif(auth('web')->check())
-                <form class="" action="{{ route('update') }}" method="post" novalidate>
+        @if (session('login_form') === App\Enums\LoginForm::ADMIN->value)
+            <form class="" action="{{ route('admin.update') }}" method="POST" novalidate>
+            @elseif (session('login_form') === App\Enums\LoginForm::GENERAL->value)
+                <form class="" action="{{ route('update') }}" method="POST" novalidate>
         @endif
         @csrf
         {{-- hidden --}}

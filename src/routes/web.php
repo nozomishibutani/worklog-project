@@ -14,6 +14,7 @@ use App\Http\Middleware\CheckAdmin; //->middleware(CheckAdmin::class)
 // admin
 // =====================
 Route::prefix('admin')
+//->middleware(['guest'])
     ->group(function () {
         Route::get('/login', function () {
             return view('auth.admin-login');
@@ -73,6 +74,6 @@ Route::middleware([
             ->name('update');
     });
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return redirect()->route('index');
+// });

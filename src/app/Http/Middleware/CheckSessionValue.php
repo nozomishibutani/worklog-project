@@ -17,21 +17,29 @@ class CheckSessionValue
     {
         /***********************************************************************
             管理者権限を持つ者が片方でログインしそのままもう一方の画面に認証なしで
-            ログインするのを防ぐため、ログインに対するsessionを持っているか確認する
+            遷移するのを防ぐため、ログインに対するsessionを持っているか確認する
         ************************************************************************/
-
-        //dd('here');
 
         if ($request->routeIs('admin.*')) {
             if (session('login_form') !== LoginForm::ADMIN->value || session('user_id') !== $request->user()->id) {
-                return redirect()->route('admin.login')
-                                    ->with('alert', '管理者権限が必要です')
-                                    ->with('alert-type', 'alert-error');
+                // return redirect()->route('index')
+                //                     ->with('alert', '現在はユーザーとしてログインしています。管理画面を利用するには一度ログアウトしてください。>>')
+                //                     ->with('alert-type', 'alert-error');
+                return redirect()->route('admin.login');
+                                    //->with('alert', '現在はユーザーとしてログインしています。管理画面を利用するには一度ログアウトしてください。>>')
+                                     //->with('alert-type', 'alert-error');
+
+
             }
         } else {
             if (session('login_form') !== LoginForm::GENERAL->value || session('user_id') !== $request->user()->id) {
+                // RedirectIfAuthenticated でエラー表示
+                //return redirect()->route('login');
 
-                return redirect()->route('login');
+                return redirect()->route('admin.index')
+                                    ->with('alert', '現在は管理者としてログインしています。ユーザー画面を利用するには一度ログアウトしてください！！')
+                                    ->with('alert-type', 'alert-error');
+
             }
         }
         return $next($request);
