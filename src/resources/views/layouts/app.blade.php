@@ -20,7 +20,7 @@
             <nav class="header__nav">
                 <ul class="header__list">
                     <!-- 管理画面 -->
-                    @if (session('role') === App\Enums\Role::ADMIN->value)
+                    @if (session('login_form') === App\Enums\LoginForm::ADMIN->value)
                         <li class="header__item">
                             <a href="{{ route('admin.index') }}" class="link header__link">勤怠一覧</a>
                         </li>
@@ -32,7 +32,7 @@
                         </li>
                     @endif
                     <!-- ユーザー画面 -->
-                    @if (session('role') === App\Enums\Role::USER->value)
+                    @if (session('login_form') === App\Enums\LoginForm::GENERAL->value)
                         <li class="header__item">
                             <a href="{{ route('index') }}" class="link header__link">勤怠</a>
                         </li>
@@ -46,8 +46,9 @@
                     <li class="header__item">
                         <form class="header__form" action="/logout" method="POST">
                             @csrf
-                            <input type="hidden" name="from" value="{{ session('role') }}">
+                            <input type="hidden" name="form" value="{{ session('login_form') }}">
                             <button class="btn header__btn">ログアウト</button>
+                        </form>
                     </li>
                 </ul>
             </nav>

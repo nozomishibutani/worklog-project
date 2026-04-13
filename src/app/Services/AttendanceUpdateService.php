@@ -40,7 +40,7 @@ class AttendanceUpdateService
         $formatCarbonDate =  $this->attendanceFormatterService->buildWorkDateFromEditAttendance($applyAttendance);
 
         return DB::transaction(function () use ($targetAttendance, $applyAttendance, $formatCarbonDate) {
-            try {
+            //try {
                 // 修正登録
                 if (is_null($targetAttendance)) {
                     // 打刻ない場合は空レコード作成
@@ -53,14 +53,14 @@ class AttendanceUpdateService
                     $this->createBreakTimeChanges($createAttendanceChange, $applyAttendance, $formatCarbonDate);
                 }
                 return $createAttendanceChange;
-            } catch (\Exception $e) {
-                Log::error($e);
-                $route = auth('admin')->check() ? Role::ADMIN->value . '.' : null;
-                return redirect()
-                    ->route($route .'index')
-                    ->with('alert', 'システムエラーが発生しました')
-                    ->with('alert-type', 'alert-error');
-            }
+            //} catch (\Exception $e) {
+                //Log::error($e);
+                //$route = auth('admin')->check() ? Role::ADMIN->value . '.' : null;
+                //return redirect()
+                //    ->route($route .'index')
+                //    ->with('alert', 'システムエラーが発生しました')
+                //    ->with('alert-type', 'alert-error');
+            //}
         });
     }
 
@@ -106,7 +106,7 @@ class AttendanceUpdateService
 
     public function approveAttendance($attendanceChangeId): AttendanceApproval|\Illuminate\Http\RedirectResponse
     {
-        try {
+        //try {
             $attendanceChange = AttendanceChange::find($attendanceChangeId);
             return DB::transaction(function () use ($attendanceChange) {
                 // 承認する内容を履歴として保存
@@ -131,12 +131,12 @@ class AttendanceUpdateService
                 }
                 return $createApproval;
             });
-        } catch (\Exception $e) {
-            Log::error($e);
-            return redirect()->route('application.index', ['mode' => 'approved'])
-                            ->with('alert', 'システムエラーが発生しました')
-                            ->with('alert-type', 'alert-error');
-        }
+        // } catch (\Exception $e) {
+        //     Log::error($e);
+        //     return redirect()->route('application.index', ['mode' => 'approved'])
+        //                     ->with('alert', 'システムエラーが発生しました')
+        //                     ->with('alert-type', 'alert-error');
+        // }
     }
 
     public function attendanceRegister($action, $attendanceId)

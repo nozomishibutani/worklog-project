@@ -40,7 +40,7 @@
                 <th class="admin__label">詳細</th>
             </tr>
             @if (!empty($attendances))
-                @if (session('role') === App\Enums\Role::ADMIN->value)
+                @if (session('login_form') === App\Enums\LoginForm::ADMIN->value)
                     @foreach ($attendances as $id => $attendance)
                         <tr class="admin__row">
                             <td class="admin__data">{{ $approvalStatus->label() }}</td>
@@ -58,7 +58,7 @@
                             </td>
                         </tr>
                     @endforeach
-                @elseif (session('role') === App\Enums\Role::USER->value)
+                @elseif (session('login_form') === App\Enums\LoginForm::GENERAL->value)
                     @foreach ($attendances as $id => $attendance)
                         <tr class="admin__row">
                             <td class="admin__data">{{ $approvalStatus->label() }}</td>

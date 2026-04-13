@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\Role;
+use App\Enums\LoginForm;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -20,14 +20,16 @@ class CheckSessionValue
             ログインするのを防ぐため、ログインに対するsessionを持っているか確認する
         ************************************************************************/
 
+        //dd('here');
+
         if ($request->routeIs('admin.*')) {
-            if (session('role') !== Role::ADMIN->value || session('user_id') !== $request->user()->id) {
+            if (session('login_form') !== LoginForm::ADMIN->value || session('user_id') !== $request->user()->id) {
                 return redirect()->route('admin.login')
                                     ->with('alert', '管理者権限が必要です')
                                     ->with('alert-type', 'alert-error');
             }
         } else {
-            if (session('role') !== Role::USER->value || session('user_id') !== $request->user()->id) {
+            if (session('login_form') !== LoginForm::GENERAL->value || session('user_id') !== $request->user()->id) {
 
                 return redirect()->route('login');
             }

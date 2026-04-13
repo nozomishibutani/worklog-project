@@ -19,10 +19,10 @@
         <div class="">{{ $day }}</div>
         <div class="">{{ $time }}</div>
         <div class="">
-            <form class="" action="{{ route('log') }}" method="post">
+            <form action="{{ route('log')}}" method="POST">
+                @csrf
                 {{-- hidden --}}
                 <input type="hidden" name="attendance_id" value="{{ $attendance?->id }}">
-                @csrf
                 @if ($attendanceStatus->value === App\Enums\attendanceStatus::OFF->value)
                     <button name="action" value="{{ App\Enums\attendanceStatus::ON_DUTY->value }}">出勤</button>
                 @elseif($attendanceStatus->value === App\Enums\attendanceStatus::ON_DUTY->value)

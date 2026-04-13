@@ -36,7 +36,7 @@
                 <form class="form" action="/login" method="POST" novalidate>
                     @csrf
                     {{-- hidedn --}}
-                    <input type="hidden" name="from" value="{{ App\Enums\Role::ADMIN->value }}">
+                    <input type="hidden" name="form" value="{{ App\Enums\LoginForm::ADMIN->value }}">
                     <ul class="auth__list">
                         <li class="auth__item">
                             <label class="auth__label" for="email">メールアドレス</label>

@@ -47,7 +47,7 @@ Route::prefix('admin')
 // =====================
 // 共通
 // =====================
-Route::middleware(['auth',])
+Route::middleware(['auth'])
     ->group(function () {
         Route::get('/stamp_correction_request/list', [CommonController::class, 'applicationIndex'])
                     ->name('application.index');
@@ -74,5 +74,5 @@ Route::middleware([
     });
 
 Route::get('/', function () {
-    return redirect()->route('login');
+    return view('welcome');
 });

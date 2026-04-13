@@ -53,6 +53,7 @@ class UserController extends Controller
     public function logAttendance(Request $request)
     {
         $attendanceId = $request->input('attendance_id');
+
         if (isset($_POST['action'])) {
             $action = $_POST['action'];
             $result =  $this->attendanceUpdateService->attendanceRegister($action, $attendanceId);

@@ -15,6 +15,7 @@ use App\Enums\Type;
 use App\Http\Requests\AttendanceRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ApprovalStatus;
+use App\Enums\LoginForm;
 use App\Enums\Role;
 use App\Models\AttendanceApproval;
 use App\Models\AttendanceChange;
@@ -47,9 +48,9 @@ class CommonController extends Controller
         if (is_null($mode)) {
             return view('application_index', compact('attendances', 'approvalStatus'));
         }
-        if (session('role') === Role::ADMIN->value) {
+        if (session('login_form') === LoginForm::ADMIN->value) {
             $attendances = $this->attendanceResolverService->getAllUserApplicationIndex($mode);
-        } elseif (session('role') === Role::USER->value) {
+        } elseif (session('login_form') === LoginForm::GENERAL->value) {
             $attendances =  $this->attendanceResolverService->getUserApplicationIndex($mode);
         }
 

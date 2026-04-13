@@ -38,11 +38,7 @@ return [
     */
 
     'guards' => [
-        'web' => [       // 一般ユーザー用
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
-        'admin' => [     // 管理者用
+        'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],

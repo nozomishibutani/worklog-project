@@ -2,20 +2,20 @@
 
 namespace App\Http\Responses;
 
+use App\Enums\LoginForm;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\Role;
 
 class LoginResponse implements LoginResponseContract
 {
     public function toResponse($request)
     {
-        session()->forget(['user_id','role']);
+        session()->forget(['user_id','login_form']);
 
         // =====================
         // adminログイン
         // =====================
-        if ($request->from === Role::ADMIN->value) {
+        if ($request->form === LoginForm::ADMIN->value) {
             if (!$request->user() || !$request->user()->isAdmin()) {
                 Auth::logout();
                 return redirect()->route('admin.login')
@@ -26,7 +26,7 @@ class LoginResponse implements LoginResponseContract
             if ($request->user() && $request->user()->isAdmin()) {
                 session([
                     'user_id' => $request->user()->id,
-                    'role' => $request->from,
+                    'login_form' => $request->form,
                     ]);
                 return redirect()->route('admin.index');
             }
@@ -35,10 +35,10 @@ class LoginResponse implements LoginResponseContract
         // =====================
         // 一般ログイン
         // =====================
-        if ($request->from === Role::USER->value) {
+        if ($request->form === LoginForm::GENERAL->value) {
             session([
                 'user_id' => $request->user()->id,
-                'role' => $request->from,
+                'login_form' => $request->form,
                 ]);
             return redirect()->route('index');
         }
