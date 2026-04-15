@@ -9,10 +9,10 @@ class Authenticate extends Middleware
 {
     protected function redirectTo($request)
     {
-        // デフォルトのmiddleware authのリダイレクト先を変更する
-        if (session('login_form') === LoginForm::ADMIN->value) {
+        if ($request->routeIs('admin.*')) {
             return route('admin.login');
+        } else {
+            return route('login');
         }
-        return route('login');
     }
 }

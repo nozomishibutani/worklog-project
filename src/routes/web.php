@@ -14,7 +14,6 @@ use App\Http\Middleware\CheckAdmin; //->middleware(CheckAdmin::class)
 // admin
 // =====================
 Route::prefix('admin')
-//->middleware(['guest'])
     ->group(function () {
         Route::get('/login', function () {
             return view('auth.admin-login');
@@ -51,7 +50,7 @@ Route::prefix('admin')
 Route::middleware(['auth'])
     ->group(function () {
         Route::get('/stamp_correction_request/list', [CommonController::class, 'applicationIndex'])
-                    ->name('application.index');
+            ->name('application.index');
     });
 
 // =====================

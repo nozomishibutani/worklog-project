@@ -14,6 +14,11 @@ class CheckAdmin
      */
     public function handle(Request $request, Closure $next)
     {
+
+        /***********************************************************************
+            管理者権限がない者は管理画面に遷移できない
+        ************************************************************************/
+
         if (!$request->user() || !$request->user()->isAdmin()) {
             return redirect()->route('admin.login')
                             ->with('alert', '管理者権限が必要です')

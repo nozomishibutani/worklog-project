@@ -20,24 +20,16 @@ class CheckSessionValue
             遷移するのを防ぐため、ログインに対するsessionを持っているか確認する
         ************************************************************************/
 
+        // 一般にログイン済みで管理画面にアクセス
         if ($request->routeIs('admin.*')) {
             if (session('login_form') !== LoginForm::ADMIN->value || session('user_id') !== $request->user()->id) {
-                // return redirect()->route('index')
-                //                     ->with('alert', '現在はユーザーとしてログインしています。管理画面を利用するには一度ログアウトしてください。>>')
-                //                     ->with('alert-type', 'alert-error');
                 return redirect()->route('admin.login');
-                                    //->with('alert', '現在はユーザーとしてログインしています。管理画面を利用するには一度ログアウトしてください。>>')
-                                     //->with('alert-type', 'alert-error');
-
-
             }
         } else {
             if (session('login_form') !== LoginForm::GENERAL->value || session('user_id') !== $request->user()->id) {
-                // RedirectIfAuthenticated でエラー表示
-                //return redirect()->route('login');
-
+                // 管理画面でログイン済みでユーザー画面にアクセス
                 return redirect()->route('admin.index')
-                                    ->with('alert', '現在は管理者としてログインしています。ユーザー画面を利用するには一度ログアウトしてください！！')
+                                    ->with('alert', '現在は管理者としてログインしています。ユーザー画面を利用するには一度ログアウトしてください。')
                                     ->with('alert-type', 'alert-error');
 
             }
