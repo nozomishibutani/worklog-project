@@ -1,0 +1,19 @@
+.admin__link--month{
+    color: #9e9b9b;
+}
+
+.export__btn{
+    background-color: black;
+    color: white;
+    width: 13%;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    /* 文字幅を広げる*/
+}
+
+.export__link-box{
+    text-align: right;
+    margin: 2rem 0;
+}

@@ -1,0 +1,112 @@
+.show {
+    width: 70%;
+    margin: 0 auto;
+    padding-top: 3rem;
+    padding-bottom: 3.5rem;
+}
+
+.show-ttl {
+    text-align: left;
+    border-left: 0.6rem solid black;
+    padding-left: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.show__table {
+    width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    /* 幅が均等になる*/
+    margin-top: 2rem;
+}
+
+.show__row{
+    width: 100%;
+}
+
+.show__label{
+    width: 30%;
+    color: #9e9b9b;
+}
+
+.show__data {
+    width: 70%;
+    word-break: break-all;
+    /* 折り返す*/
+    letter-spacing: 0.1em;
+    /* 文字幅を広げる*/
+    color: black;
+}
+
+.show__label,
+.show__data {
+    border-bottom: 0.2rem solid #ebe8e8;
+    font-weight: 600;
+    padding: 1.5rem;
+}
+
+.show__link--detail{
+    color: black;
+}
+
+.show__data-input{
+    border: solid 1px rgb(195, 195, 199);
+    height: 40px;
+    outline: none;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 20%;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    text-align: center;
+}
+
+.show__data-span{
+    margin-left: 1rem;
+    }
+
+.range-separator{
+    margin: 0 1.5rem;
+}
+
+.show__data-textarea{
+    width: 53%;
+    height: 64px;
+    border: solid 1px rgb(195, 195, 199);
+    outline: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.show__data-input--pending,
+.show__data-textarea--pending {
+    border: none;
+}
+
+.show__btn-box {
+    text-align: right;
+    margin: 2rem 0;
+}
+
+.show__btn {
+    background-color: black;
+    color: white;
+    width: 13%;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+.show__msg{
+    color: #f33b4e;
+    font-weight: 500;
+}
+
+.show__data-textarea,
+.show__data-span--textarea{
+    word-break: break-all;
+    /* 折り返す*/
+}

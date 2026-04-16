@@ -1,39 +1,41 @@
 @extends('layouts.app')
 
 @section('css')
-    <link rel="stylesheet" href="{{ asset('css/.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/index.css') }}">
 @endsection
 
 @section('title')
-    <title></title>
+    <title>{{ $date['title'] }}の勤怠</title>
 @endsection
 
 @section('content')
     <div class="admin">
+        <h1 class="admin-ttl">{{ $date['title'] }}の勤怠</h1>
         @if (session('alert'))
             <div class="alert {{ session('alert-type', 'alert-success') }}">
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
-        <h1>{{ $date['title'] }}の勤怠</h1>
-        <div>
-            <nav class="">
-                <ul class="">
-                    <li class="">
-                        <a class="" href="{{ route('admin.index', ['date' => $date['prev']]) }}">前日</a>
-                    </li>
-                    </li>
-                    <li class="">
-                        {{ $date['label'] }}
-                    </li>
-                    <li class="">
-                        <a class="" href="{{ route('admin.index', ['date' => $date['next']]) }}">翌日</a>
-                    </li>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-
+        <nav class="admin__nav">
+            <ul class="admin__list">
+                <li class="admin__item">
+                    <a class="link admin__link admin__link--day" href="{{ route('admin.index', ['date' => $date['prev']]) }}">
+                        <span class="direction">←</span>
+                        <span class="admin__item-day">前日</span>
+                    </a>
+                </li>
+                <li class="admin__item">
+                    <span class="admin__item-date">{{ $date['label'] }}</span>
+                </li>
+                <li class="admin__item">
+                    <a class="link admin__link admin__link--day"
+                        href="{{ route('admin.index', ['date' => $date['next']]) }}">
+                        <span class="admin__item-day">翌日</span>
+                        <span class="direction">→</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
         <table class="admin__table">
             <tr class="admin__row">
                 <th class="admin__label">名前</th>
@@ -51,17 +53,8 @@
                     <td class="admin__data">{{ $breakTimes[$userId]['display_total'] ?? null }}</td>
                     <td class="admin__data">{{ $val['display_total'] }}</td>
                     <td class="admin__data">
-                        {{-- <a class="admin__detail-btn"
-                        href="{{ route('admin.session', ['id' => $userId, 'date' => $date['detail']]) }}">詳細 --}}
-                        @if (is_null($val['attendance_id']))
-                            <a class="admin__detail-btn"
-                                href="{{ route('admin.show', ['id' =>'', 'user_id' => $userId, 'date' => $date['detail']] ) }}">詳細
-                            </a>
-                        @else
-                            <a class="admin__detail-btn"
-                                href="{{ route('admin.show', ['id' => $val['attendance_id']]) }}">詳細
-                            </a>
-                        @endif
+                        <a class="link admin__link admin__link--detail"
+                            href="{{ route('admin.show', ['id' => $val['attendance_id']]) }}">詳細</a>
                     </td>
                 </tr>
             @endforeach

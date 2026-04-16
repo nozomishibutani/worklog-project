@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('css')
-    <link rel="stylesheet" href="{{ asset('css/.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/index.css') }}">
 @endsection
 
 @section('title')
@@ -10,8 +10,7 @@
 
 @section('content')
     <div class="admin">
-        <h1>スタッフ一覧</h1>
-
+        <h1 class="admin-ttl">スタッフ一覧</h1>
         <table class="admin__table">
             <tr class="admin__row">
                 <th class="admin__label">名前</th>
@@ -23,9 +22,11 @@
                     <td class="admin__data">{{ $user->name }}</td>
                     <td class="admin__data">{{ $user->email }}</td>
                     <td class="admin__data">
-                        <a class="admin__detail-btn" href="{{ route('admin.monthly.index',  ['id' => $user->id]) }}">詳細</a>
+                        <a class="link admin__link admin__link--detail"
+                            href="{{ route('admin.monthly.index', ['id' => $user->id]) }}">詳細</a>
                     </td>
                 </tr>
             @endforeach
+        </table>
     </div><!-- admin-->
 @endsection

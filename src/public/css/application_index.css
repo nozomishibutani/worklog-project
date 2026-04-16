@@ -1,0 +1,70 @@
+.application {
+    width: 70%;
+    margin: 0 auto;
+    padding-top: 3rem;
+    padding-bottom: 3.5rem;
+}
+
+.application__nav {
+    padding: 0.8rem 1rem;
+    margin-bottom: 3rem;
+    border-bottom: 0.1rem solid rgb(134, 131, 131);
+}
+
+.application-ttl {
+    text-align: left;
+    border-left: 0.6rem solid black;
+    padding-left: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.application__list {
+    margin: 0.3rem 0;
+    padding-left: 0;
+    display: flex;
+}
+
+.application__item {
+    list-style: none;
+    width: 20%;
+    letter-spacing: 0.1em;
+    /* 文字幅を広げる*/
+    padding-left: 2rem;
+}
+
+.application__link{
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    color: black;
+}
+
+.application__link--select {
+    font-weight: 700;
+}
+
+.application__table {
+    width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    /* 幅が均等になる*/
+}
+
+.application__data {
+    text-align: center;
+    word-break: break-all;
+    /* 折り返す*/
+    letter-spacing: 0.1em;
+    /* 文字幅を広げる*/
+}
+
+.application__label,
+.application__data {
+    border-bottom: 0.2rem solid #ebe8e8;
+    padding: 0.7rem;
+    color: #9e9b9b;
+    font-weight: 600;
+}

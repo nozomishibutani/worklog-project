@@ -214,6 +214,7 @@ class AdminController extends Controller
             'Content-Type' => 'text/csv; charset=SJIS-win',
             'Content-Disposition' => "attachment; filename=\"{$name}_{$date}.csv\"",
         ]);
+
         return $response;
     }
 }

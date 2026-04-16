@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ asset('css/normalize.css') }}">
     <link rel="stylesheet" href="{{ asset('css/common.css') }}">
+    @yield('css')
     @yield('title')
 </head>
 
@@ -13,9 +14,7 @@
     <header class="header">
         <div class="header__container">
             <div class="header__logo">
-                <a href="#">
-                    <img src="{{ asset('header_logo.png') }}" alt="ヘッダーロゴ画像">
-                </a>
+                <img src="{{ asset('header_logo.png') }}" alt="ヘッダーロゴ画像">
             </div>
             <nav class="header__nav">
                 <ul class="header__list">

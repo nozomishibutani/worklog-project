@@ -14,6 +14,7 @@ html {
 body {
     font-size: 1rem;
     line-height: 1.6;
+    background-color: #ebe8e8;
 }
 
 /* ===============================
@@ -28,7 +29,6 @@ header {
     max-width: 1540px;
     /* PC (1400-1540px) で崩れない */
     width: 100%;
-    margin-bottom: 4rem;
     padding: 0;
     display: flex;
 }
@@ -100,6 +100,7 @@ header {
 .alert {
     border-radius: 6px;
     font-weight: 500;
+    padding-left: 1rem;
 }
 
 .alert__list{
@@ -116,4 +117,18 @@ header {
     background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
+}
+
+.direction{
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #bbb8b8;
+    margin: 0.3rem;
+}
+
+.msg{
+    margin-top: 1rem;
+    color: #f33b4e;
+    font-weight: 500;
+    font-size: 0.9rem;
 }
