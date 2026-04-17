@@ -5,13 +5,13 @@
 @endsection
 
 @section('title')
-    <title></title>
+    <title>勤怠登録画面_{{ $attendanceStatus->label() }}</title>
 @endsection
 
 @section('content')
-    <div class="user">
+    <div class="general">
         @if (session('alert'))
-            <div class="alert {{ session('alert-type', 'alert-success') }}">
+            <div class="alert {{ session('alert-type', 'alert--success') }}">
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
@@ -19,7 +19,7 @@
         <div class="">{{ $day }}</div>
         <div class="">{{ $time }}</div>
         <div class="">
-            <form action="{{ route('log')}}" method="POST">
+            <form action="{{ route('log') }}" method="POST">
                 @csrf
                 {{-- hidden --}}
                 <input type="hidden" name="attendance_id" value="{{ $attendance?->id }}">

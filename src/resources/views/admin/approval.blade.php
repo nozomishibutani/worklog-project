@@ -12,7 +12,7 @@
     <div class="approval">
         <h1 class="approval-ttl">勤怠詳細</h1>
         @if (session('alert'))
-            <div class="alert {{ session('alert-type', 'alert-success') }}">
+            <div class="alert {{ session('alert-type', 'alert--success') }}">
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
