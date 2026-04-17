@@ -57,14 +57,15 @@
     text-align: center;
     word-break: break-all;
     /* 折り返す*/
-    letter-spacing: 0.1em;
+    letter-spacing: 0.07em;
     /* 文字幅を広げる*/
 }
 
 .application__label,
 .application__data {
     border-bottom: 0.2rem solid #ebe8e8;
-    padding: 0.7rem;
+    padding: 0.9rem 0rem 0.9rem 3rem;
     color: #9e9b9b;
     font-weight: 600;
+    text-align: left;
 }

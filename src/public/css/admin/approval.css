@@ -1,0 +1,65 @@
+.approval {
+    width: 70%;
+    margin: 0 auto;
+    padding-top: 3rem;
+    padding-bottom: 3.5rem;
+}
+
+.approval-ttl {
+    text-align: left;
+    border-left: 0.6rem solid black;
+    padding-left: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.approval__table {
+    width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    /* 幅が均等になる*/
+    margin-top: 2rem;
+}
+
+.approval__label,
+.approval__data {
+    border-bottom: 0.2rem solid #ebe8e8;
+    font-weight: 600;
+}
+
+.approval__label{
+    width: 30%;
+    color: #9e9b9b;
+    padding: 1.5rem 1.5rem 1.5rem 5rem;
+    text-align: left;
+}
+
+.approval__data {
+    width: 70%;
+    word-break: break-all;
+    /* 折り返す*/
+    letter-spacing: 0.1em;
+    /* 文字幅を広げる*/
+    color: black;
+}
+
+.approval__data-box{
+    gap: 4rem;
+    display: flex;
+}
+
+.approval__data-span{
+    margin-left:4.5rem;
+}
+
+.approval__btn-box {
+    text-align: right;
+    margin: 2rem 0;
+}
+
+.approval__data-name,
+.approval__data-textarea{
+    word-break: break-all;
+    /* 折り返す*/
+}

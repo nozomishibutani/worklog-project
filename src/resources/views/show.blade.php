@@ -31,33 +31,39 @@
         <input type="hidden" name="day" value="{{ $workDate['day'] }}">
 
         <table class="show__table">
-            <tr class="show__row">
-                <th class="show__label">名前</th>
-                <td class="show__data" colspan="3"><span class="show__data-span">{{ $workTimes['name'] }}</span></td>
-            </tr>
-            <tr class="show__row">
-                <th class="show__label">日付</th>
-                <td class="show__data"><span class="show__data-span">{{ $workDate['year'] }}年</span></td>
-                <td class="show__data" colspan="2">
-                    <span class="show__data-span">{{ $workDate['month'] }}月</span>
-                    {{ $workDate['day'] }}日
-                </td>
-            </tr>
             @if ($currentAttendanceStatus === App\Enums\ApprovalStatus::APPROVED->value || is_null($currentAttendanceStatus))
                 {{-- 修正可能 --}}
                 <tr class="show__row">
+                    <th class="show__label">名前</th>
+                    <td class="show__data"><span class="show__data-name">{{ $workTimes['name'] }}</span></td>
+                </tr>
+                <tr class="show__row">
+                    <th class="show__label">日付</th>
+                    <td class="show__data">
+                        <div class="show__data-box">
+                            <span class="show__data-year">{{ $workDate['year'] }}年</span>
+                            <span class="show__data-span show__data-span--approved">
+                                {{ $workDate['month'] }}月
+                                {{ $workDate['day'] }}日
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="show__row">
                     <th class="show__label">出勤・退勤</th>
-                    <td class="show__data" colspan="3">
+                    <td class="show__data">
                         <div class="show__data-box">
                             <input class="show__data-input" type="time" name="work_in"
                                 value="{{ old('work_in', $workTimes['clock_in']) }}">
-                            <span class="range-separator">～</span>
+                            <span>～</span>
                             <input type="time" class="show__data-input" name="work_out"
                                 value="{{ old('work_out', $workTimes['clock_out']) }}">
                         </div>
                         @if ($errors->has('work_in') || $errors->has('work_out'))
-                            <div class="msg"> {{ $errors->first('work_in') }} </div>
-                            <div class="msg"> {{ $errors->first('work_out') }} </div>
+                            <div class="msg">
+                                {{ $errors->first('work_in') }}
+                                {{ $errors->first('work_out') }}
+                            </div>
                         @endif
                     </td>
                 </tr>
@@ -65,17 +71,19 @@
                     {{-- 休憩なし --}}
                     <tr class="show__row">
                         <th class="show__label">休憩</th>
-                        <td class="show__data" colspan="3">
+                        <td class="show__data">
                             <div class="show__data-box">
                                 <input type="time" class="show__data-input" name="break_in[0]"
                                     value="{{ old('break_in.0') }}">
-                                <span class="range-separator">～</span>
+                                <span>～</span>
                                 <input type="time" class="show__data-input" name="break_out[0]"
                                     value="{{ old('break_out.0') }}">
                             </div>
                             @if ($errors->has('break_in.0') || $errors->has('break_out.0'))
-                                <div class="msg">{{ $errors->first('break_in.0') }}</div>
-                                <div class="msg">{{ $errors->first('break_out.0') }}</div>
+                                <div class="msg">
+                                    {{ $errors->first('break_in.0') }}
+                                    {{ $errors->first('break_out.0') }}
+                                </div>
                             @endif
                         </td>
                     </tr>
@@ -83,44 +91,48 @@
                     {{-- 休憩あり --}}
                     @for ($i = 0; $i < count($breakTimes); $i++)
                         <tr class="show__row">
-                            <th class="show__label">休憩{{ $i > 0 ? $i + 1 : '' }}</th>
-                            <td class="show__data" colspan="3">
+                            <th class="show__label">休憩</th>
+                            <td class="show__data">
                                 <div class="show__data-box">
                                     <input type="time" class="show__data-input"
                                         name="break_in[{{ $breakTimes[$i]['id'] }}]"
                                         value="{{ old('break_in.' . $breakTimes[$i]['id'], $breakTimes[$i]['clock_in']) }}">
-                                    <span class="range-separator">～</span>
+                                    <span>～</span>
                                     <input class="show__data-input" type="time"
                                         name="break_out[{{ $breakTimes[$i]['id'] }}]"
                                         value="{{ old('break_out.' . $breakTimes[$i]['id'], $breakTimes[$i]['clock_out']) }}">
                                 </div>
                                 @if ($errors->has('break_in.' . $breakTimes[$i]['id']) || $errors->has('break_out.' . $breakTimes[$i]['id']))
-                                    <div class="msg">{{ $errors->first('break_in.' . $breakTimes[$i]['id']) }}</div>
-                                    <div class="msg">{{ $errors->first('break_out.' . $breakTimes[$i]['id']) }}</div>
+                                    <div class="msg">
+                                        {{ $errors->first('break_in.' . $breakTimes[$i]['id']) }}
+                                        {{ $errors->first('break_out.' . $breakTimes[$i]['id']) }}
+                                    </div>
                                 @endif
                             </td>
                         </tr>
                     @endfor
                     <tr class="show__row">
                         <th class="show__label">休憩{{ count($breakTimes) + 1 }}</th>
-                        <td class="show__data" colspan="3">
+                        <td class="show__data">
                             <div class="show__data-box">
                                 <input class="show__data-input" type="time" name="break_in[0]"
                                     value="{{ old('break_in.0') }}">
-                                <span class="range-separator">～</span>
+                                <span>～</span>
                                 <input class="show__data-input" type="time" name="break_out[0]"
                                     value="{{ old('break_out.0') }}">
                             </div>
                             @if ($errors->has('break_in.0') || $errors->has('break_out.0'))
-                                <div class="msg">{{ $errors->first('break_in.0') }}</div>
-                                <div class="msg">{{ $errors->first('break_out.0') }}</div>
+                                <div class="msg">
+                                    {{ $errors->first('break_in.0') }}
+                                    {{ $errors->first('break_out.0') }}
+                                </div>
                             @endif
                         </td>
                     </tr>
                 @endif
                 <tr class="show__row">
                     <th class="show__label">備考</th>
-                    <td class="show__data" colspan="3">
+                    <td class="show__data">
                         <textarea class="show__data-textarea" name="note">{{ old('note', $note) }}</textarea>
                         @error('note')
                             <div class="msg">{{ $message }}</div>
@@ -130,40 +142,58 @@
             @elseif($currentAttendanceStatus === App\Enums\ApprovalStatus::PENDING->value)
                 {{-- 修正不可 --}}
                 <tr class="show__row">
-                    <th class="show__label">出勤・退勤</th>
-                    <td class="show__data" colspan="3">
+                    <th class="show__label">名前</th>
+                    <td class="show__data"><span>{{ $workTimes['name'] }}</span></td>
+                </tr>
+                <tr class="show__row">
+                    <th class="show__label">日付</th>
+                    <td class="show__data">
                         <div class="show__data-box">
-                            <span class="show__data-span">{{ $workTimes['clock_in'] }}</span>
-                            <span class="range-separator">～</span>
-                            {{ $workTimes['clock_out'] }}
+                            <span>{{ $workDate['year'] }}年</span>
+                            <span class="show__data-span">
+                                {{ $workDate['month'] }}月
+                                {{ $workDate['day'] }}日
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="show__row">
+                    <th class="show__label">出勤・退勤</th>
+                    <td class="show__data">
+                        <div class="show__data-box">
+                            @if (!is_null($workTimes['clock_in']))
+                                <span>{{ $workTimes['clock_in'] }}</span>
+                                <span>～</span>
+                                <span>{{ $workTimes['clock_out'] }}</span>
+                            @endif
                         </div>
                     </td>
                 </tr>
                 @for ($i = 0; $i < count($breakTimes); $i++)
                     <tr class="show__row">
                         <th class="show__label">休憩{{ $i > 0 ? $i + 1 : '' }}</th>
-                        <td class="show__data" colspan="3">
-                            <div class="show__data-box show__data-box--pending">
-                                <span class="show__data-span">{{ $breakTimes[$i]['clock_in'] }}</span>
-                                <span class="range-separator">～</span>
-                                {{ $breakTimes[$i]['clock_out'] }}
+                        <td class="show__data">
+                            <div class="show__data-box">
+                                <span>{{ $breakTimes[$i]['clock_in'] }}</span>
+                                <span>～<span>
+                                        <span>{{ $breakTimes[$i]['clock_out'] }}<span>
                             </div>
                         </td>
                     </tr>
                 @endfor
                 <tr class="show__row">
                     <th class="show__label">備考</th>
-                    <td class="show__data" colspan="3">
-                        <span class="show__data-span show__data-span--textarea">{{ $note }}</span>
+                    <td class="show__data">
+                        <p>{{ $note }}</p>
                     </td>
                 </tr>
             @endif
         </table>
         <div class="show__btn-box">
             @if ($currentAttendanceStatus === App\Enums\ApprovalStatus::APPROVED->value || is_null($currentAttendanceStatus))
-                <button class="btn show__btn">修正</button>
+                <button class="btn">修正</button>
             @else
-                <span class="show__msg">*承認待ちのため修正はできません。</span>
+                <p class="show__msg">*承認待ちのため修正はできません。</p>
             @endif
         </div>
         </form>

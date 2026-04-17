@@ -19,7 +19,6 @@ use App\Enums\Guard;
 use App\Models\AttendanceApproval;
 use Illuminate\Database\Eloquent\Collection;
 
-
 class AttendanceResolverService
 {
     protected AttendanceRepository $attendanceRepository;
@@ -185,9 +184,15 @@ class AttendanceResolverService
                                                 ->get();
                 break;
             case ApprovalStatus::APPROVED->value:
-                $attendances = AttendanceApproval::with('attendanceChange')
-                                                ->orderBy('approved_at', 'desc')
+                $attendances = AttendanceChange::whereHas('attendanceApproval')
+                                                ->orderByDesc(
+                                                    AttendanceApproval::select('approved_at')
+                                                        ->whereColumn('attendance_approvals.attendance_change_id', 'attendance_changes.id')
+                                                        ->latest('approved_at')
+                                                        ->limit(1)
+                                                )
                                                 ->get();
+
                 break;
         }
         return  $attendances;

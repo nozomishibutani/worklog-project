@@ -63,6 +63,8 @@ header {
 }
 
 .header__btn {
+    cursor: pointer;
+    padding: 0;
     background: black;
     color: white;
     font-size: 1rem;
@@ -89,7 +91,20 @@ header {
 
 .btn{
     cursor: pointer;
-    padding: 0;
+    background-color: black;
+    color: white;
+    width: 14%;
+    padding: 0.8rem 1rem;
+    border-radius: 4px;
+    font-weight: 700;
+    border: none;
+    letter-spacing: 0.25em;
+    /* 文字幅を広げる*/
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .link{
@@ -131,4 +146,8 @@ header {
     color: #f33b4e;
     font-weight: 500;
     font-size: 0.9rem;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+    display: none;
 }

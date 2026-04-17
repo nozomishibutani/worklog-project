@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ApprovalStatus;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Models\BreakTime;
@@ -161,8 +162,8 @@ class AdminController extends Controller
     {
         $this->attendanceUpdateService->approveAttendance($attendanceChangeId);
 
-        return redirect()->route('admin.approval.show', ['attendance_correct_request_id' => $attendanceChangeId])
-                                        ->with('alert', '承認が完了しました')
+        return redirect()->route('application.index', ['mode' => ApprovalStatus::APPROVED->value])
+                                        ->with('alert', '承認しました')
                                         ->with('alert-type', 'alert-success');
     }
 

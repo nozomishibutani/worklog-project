@@ -46,7 +46,7 @@
                         <form class="header__form" action="/logout" method="POST">
                             @csrf
                             <input type="hidden" name="form" value="{{ session('login_form') }}">
-                            <button class="btn header__btn">ログアウト</button>
+                            <button class="header__btn">ログアウト</button>
                         </form>
                     </li>
                 </ul>

@@ -48,29 +48,22 @@
                 <th class="application__label">詳細</th>
             </tr>
             @if (!empty($attendances))
-                @if (session('login_form') === App\Enums\LoginForm::ADMIN->value)
-                    @foreach ($attendances as $id => $attendance)
-                        <tr class="application__row">
-                            <td class="application__data">{{ $approvalStatus->label() }}</td>
-                            <td class="application__data">{{ $attendance->user->name }}</td>
-                            <td class="application__data">{{ $attendance->work_date->format('Y/m/d') }}</td>
+                @foreach ($attendances as $id => $attendance)
+                    <tr class="application__row">
+                        <td class="application__data">{{ $approvalStatus->label() }}</td>
+                        <td class="application__data">{{ $attendance->user->name }}</td>
+                        <td class="application__data">{{ $attendance->work_date->format('Y/m/d') }}</td>
+                        @if (session('login_form') === App\Enums\LoginForm::ADMIN->value)
                             <td class="application__data">{{ $attendance->note }}</td>
                             <td class="application__data">
-                                {{ $attendance->applied_at?->format('Y/m/d') ?? $attendance->attendanceChange->applied_at->format('Y/m/d') }}
+                                {{ $attendance->applied_at?->format('Y/m/d') }}
                             </td>
                             <td class="application__data">
                                 <a class="link application__link"
-                                    href="{{ route('admin.approval.show', ['attendance_correct_request_id' => $attendance->AttendanceChange?->id ?? $attendance->id]) }}">詳細
+                                    href="{{ route('admin.approval.show', ['attendance_correct_request_id' => $attendance->id]) }}">詳細
                                 </a>
                             </td>
-                        </tr>
-                    @endforeach
-                @elseif (session('login_form') === App\Enums\LoginForm::GENERAL->value)
-                    @foreach ($attendances as $id => $attendance)
-                        <tr class="application__row">
-                            <td class="application__data">{{ $approvalStatus->label() }}</td>
-                            <td class="application__data">{{ $attendance->user->name }}</td>
-                            <td class="application__data">{{ $attendance->work_date->format('Y/m/d') }}</td>
+                        @elseif (session('login_form') === App\Enums\LoginForm::GENERAL->value)
                             <td class="application__data">
                                 {{ $attendance->latestAttendanceChange->note }}
                             </td>
@@ -81,9 +74,9 @@
                                 <a class="link application__link" href="{{ route('show', ['id' => $attendance->id]) }}">詳細
                                 </a>
                             </td>
-                        </tr>
-                    @endforeach
-                @endif
+                        @endif
+                    </tr>
+                @endforeach
             @endif
         </table>
     </div><!-- application -->

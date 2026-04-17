@@ -65,7 +65,7 @@
         </table>
         <div class="export__link-box">
             <a class="" href="{{ route('admin.export', ['user_id' => $userId, 'date' => $date['export']]) }}">
-                <button class="btn export__btn " type="submit">CSV出力</button>
+                <button class="btn" type="submit">CSV出力</button>
             </a>
         </div>
     </div><!-- admin-->

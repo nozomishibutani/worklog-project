@@ -22,11 +22,15 @@
     margin-top: 2rem;
 }
 
-.show__row{
-    width: 100%;
+.show__label,
+.show__data {
+    border-bottom: 0.2rem solid #ebe8e8;
+    font-weight: 600;
 }
 
-.show__label{
+.show__label {
+    padding: 1.5rem 1.5rem 1.5rem 5rem;
+    text-align: left;
     width: 30%;
     color: #9e9b9b;
 }
@@ -40,18 +44,12 @@
     color: black;
 }
 
-.show__label,
-.show__data {
-    border-bottom: 0.2rem solid #ebe8e8;
-    font-weight: 600;
-    padding: 1.5rem;
+.show__data-box {
+    gap: 4rem;
+    display: flex;
 }
 
-.show__link--detail{
-    color: black;
-}
-
-.show__data-input{
+.show__data-input {
     border: solid 1px rgb(195, 195, 199);
     height: 40px;
     outline: none;
@@ -63,27 +61,28 @@
     text-align: center;
 }
 
-.show__data-span{
-    margin-left: 1rem;
-    }
-
-.range-separator{
-    margin: 0 1.5rem;
+.show__data-span {
+    margin-left: 3.5rem;
 }
 
-.show__data-textarea{
-    width: 53%;
+.show__data-name,
+.show__data-year {
+    margin-left: 1.5rem;
+}
+
+.show__data-span--approved {
+    margin-left: 8rem;
+}
+
+.show__data-textarea {
+    width: 65%;
     height: 64px;
     border: solid 1px rgb(195, 195, 199);
     outline: none;
     cursor: pointer;
     border-radius: 4px;
     font-weight: 600;
-}
-
-.show__data-input--pending,
-.show__data-textarea--pending {
-    border: none;
+    margin: 1rem 0;
 }
 
 .show__btn-box {
@@ -91,22 +90,16 @@
     margin: 2rem 0;
 }
 
-.show__btn {
-    background-color: black;
-    color: white;
-    width: 13%;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-weight: 700;
-}
-
-.show__msg{
+.show__msg {
     color: #f33b4e;
     font-weight: 500;
+    letter-spacing: 0.1em;
+    /* 文字幅を広げる*/
 }
 
+.show__data-name,
 .show__data-textarea,
-.show__data-span--textarea{
+.show__data-span--textarea {
     word-break: break-all;
     /* 折り返す*/
 }

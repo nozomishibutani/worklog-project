@@ -39,14 +39,15 @@
                     </div>
                 @endif
                 @if (!session('alert') && session('login_form') === App\Enums\LoginForm::GENERAL->value)
-                    <div class="alert {{ session('alert-type', 'alert-error') }}">
-                        <p>現在はユーザーとしてログインしています。<br >管理画面を利用するには一度ログアウトしてください。</p>
-                        <form class="header__form" action="/logout" method="POST">
-                            @csrf
-                            <input type="hidden" name="form" value="{{ App\Enums\LoginForm::ADMIN->value }}">
-                            <button class="btn">ログアウト</button>
-                        </form>
-                    </div>
+                    <form class="header__form" action="/logout" method="POST">
+                        @csrf
+                        <input type="hidden" name="form" value="{{ App\Enums\LoginForm::ADMIN->value }}">
+                        <div class="alert {{ session('alert-type', 'alert-error') }}">
+                            <p>現在はユーザーとしてログインしています。<br>
+                                管理画面を利用するには一度<button class="auth__btn--logout">ログアウト</button>してください。
+                            </p>
+                        </div>
+                    </form>
                 @endif
                 <form class="form" action="/login" method="POST" novalidate>
                     @csrf
@@ -65,7 +66,7 @@
                                 id="password" />
                         </li>
                     </ul>
-                    <button class="btn auth__btn">管理者ログインする</button>
+                    <button class="auth__btn">管理者ログインする</button>
                 </form>
             </div><!-- auth -->
         </div><!-- main__container -->
