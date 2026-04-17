@@ -10,12 +10,12 @@
 
 @section('content')
     <div class="admin">
-        <h1 class="admin-ttl">{{ $date['title'] }}の勤怠</h1>
         @if (session('alert'))
             <div class="alert {{ session('alert-type', 'alert-success') }}">
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
+        <h1 class="admin-ttl">{{ $date['title'] }}の勤怠</h1>
         <nav class="admin__nav">
             <ul class="admin__list">
                 <li class="admin__item">

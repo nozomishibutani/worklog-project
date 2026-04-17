@@ -82,3 +82,7 @@ body {
 .auth__link {
     color: rgb(3, 105, 238);
 }
+
+.auth__alert{
+    padding-left: 0;
+}

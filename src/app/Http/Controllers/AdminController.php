@@ -163,8 +163,8 @@ class AdminController extends Controller
         $this->attendanceUpdateService->approveAttendance($attendanceChangeId);
 
         return redirect()->route('application.index', ['mode' => ApprovalStatus::APPROVED->value])
-                                        ->with('alert', '承認しました')
-                                        ->with('alert-type', 'alert-success');
+                            ->with('alert', '承認しました')
+                            ->with('alert-type', 'alert-success');
     }
 
     public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
@@ -177,10 +177,9 @@ class AdminController extends Controller
         // 管理者が直接修正した場合は承認フェーズを省く
         $this->attendanceUpdateService->approveAttendance($result->id);
 
-        return redirect()
-            ->route('admin.show', ['id' => $result->attendance_id])
-            ->with('alert', '勤怠情報を修正しました')
-            ->with('alert-type', 'alert-success');
+        return redirect()->route('admin.show', ['id' => $result->attendance_id])
+                            ->with('alert', '勤怠情報を修正しました')
+                            ->with('alert-type', 'alert-success');
     }
 
     public function export($userId, $date)
