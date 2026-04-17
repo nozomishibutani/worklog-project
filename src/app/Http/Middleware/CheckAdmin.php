@@ -22,7 +22,7 @@ class CheckAdmin
         if (!$request->user() || !$request->user()->isAdmin()) {
             return redirect()->route('admin.login')
                             ->with('alert', '管理者権限が必要です')
-                            ->with('alert-type', 'alert-error');
+                            ->with('alert-type', 'alert--error');
         }
         return $next($request);
     }

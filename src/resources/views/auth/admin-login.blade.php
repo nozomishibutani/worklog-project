@@ -25,7 +25,7 @@
             <div class="auth">
                 <h1 class="auth-ttl">管理者ログイン</h1>
                 @if ($errors->any())
-                    <div class="alert auth__alert alert-error">
+                    <div class="alert auth__alert alert--error">
                         <ul class="alert__list">
                             @foreach ($errors->all() as $error)
                                 <li class="alert__item">{{ $error }}</li>
@@ -42,7 +42,7 @@
                     <form class="header__form" action="/logout" method="POST">
                         @csrf
                         <input type="hidden" name="form" value="{{ App\Enums\LoginForm::ADMIN->value }}">
-                        <div class="alert {{ session('alert-type', 'alert-error') }}">
+                        <div class="alert {{ session('alert-type', 'alert--error') }}">
                             <p>現在はユーザーとしてログインしています。<br>
                                 管理画面を利用するには一度<button class="auth__btn--logout">ログアウト</button>してください。
                             </p>

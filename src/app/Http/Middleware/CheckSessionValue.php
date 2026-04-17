@@ -30,7 +30,7 @@ class CheckSessionValue
                 // 管理画面でログイン済みでユーザー画面にアクセス
                 return redirect()->route('admin.index')
                                     ->with('alert', '現在は管理者としてログインしています。ユーザー画面を利用するには一度ログアウトしてください。')
-                                    ->with('alert-type', 'alert-error');
+                                    ->with('alert-type', 'alert--error');
 
             }
         }

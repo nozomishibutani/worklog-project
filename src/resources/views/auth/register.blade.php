@@ -25,7 +25,7 @@
             <div class="auth">
                 <h1 class="auth-ttl">会員登録</h1>
                 @if ($errors->any())
-                    <div class="alert auth__alert alert-error">
+                    <div class="alert auth__alert alert--error">
                         <ul class="alert__list">
                             @foreach ($errors->all() as $error)
                                 <li class="alert__item">{{ $error }}</li>
