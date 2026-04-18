@@ -79,7 +79,8 @@ body {
     border: none;
 }
 
-.auth__link {
+.auth__link,
+.auth__btn--resend {
     color: rgb(3, 105, 238);
 }
 

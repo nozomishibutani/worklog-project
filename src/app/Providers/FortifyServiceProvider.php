@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Contracts\LogoutResponse;
 use App\Http\Responses\LoginResponse as CustomLoginResponse;
 use App\Http\Responses\LogoutResponse as CustomLogoutResponse;
+use App\Http\Responses\RegisterResponse as CustomRegisterResponse;
 use Laravel\Fortify\Http\Requests\LoginRequest as FortifyLoginRequest;
 use App\Http\Requests\LoginRequest;
 
@@ -22,10 +24,8 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //$this->app->singleton(RegisterResponse::class, CustomRegisterResponse::class);
-        // ログイン後のリダイレクト
+        $this->app->singleton(RegisterResponse::class, CustomRegisterResponse::class);
         $this->app->singleton(LoginResponse::class, CustomLoginResponse::class);
-        // ログアウト後のリダイレクト
         $this->app->singleton(LogoutResponse::class, CustomLogoutResponse::class);
     }
 

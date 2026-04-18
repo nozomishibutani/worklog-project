@@ -36,10 +36,21 @@ class LoginResponse implements LoginResponseContract
         // 一般ログイン
         // =====================
         if ($request->form === LoginForm::GENERAL->value) {
+
+            // メール未認証の場合
+            if ($request->user() && !$request->user()->hasVerifiedEmail()) {
+                // メール再送
+                $request->user()->sendEmailVerificationNotification();
+                session(['unverified_user_id' => $request->user()->id]);
+                Auth::logout();
+                return redirect()->route('verification.notice');
+            }
+
             session([
                 'user_id' => $request->user()->id,
                 'login_form' => $request->form,
                 ]);
+
             return redirect()->route('index');
         }
     }

@@ -1,0 +1,35 @@
+body {
+    background-color: white;
+    font-weight: 700;
+}
+
+.verification {
+    width: 50%;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.verification__link-box,
+.verification__btn-box {
+    margin: 3rem 0;
+}
+
+.verification__link {
+    padding: 0.8rem 1rem;
+    background-color: #d1cfcf;
+    color: black;
+    border: 1px solid black;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-block;
+    width: 20%;
+}
+
+.verification__btn {
+    color: rgb(3, 105, 238);
+    border: none;
+    background-color: white;
+}
