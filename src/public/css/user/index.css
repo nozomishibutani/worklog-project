@@ -7,12 +7,12 @@
     text-align: center;
 }
 
-.general__label{
+.general__label {
     display: block;
     margin: 1rem 0;
 }
 
-.general__label--status{
+.general__label--status {
     background-color: #d6d4d4;
     color: #7a7878;
     padding: 0.3rem 0;
@@ -48,7 +48,7 @@
     background-color: rgb(54, 53, 53);
 }
 
-.general__btn--work-out{
+.general__btn--attendance-off {
     margin-right: 3rem;
 }
 
@@ -59,4 +59,10 @@
 
 .general__btn--break:hover {
     background-color: rgb(250, 246, 246);
+}
+
+.general__msg--attendance-off {
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    /* 文字幅を広げる*/
 }

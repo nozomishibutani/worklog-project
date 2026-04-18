@@ -4,18 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\ApprovalStatus;
 use App\Models\User;
-use App\Models\Attendance;
-use App\Models\BreakTime;
 use App\Services\AttendanceCalculatorService;
 use App\Services\AttendanceUpdateService;
 use App\Services\AttendanceFormatterService;
 use App\Services\AttendanceResolverService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use App\Enums\Type;
 use App\Http\Requests\AttendanceRequest;
-use Illuminate\Support\Facades\Auth;
-use App\Enums\Role;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller

@@ -36,11 +36,6 @@ class AttendanceChange extends Model
         return $this->belongsTo(Attendance::class);
     }
 
-    // public function latestAttendanceApproval()
-    // {
-    //     return $this->hasOne(AttendanceApproval::class)->latestOfMany();
-    // }
-
     public function attendanceApproval()
     {
         return $this->HasOne(AttendanceApproval::class);

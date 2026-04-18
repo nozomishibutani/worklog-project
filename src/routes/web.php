@@ -1,14 +1,11 @@
 <?php
 
-use App\Enums\Role;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CommonController;
-use App\Http\Controllers\AdminAuthenticatedSessionController;
-use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 use App\Http\Middleware\CheckSessionValue;
-use App\Http\Middleware\CheckAdmin; //->middleware(CheckAdmin::class)
+use App\Http\Middleware\CheckAdmin;
 
 // =====================
 // admin
@@ -19,6 +16,7 @@ Route::prefix('admin')
             return view('auth.admin-login');
         })->name('admin.login');
     });
+
 Route::prefix('admin')
     ->middleware([
         'auth',
@@ -72,7 +70,3 @@ Route::middleware([
         Route::post('/attendance/update', [UserController::class, 'update'])
             ->name('update');
     });
-
-// Route::get('/', function () {
-//     return redirect()->route('index');
-// });

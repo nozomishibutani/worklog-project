@@ -27,14 +27,14 @@
                     <button class="btn general__btn" name="action"
                         value="{{ App\Enums\attendanceStatus::ON_DUTY->value }}">出勤</button>
                 @elseif($attendanceStatus->value === App\Enums\attendanceStatus::ON_DUTY->value)
-                    <button class="btn general__btn general__btn--work-out" name="action" value="{{ App\Enums\attendanceStatus::OFF->value }}">退勤</button>
+                    <button class="btn general__btn general__btn--attendance-off" name="action" value="{{ App\Enums\attendanceStatus::OFF->value }}">退勤</button>
                     <button class="btn general__btn--break" name="action"
                         value="{{ App\Enums\attendanceStatus::ON_BREAK->value }}">休憩入</button>
                 @elseif($attendanceStatus->value === App\Enums\attendanceStatus::ON_BREAK->value)
                     <button class="btn general__btn--break" name="action"
                         value="{{ App\Enums\attendanceStatus::OFF_BREAK->value }}">休憩戻</button>
                 @elseif($attendanceStatus->value === App\Enums\attendanceStatus::OFF_DUTY->value)
-                    <span>お疲れさまでした。</span>
+                    <span class="general__msg--attendance-off">お疲れ様でした。</span>
                 @endif
             </div>
         </form>

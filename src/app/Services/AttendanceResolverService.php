@@ -4,18 +4,11 @@ namespace App\Services;
 
 use App\Repositories\AttendanceRepository;
 use App\Services\AttendanceFormatterService;
-use Carbon\Carbon;
 use App\Models\AttendanceChange;
 use App\Models\Attendance;
-use App\Enums\Role;
 use App\Enums\AttendanceStatus;
-use App\Models\BreakTime;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ApprovalStatus;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
-use Illuminate\Support\Facades\Log;
-use App\Enums\Guard;
 use App\Models\AttendanceApproval;
 use Illuminate\Database\Eloquent\Collection;
 

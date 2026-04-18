@@ -5,18 +5,9 @@ namespace App\Repositories;
 use App\Models\Attendance;
 use App\Models\AttendanceChange;
 use App\Models\BreakTimeChange;
-use App\Models\User;
 use App\Models\BreakTime;
-use App\Enums\ApprovalStatus;
-use App\Models\AttendanceApplication;
-use App\Models\AttendanceHistory;
-use App\Models\BreakTimeHistory;
 use App\Models\AttendanceApproval;
 use App\Models\BreakTimeApproval;
-;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class AttendanceRepository
 {
@@ -49,7 +40,6 @@ class AttendanceRepository
     {
         return BreakTimeApproval::create($breakTime);
     }
-
 
     public function updateAttendance($targetAttendance): bool
     {

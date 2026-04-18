@@ -30,24 +30,24 @@
     list-style: none;
 }
 
-.admin__link{
+.admin__link {
     font-size: 1rem;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
 }
 
-.admin__item-box{
+.admin__item-box {
     display: inline-flex;
     align-items: center;
     background-color: #9e9b9b;
 }
 
-.admin__link--day{
+.admin__link--day {
     color: #9e9b9b;
 }
 
-.admin__item-date{
+.admin__item-date {
     display: inline-block;
     color: black;
     font-weight: 700;
@@ -55,9 +55,9 @@
     margin-top: 0.25rem;
 }
 
-.admin__item-day{
-color: #9e9b9b;
-font-weight: 600;
+.admin__item-day {
+    color: #9e9b9b;
+    font-weight: 600;
 }
 
 .admin__table {

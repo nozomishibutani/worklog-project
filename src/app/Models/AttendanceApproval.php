@@ -36,11 +36,6 @@ class AttendanceApproval extends Model
         return $this->belongsTo(AttendanceChange::class);
     }
 
-    // public function latestAttendanceApproval()
-    // {
-    //     return $this->belongsTo(AttendanceApproval::class);
-    // }
-
     public function breakTimes()
     {
         return $this->hasMany(BreakTimeApproval::class);

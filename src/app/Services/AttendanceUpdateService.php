@@ -5,17 +5,13 @@ namespace App\Services;
 use App\Repositories\AttendanceRepository;
 use App\Services\AttendanceFormatterService;
 use App\Services\AttendanceResolverService;
-use Carbon\Carbon;
 use App\Models\Attendance;
-use App\Enums\Role;
 use App\Enums\AttendanceStatus;
+use App\Enums\LoginForm;
 use App\Models\BreakTime;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\ApprovalStatus;
 use Illuminate\Support\Facades\DB;
-use App\Models\User;
 use Illuminate\Support\Facades\Log;
-use App\Enums\Guard;
 use App\Models\AttendanceApproval;
 use App\Models\AttendanceChange;
 
@@ -34,13 +30,14 @@ class AttendanceUpdateService
         $this->attendanceRepository = $attendanceRepository;
         $this->attendanceResolverService =  $attendanceResolverService;
     }
+
     public function applyAttendance($applyAttendance): AttendanceChange|\Illuminate\Http\RedirectResponse
     {
         $targetAttendance = Attendance::find($applyAttendance['attendance_id']);
         $formatCarbonDate =  $this->attendanceFormatterService->buildWorkDateFromEditAttendance($applyAttendance);
 
         return DB::transaction(function () use ($targetAttendance, $applyAttendance, $formatCarbonDate) {
-            //try {
+            try {
                 // 修正登録
                 if (is_null($targetAttendance)) {
                     // 打刻ない場合は空レコード作成
@@ -53,14 +50,13 @@ class AttendanceUpdateService
                     $this->createBreakTimeChanges($createAttendanceChange, $applyAttendance, $formatCarbonDate);
                 }
                 return $createAttendanceChange;
-            //} catch (\Exception $e) {
-                //Log::error($e);
-                //$route = auth('admin')->check() ? Role::ADMIN->value . '.' : null;
-                //return redirect()
-                //    ->route($route .'index')
-                //    ->with('alert', 'システムエラーが発生しました')
-                //    ->with('alert-type', 'alert-error');
-            //}
+            } catch (\Exception $e) {
+                Log::error($e);
+                $route = session('login_form') ? LoginForm::ADMIN->value . '.' : null;
+                return redirect()->route($route .'index')
+                                ->with('alert', 'システムエラーが発生しました')
+                                ->with('alert-type', 'alert--error');
+            }
         });
     }
 
@@ -106,7 +102,7 @@ class AttendanceUpdateService
 
     public function approveAttendance($attendanceChangeId): AttendanceApproval|\Illuminate\Http\RedirectResponse
     {
-        //try {
+        try {
             $attendanceChange = AttendanceChange::find($attendanceChangeId);
             return DB::transaction(function () use ($attendanceChange) {
                 // 承認する内容を履歴として保存
@@ -131,12 +127,12 @@ class AttendanceUpdateService
                 }
                 return $createApproval;
             });
-        // } catch (\Exception $e) {
-        //     Log::error($e);
-        //     return redirect()->route('application.index', ['mode' => 'approved'])
-        //                     ->with('alert', 'システムエラーが発生しました')
-        //                     ->with('alert-type', 'alert-error');
-        // }
+        } catch (\Exception $e) {
+            Log::error($e);
+            return redirect()->route('application.index', ['mode' => 'approved'])
+                            ->with('alert', 'システムエラーが発生しました')
+                            ->with('alert-type', 'alert--error');
+        }
     }
 
     public function attendanceRegister($action, $attendanceId)
@@ -150,12 +146,12 @@ class AttendanceUpdateService
             };
         } catch (\Exception $e) {
             Log::error($e);
-            return redirect()
-                ->route('index')
-                ->with('alert', 'システムエラーが発生しました')
-                ->with('alert-type', 'alert-error');
+            return redirect()->route('index')
+                            ->with('alert', 'システムエラーが発生しました')
+                            ->with('alert-type', 'alert--error');
         }
     }
+
     private function startWork()
     {
         return $this->attendanceRepository->createAttendance([
@@ -164,12 +160,14 @@ class AttendanceUpdateService
             'clock_in' => now(),
         ]);
     }
+
     private function endWork($attendanceId)
     {
         $targetAttendance = Attendance::find($attendanceId);
         $targetAttendance->clock_out = now();
         return $this->attendanceRepository->updateAttendance($targetAttendance);
     }
+
     private function startBreak($attendanceId)
     {
         return $this->attendanceRepository->createBreakTime([
@@ -177,6 +175,7 @@ class AttendanceUpdateService
                             'clock_in'  => now(),
                         ]);
     }
+
     private function endBreak($attendanceId)
     {
         /** @var \App\Models\BreakTime $targetBreakTime */

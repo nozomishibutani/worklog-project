@@ -8,10 +8,6 @@ use App\Services\AttendanceResolverService;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Attendance;
-use App\Enums\AttendanceStatus;
-use App\Models\AttendanceApproval;
-use App\Models\AttendanceChange;
-use Illuminate\Support\Facades\Auth;
 
 class AttendanceCalculatorService
 {

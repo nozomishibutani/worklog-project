@@ -8,7 +8,7 @@ body {
     padding-bottom: 3.5rem;
 }
 
-.auth-ttl{
+.auth-ttl {
     text-align: center;
 }
 .auth__list {
@@ -63,7 +63,7 @@ body {
     background-color: rgb(54, 53, 53);
 }
 
-.auth__btn--logout{
+.auth__btn--logout {
     display: inline;
     border: none;
     background-color: #f8d7da;
@@ -83,6 +83,6 @@ body {
     color: rgb(3, 105, 238);
 }
 
-.auth__alert{
+.auth__alert {
     padding-left: 0;
 }
