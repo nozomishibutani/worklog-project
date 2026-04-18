@@ -45,9 +45,9 @@ class UserController extends Controller
         = $this->attendanceResolverService->getUserAttendanceStatus(now()->format('Y-m-d'));
 
         $time = now()->format('H:i');
-        $day = $this->attendanceFormatterService->addDay(now(), 'Y年n月j日');
+        $date = $this->attendanceFormatterService->addDay(now(), 'Y年n月j日');
 
-        return view('user.index', compact('attendanceStatus', 'attendance', 'time', 'day'));
+        return view('user.index', compact('attendanceStatus', 'attendance', 'time', 'date'));
     }
 
     public function logAttendance(Request $request)
@@ -138,6 +138,6 @@ class UserController extends Controller
         return redirect()
             ->route('show', ['id' => $result->attendance_id])
             ->with('alert', '勤怠情報を修正しました')
-            ->with('alert-type', 'alert-success');
+            ->with('alert-type', 'alert--success');
     }
 }

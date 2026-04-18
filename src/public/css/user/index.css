@@ -1,0 +1,62 @@
+.general {
+    width: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.general__label{
+    display: block;
+    margin: 1rem 0;
+}
+
+.general__label--status{
+    background-color: #d6d4d4;
+    color: #7a7878;
+    padding: 0.3rem 0;
+    border-radius: 30px;
+    width: 13%;
+    margin: 0 auto;
+    font-weight: 600;
+}
+
+.general__label--date {
+    font-size: x-large;
+}
+
+.general__label--time {
+    font-size: xx-large;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    /* 文字幅を広げる*/
+}
+
+.general__btn-box {
+    margin-top: 2rem;
+}
+
+.general__btn,
+.general__btn--break {
+    width: 16%;
+    padding: 0.7rem 1rem;
+    border-radius: 12px;
+}
+
+.general__btn:hover {
+    background-color: rgb(54, 53, 53);
+}
+
+.general__btn--work-out{
+    margin-right: 3rem;
+}
+
+.general__btn--break {
+    background-color: white;
+    color: black;
+}
+
+.general__btn--break:hover {
+    background-color: rgb(250, 246, 246);
+}

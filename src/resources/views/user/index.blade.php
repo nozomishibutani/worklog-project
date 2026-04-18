@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('css')
-    <link rel="stylesheet" href="{{ asset('css/index.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/user/index.css') }}">
 @endsection
 
 @section('title')
@@ -15,25 +15,28 @@
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
-        <div class="">{{ $attendanceStatus->label() }}</div>
-        <div class="">{{ $day }}</div>
-        <div class="">{{ $time }}</div>
-        <div class="">
-            <form action="{{ route('log') }}" method="POST">
-                @csrf
-                {{-- hidden --}}
-                <input type="hidden" name="attendance_id" value="{{ $attendance?->id }}">
+        <span class="general__label general__label--status">{{ $attendanceStatus->label() }}</span>
+        <span class="general__label general__label--date">{{ $date }}</span>
+        <span class="general__label general__label--time">{{ $time }}</span>
+        <form action="{{ route('log') }}" method="POST">
+            @csrf
+            {{-- hidden --}}
+            <input type="hidden" name="attendance_id" value="{{ $attendance?->id }}">
+            <div class="general__btn-box">
                 @if ($attendanceStatus->value === App\Enums\attendanceStatus::OFF->value)
-                    <button name="action" value="{{ App\Enums\attendanceStatus::ON_DUTY->value }}">出勤</button>
+                    <button class="btn general__btn" name="action"
+                        value="{{ App\Enums\attendanceStatus::ON_DUTY->value }}">出勤</button>
                 @elseif($attendanceStatus->value === App\Enums\attendanceStatus::ON_DUTY->value)
-                    <button name="action" value="{{ App\Enums\attendanceStatus::OFF->value }}">退勤</button>
-                    <button name="action" value="{{ App\Enums\attendanceStatus::ON_BREAK->value }}">休憩入</button>
+                    <button class="btn general__btn general__btn--work-out" name="action" value="{{ App\Enums\attendanceStatus::OFF->value }}">退勤</button>
+                    <button class="btn general__btn--break" name="action"
+                        value="{{ App\Enums\attendanceStatus::ON_BREAK->value }}">休憩入</button>
                 @elseif($attendanceStatus->value === App\Enums\attendanceStatus::ON_BREAK->value)
-                    <button name="action" value="{{ App\Enums\attendanceStatus::OFF_BREAK->value }}">休憩戻</button>
+                    <button class="btn general__btn--break" name="action"
+                        value="{{ App\Enums\attendanceStatus::OFF_BREAK->value }}">休憩戻</button>
                 @elseif($attendanceStatus->value === App\Enums\attendanceStatus::OFF_DUTY->value)
-                    お疲れさまでした。
+                    <span>お疲れさまでした。</span>
                 @endif
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 @endsection

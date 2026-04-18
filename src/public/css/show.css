@@ -47,6 +47,7 @@
 .show__data-box {
     gap: 4rem;
     display: flex;
+    margin: 1rem 0;
 }
 
 .show__data-input {
@@ -74,6 +75,10 @@
     margin-left: 8rem;
 }
 
+.show__data-span--pending{
+    margin-left: 4.5rem;
+}
+
 .show__data-textarea {
     width: 65%;
     height: 64px;
@@ -82,7 +87,6 @@
     cursor: pointer;
     border-radius: 4px;
     font-weight: 600;
-    margin: 1rem 0;
 }
 
 .show__btn-box {

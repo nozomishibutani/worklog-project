@@ -164,7 +164,7 @@ class AdminController extends Controller
 
         return redirect()->route('application.index', ['mode' => ApprovalStatus::APPROVED->value])
                             ->with('alert', '承認しました')
-                            ->with('alert-type', 'alert-success');
+                            ->with('alert-type', 'alert--success');
     }
 
     public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
@@ -179,7 +179,7 @@ class AdminController extends Controller
 
         return redirect()->route('admin.show', ['id' => $result->attendance_id])
                             ->with('alert', '勤怠情報を修正しました')
-                            ->with('alert-type', 'alert-success');
+                            ->with('alert-type', 'alert--success');
     }
 
     public function export($userId, $date)

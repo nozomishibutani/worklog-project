@@ -133,7 +133,9 @@
                 <tr class="show__row">
                     <th class="show__label">備考</th>
                     <td class="show__data">
-                        <textarea class="show__data-textarea" name="note">{{ old('note', $note) }}</textarea>
+                        <div class="show__data-box">
+                            <textarea class="show__data-textarea" name="note">{{ old('note', $note) }}</textarea>
+                        </div>
                         @error('note')
                             <div class="msg">{{ $message }}</div>
                         @enderror
@@ -150,7 +152,7 @@
                     <td class="show__data">
                         <div class="show__data-box">
                             <span>{{ $workDate['year'] }}年</span>
-                            <span class="show__data-span">
+                            <span class="show__data-span show__data-span--pending">
                                 {{ $workDate['month'] }}月
                                 {{ $workDate['day'] }}日
                             </span>
@@ -175,8 +177,8 @@
                         <td class="show__data">
                             <div class="show__data-box">
                                 <span>{{ $breakTimes[$i]['clock_in'] }}</span>
-                                <span>～<span>
-                                        <span>{{ $breakTimes[$i]['clock_out'] }}<span>
+                                <span>～</span>
+                                <span>{{ $breakTimes[$i]['clock_out'] }}</span>
                             </div>
                         </td>
                     </tr>
