@@ -3,16 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Attendance;
-use App\Enums\ApprovalStatus;
 use App\Enums\Role;
-use App\Models\BreakTime;
 use Illuminate\Database\Seeder;
 use App\Models\AttendanceApproval;
 use App\Models\AttendanceChange;
 use App\Models\BreakTimeApproval;
 use App\Models\BreakTimeChange;
-use Carbon\Carbon;
 
 class AttendanceApprovalSeeder extends Seeder
 {

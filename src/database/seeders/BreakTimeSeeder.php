@@ -6,8 +6,6 @@ use Illuminate\Database\Seeder;
 use App\Models\Attendance;
 use App\Models\BreakTime;
 
-use function Symfony\Component\Clock\now;
-
 class BreakTimeSeeder extends Seeder
 {
     public function run(): void
