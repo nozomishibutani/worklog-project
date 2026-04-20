@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\LoginForm;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated as Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class RedirectIfAuthenticated extends Middleware
 {
@@ -27,9 +28,15 @@ class RedirectIfAuthenticated extends Middleware
             if ($request->form === LoginForm::ADMIN->value) {
                 return route('admin.login');
             }
+            // 一般ログイン画面にアクセス → メール認証済みなら問題なし
+            if ($request->user() && !$request->user()->hasVerifiedEmail()) {
+                // メール再送
+                $request->user()->sendEmailVerificationNotification();
+                session(['unverified_user_id' => $request->user()->id]);
+                return route('verification.notice');
+            }
         }
 
-        // 一般でログイン済みで、一般ログイン画面にアクセス → 問題なし
         // 管理画面にログイン済みで、一般ログイン画面にアクセス → ログイン済みの場合は一般ログイン画面を表示できないのでCheckSessionValueで捕まえる
         return route('index');
     }

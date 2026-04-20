@@ -46,7 +46,10 @@ Route::prefix('admin')
 // =====================
 // 共通
 // =====================
-Route::middleware(['auth'])
+Route::middleware([
+        'auth',
+        'verified',
+    ])
     ->group(function () {
         Route::get('/stamp_correction_request/list', [CommonController::class, 'applicationIndex'])
             ->name('application.index');
@@ -57,6 +60,7 @@ Route::middleware(['auth'])
 // =====================
 Route::middleware([
         'auth',
+        'verified',
         CheckSessionValue::class,
     ])
     ->group(function () {

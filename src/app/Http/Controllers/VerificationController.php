@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\LoginForm;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
@@ -28,18 +29,23 @@ class VerificationController extends Controller
      */
     public function verify()
     {
-        $user = User::find(session('unverified_user_id'));
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
         if (!$user) {
-            return redirect()->route('login');
+            return redirect()->route('login')
+                            ->with('alert', 'システムエラーが発生しました。')
+                            ->with('alert-type', 'alert--error');
+
         }
         if (!$user->hasVerifiedEmail()) {
             // email_verified_at に日時セット
             $user->markEmailAsVerified();
             // ログイン
-            Auth::login($user);
+            session([
+                'user_id' => $user->id,
+                'login_form' => LoginForm::GENERAL->value,
+            ]);
         }
-        session()->forget('unverified_user_id');
-
         return redirect()->route('index');
     }
 
@@ -56,7 +62,8 @@ class VerificationController extends Controller
      */
     public function confirm()
     {
-        $user = User::find(session('unverified_user_id'));
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
         if (!$user) {
             // 会員登録とメール認証のブラウザが異なるとセッションがないのでエラー
             return redirect()->route('login')
@@ -71,7 +78,6 @@ class VerificationController extends Controller
                 'hash' => sha1($user->email),
             ]
         );
-
         return view('auth.confirm', compact('url'));
     }
 }

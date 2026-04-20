@@ -3,9 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\CheckSessionValue;
 use App\Http\Middleware\Authenticate;
-use App\Http\Middleware\CheckAdmin;
 use App\Providers\FortifyServiceProvider;
 use App\Http\Middleware\RedirectIfAuthenticated;
 
