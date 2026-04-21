@@ -141,7 +141,7 @@ class AttendanceCalculatorService
         // ---  労働時間 ---
         $clockIn  = $currentAttendance->clock_in ? Carbon::parse($currentAttendance->clock_in) : null;
         $clockOut = $currentAttendance->clock_out ? Carbon::parse($currentAttendance->clock_out) : null;
-        $date = $currentAttendance->work_date;
+        $date = Carbon::parse($currentAttendance->work_date);
         $workDate = [
                         'year'  => $date->year,
                         'month' => $date->month,

@@ -52,7 +52,7 @@
                     <tr class="application__row">
                         <td class="application__data">{{ $approvalStatus->label() }}</td>
                         <td class="application__data">{{ $attendance->user->name }}</td>
-                        <td class="application__data">{{ $attendance->work_date->format('Y/m/d') }}</td>
+                        <td class="application__data">{{ Carbon\Carbon::parse($attendance->work_date)->format('Y/m/d') }}</td>
                         @if (session('login_form') === App\Enums\LoginForm::ADMIN->value)
                             <td class="application__data">{{ $attendance->note }}</td>
                             <td class="application__data">

@@ -181,7 +181,7 @@ class AttendanceUpdateService
         /** @var \App\Models\BreakTime $targetBreakTime */
         $targetBreakTime = BreakTime::where('attendance_id', $attendanceId)->whereNull('clock_out')->latest('clock_in')->first();
         if (is_null($targetBreakTime)) {
-            return;
+            throw new \Exception();
         }
         return $this->attendanceRepository->updateBreakTime(
             ['id' => $targetBreakTime->id],
