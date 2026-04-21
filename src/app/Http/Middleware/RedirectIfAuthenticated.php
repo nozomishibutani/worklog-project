@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use App\Enums\LoginForm;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated as Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class RedirectIfAuthenticated extends Middleware
 {
@@ -23,8 +22,9 @@ class RedirectIfAuthenticated extends Middleware
             }
         }
 
-        // 一般でログイン済みで、管理画面のログイン試行 → 管理画面のログインに遷移し、ログアウトを促す
+        // 一般でログイン済み
         if (session('login_form') === LoginForm::GENERAL->value) {
+            // 管理画面のログイン試行 → 管理画面のログインに遷移し、ログアウトを促す
             if ($request->form === LoginForm::ADMIN->value) {
                 return route('admin.login');
             }

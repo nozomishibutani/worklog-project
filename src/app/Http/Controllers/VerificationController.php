@@ -40,7 +40,6 @@ class VerificationController extends Controller
         if (!$user->hasVerifiedEmail()) {
             // email_verified_at に日時セット
             $user->markEmailAsVerified();
-            // ログイン
             session([
                 'user_id' => $user->id,
                 'login_form' => LoginForm::GENERAL->value,

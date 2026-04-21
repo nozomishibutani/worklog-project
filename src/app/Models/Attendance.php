@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Attendance extends Model
 {
+    /** @use HasFactory<AttendanceFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'work_date',
@@ -14,7 +18,7 @@ class Attendance extends Model
     ];
 
     protected $casts = [
-    'work_date' => 'datetime',
+    //'work_date' => 'datetime',
     'clock_in' => 'datetime',
     'clock_out' => 'datetime',
     ];
