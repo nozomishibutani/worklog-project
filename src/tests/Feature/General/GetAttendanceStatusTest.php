@@ -22,7 +22,8 @@ class GetAttendanceStatusTest extends TestCase
      * 勤務外の場合、勤怠ステータスが正しく表示される
      */
     #[Test]
-    public function offStatusIsDisplayed() {
+    public function offStatusIsDisplayed()
+    {
         $user = User::factory()->create();
         session([
                 'user_id' => $user->id,
@@ -30,12 +31,11 @@ class GetAttendanceStatusTest extends TestCase
             ]);
 
         // 1. ステータスが勤務外のユーザーにログインする
+        // 2. 勤怠打刻画面を開く
         $this->assertDatabaseMissing('attendances', [
             'user_id' => $user->id,
             'work_date' => now()->format('Y-m-d'),
         ]);
-
-        // 2. 勤怠打刻画面を開く
         $response = $this->actingAs($user)->get(route('index'));
         $response->assertStatus(200);
 
@@ -47,7 +47,8 @@ class GetAttendanceStatusTest extends TestCase
      * 出勤中の場合、勤怠ステータスが正しく表示される
      */
     #[Test]
-    public function onDutyStatusIsDisplayed() {
+    public function onDutyStatusIsDisplayed()
+    {
         $user = User::factory()->create();
         session([
                 'user_id' => $user->id,
@@ -60,14 +61,13 @@ class GetAttendanceStatusTest extends TestCase
             'clock_in' => $now->format('Y-m-d H:i:s'),
         ]);
 
+        // 1. ステータスが出勤中のユーザーにログインする
+        // 2. 勤怠打刻画面を開く
         $this->assertDatabaseHas('attendances', [
             'user_id' => $user->id,
             'work_date' => $now->format('Y-m-d'),
             'clock_in' => $now->format('Y-m-d H:i:s'),
         ]);
-
-        // 1. ステータスが出勤中のユーザーにログインする
-        // 2. 勤怠打刻画面を開く
         $response = $this->actingAs($user)->get(route('index'));
         $response->assertStatus(200);
 
@@ -79,7 +79,8 @@ class GetAttendanceStatusTest extends TestCase
      * 休憩中の場合、勤怠ステータスが正しく表示される
      */
     #[Test]
-    public function onBreakStatusIsDisplayed() {
+    public function onBreakStatusIsDisplayed()
+    {
         $user = User::factory()->create();
         session([
                 'user_id' => $user->id,
@@ -96,6 +97,8 @@ class GetAttendanceStatusTest extends TestCase
             'clock_in' => $now->copy()->format('Y-m-d H:i:s'),
         ]);
 
+        // 1. ステータスが休憩中のユーザーにログインする
+        // 2. 勤怠打刻画面を開く
         $this->assertDatabaseHas('attendances', [
             'user_id' => $user->id,
             'work_date' => $now->format('Y-m-d'),
@@ -105,9 +108,6 @@ class GetAttendanceStatusTest extends TestCase
             'attendance_id' => $attendance->id,
             'clock_in' => $now->copy()->format('Y-m-d H:i:s'),
         ]);
-
-        // 1. ステータスが休憩中のユーザーにログインする
-        // 2. 勤怠打刻画面を開く
         $response = $this->actingAs($user)->get(route('index'));
         $response->assertStatus(200);
 
@@ -119,7 +119,8 @@ class GetAttendanceStatusTest extends TestCase
      * 退勤済の場合、勤怠ステータスが正しく表示される
      */
     #[Test]
-    public function offDUTYStatusIsDisplayed() {
+    public function offDUTYStatusIsDisplayed()
+    {
         $user = User::factory()->create();
         session([
                 'user_id' => $user->id,
@@ -132,15 +133,15 @@ class GetAttendanceStatusTest extends TestCase
             'clock_in' => $now->copy()->subHours(6)->format('Y-m-d H:i:s'),
             'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
         ]);
+
+        // 1. ステータスが退勤済のユーザーにログインする
+        // 2. 勤怠打刻画面を開く
         $this->assertDatabaseHas('attendances', [
             'user_id' => $user->id,
             'work_date' => $now->format('Y-m-d'),
             'clock_in' => $now->copy()->subHours(6)->format('Y-m-d H:i:s'),
             'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
         ]);
-
-        // 1. ステータスが退勤済のユーザーにログインする
-        // 2. 勤怠打刻画面を開く
         $response = $this->actingAs($user)->get(route('index'));
         $response->assertStatus(200);
 

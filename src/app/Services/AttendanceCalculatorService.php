@@ -196,11 +196,11 @@ class AttendanceCalculatorService
 
         $baseList = [];
 
-        $start = $startOfMonth;
+        $start = $startOfMonth->copy();
         $end   = $startOfMonth->copy()->endOfMonth();
 
         $attendances = Attendance::where('user_id', $userId)
-                            ->whereBetween('work_date', [$start, $end])
+                            ->whereBetween('work_date', [$startOfMonth->copy()->format('Y-m-d'), $startOfMonth->copy()->endOfMonth()->format('Y-m-d')])
                             ->get('id');
 
         foreach ($attendances as $attendance) {

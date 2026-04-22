@@ -12,7 +12,7 @@ use App\Services\AttendanceCalculatorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
-class AttendanceOperationTest extends TestCase
+class OnDutyOperationTest extends TestCase
 {
     /**
      * 出勤機能
@@ -39,7 +39,7 @@ class AttendanceOperationTest extends TestCase
         $response->assertSee(attendanceStatus::OFF->label());
 
         // 2. 画面に「出勤」ボタンが表示されていることを確認する
-        $response->assertSee("出勤");
+        $response->assertSee('出勤</button>', false);
 
         // 3. 出勤の処理を行う
         $response =  $this->post(route('log'), [
