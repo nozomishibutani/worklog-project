@@ -107,7 +107,7 @@ class AttendanceRequest extends FormRequest
                     // 退勤時間が入力済みなのに休憩戻り時間がない場合に以下のメッセージを表示
                     $validator->errors()->add('break_out.'. $id, '休憩時間もしくは退勤時間が不適切な値です');
                 }
-                if ($breakOut >= $carbonWorkOut) {
+                if ($breakOut >= $carbonWorkOut && empty($isInvalidBreakTimes[$id])) {
                     $validator->errors()->add('break_in.'. $id, '休憩時間もしくは退勤時間が不適切な値です');
                 }
             }

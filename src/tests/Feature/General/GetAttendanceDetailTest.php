@@ -12,7 +12,7 @@ use App\Services\AttendanceCalculatorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
-class GGetAttendanceDetailTest extends TestCase
+class GetAttendanceDetailTest extends TestCase
 {
     /**
      * 勤怠詳細情報取得機能（一般ユーザー）
@@ -50,7 +50,6 @@ class GGetAttendanceDetailTest extends TestCase
                             'clock_in' => $now->copy()->subMinutes(50)->format('Y-m-d H:i:s'),
                             'clock_out' => $now->copy()->subMinutes(55)->format('Y-m-d H:i:s'),
                         ]);
-
 
         session([
             'user_id' => $user->id,

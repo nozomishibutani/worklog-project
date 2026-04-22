@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Http\Requests\AttendanceRequest;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -155,7 +156,7 @@ class AdminController extends Controller
 
     public function approve($attendanceChangeId)
     {
-        $this->attendanceUpdateService->approveAttendance($attendanceChangeId);
+        $this->attendanceUpdateService->approveAttendance($attendanceChangeId, Auth::id());
 
         return redirect()->route('application.index', ['mode' => ApprovalStatus::APPROVED->value])
                             ->with('alert', '承認しました')
@@ -170,7 +171,7 @@ class AdminController extends Controller
 
         $result = $this->attendanceUpdateService->applyAttendance($applyAttendance);
         // 管理者が直接修正した場合は承認フェーズを省く
-        $this->attendanceUpdateService->approveAttendance($result->id);
+        $this->attendanceUpdateService->approveAttendance($result->id, Auth::id());
 
         return redirect()->route('admin.show', ['id' => $result->attendance_id])
                             ->with('alert', '勤怠情報を修正しました')

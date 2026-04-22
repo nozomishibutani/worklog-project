@@ -250,25 +250,5 @@ class GetAttendanceListTest extends TestCase
         $response->assertSee($now->year . '年');
         $response->assertSee($now->month. '月');
         $response->assertSee($now->day. '日');
-
-        // $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        // [
-        //     'workTimes' => $workTimes,
-        //     'breakTimes' => $breakTimes,
-        //     'workDate' => $workDate,
-        //     'currentAttendanceStatus' => $currentAttendanceStatus,
-        //     'note' => $note,
-        // ]
-        // = $attendanceCalculatorService->getUserDailyAttendance($attendance->id, null);
-
-
-        // $response->assertSee($workDate);
-        // $response->assertSee($workTimes['clock_in']);
-        // $response->assertSee($workTimes['clock_out']);
-        // foreach ($breakTimes as $breakTime) {
-        //     $response->assertSee($breakTime['clock_in']);
-        //     $response->assertSee($breakTime['clock_out']);
-        // }
-        // $response->assertSee($note);
     }
 }

@@ -100,11 +100,11 @@ class AttendanceUpdateService
         }
     }
 
-    public function approveAttendance($attendanceChangeId): AttendanceApproval|\Illuminate\Http\RedirectResponse
+    public function approveAttendance($attendanceChangeId, $approvedBy): AttendanceApproval|\Illuminate\Http\RedirectResponse
     {
         try {
             $attendanceChange = AttendanceChange::find($attendanceChangeId);
-            return DB::transaction(function () use ($attendanceChange) {
+            return DB::transaction(function () use ($attendanceChange, $approvedBy) {
                 // 承認する内容を履歴として保存
                 $createApproval = $this->attendanceRepository->createAttendanceApproval([
                     'user_id' => $attendanceChange->user_id,
@@ -112,7 +112,7 @@ class AttendanceUpdateService
                     'work_date' => $attendanceChange->work_date,
                     'clock_in' => $attendanceChange->clock_in,
                     'clock_out' => $attendanceChange->clock_out,
-                    'approved_by' => Auth::id(),
+                    'approved_by' => $approvedBy,
                     'approved_at' => now(),
                     'note' => $attendanceChange->note,
                 ]);
