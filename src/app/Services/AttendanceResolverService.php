@@ -190,4 +190,15 @@ class AttendanceResolverService
         }
         return  $attendances;
     }
+
+    /**
+     * 承認待ち勤怠の数を取得
+     */
+    public function countPendingAttendances($attendanceId): int
+    {
+        $attendanceChangeCount = AttendanceChange::doesntHave('attendanceApproval')
+                                                    ->where('attendance_id', $attendanceId)
+                                                    ->count();
+        return $attendanceChangeCount;
+    }
 }

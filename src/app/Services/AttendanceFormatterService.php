@@ -238,7 +238,6 @@ class AttendanceFormatterService
                 $value['display_total'],
             ];
         }
-
         return $rows;
     }
 }

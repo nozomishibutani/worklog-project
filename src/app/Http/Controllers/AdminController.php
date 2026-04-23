@@ -11,6 +11,7 @@ use App\Services\AttendanceResolverService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Http\Requests\AttendanceRequest;
+use App\Models\AttendanceChange;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -157,6 +158,7 @@ class AdminController extends Controller
     public function approve(Request $request)
     {
         $attendanceChangeId = $request->input('attendance_change_id');
+
         $this->attendanceUpdateService->approveAttendance($attendanceChangeId, Auth::id());
 
         return redirect()->route('application.index', ['mode' => ApprovalStatus::APPROVED->value])
@@ -170,8 +172,15 @@ class AdminController extends Controller
         $hidden = $request->only('user_id', 'attendance_id', 'current_attendance_status', 'year', 'month', 'day');
         $applyAttendance = array_merge($hidden, $input);
 
+        // 管理者が直接修正した場合は承認も一緒に行う
+        $count = $this->attendanceResolverService->countPendingAttendances($hidden['attendance_id']);
+        if ($count !== 0) {
+            return redirect()->route('admin.show', ['id' => $hidden['attendance_id']])
+                            ->with('alert', 'この勤怠情報は、更新されたため修正できません。')
+                            ->with('alert-type', 'alert--error');
+        }
+
         $result = $this->attendanceUpdateService->applyAttendance($applyAttendance);
-        // 管理者が直接修正した場合は承認フェーズを省く
         $this->attendanceUpdateService->approveAttendance($result->id, Auth::id());
 
         return redirect()->route('admin.show', ['id' => $result->attendance_id])

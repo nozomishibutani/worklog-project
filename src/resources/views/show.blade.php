@@ -91,7 +91,7 @@
                     {{-- 休憩あり --}}
                     @for ($i = 0; $i < count($breakTimes); $i++)
                         <tr class="show__row">
-                            <th class="show__label">休憩</th>
+                            <th class="show__label">休憩{{ $i > 0 ? $i + 1 : '' }}</th>
                             <td class="show__data">
                                 <div class="show__data-box">
                                     <input type="time" class="show__data-input"
@@ -186,7 +186,7 @@
                 <tr class="show__row">
                     <th class="show__label">備考</th>
                     <td class="show__data">
-                        <p>{{ $note }}</p>
+                        <p class="show__data-textarea--readonly">{{ $note }}</p>
                     </td>
                 </tr>
             @endif

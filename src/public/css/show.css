@@ -107,3 +107,7 @@
     word-break: break-all;
     /* 折り返す*/
 }
+
+.show__data-textarea--readonly{
+    padding-right: 2rem;
+}

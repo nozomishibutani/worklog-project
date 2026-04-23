@@ -62,4 +62,5 @@
 .approval__data-textarea {
     word-break: break-all;
     /* 折り返す*/
+    padding-right: 2rem;
 }
