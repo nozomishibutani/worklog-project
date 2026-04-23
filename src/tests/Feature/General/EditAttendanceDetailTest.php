@@ -502,7 +502,7 @@ class EditAttendanceDetailTest extends TestCase
      * 「承認済み」に管理者が承認した修正申請が全て表示されている
      */
     #[Test]
-    public function allApplicantsAreDisplayedOnApprovedList()
+    public function allApprovedApplicantsAreDisplayed()
     {
         $user = User::factory()->create();
         $now = now();

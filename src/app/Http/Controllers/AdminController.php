@@ -154,8 +154,9 @@ class AdminController extends Controller
         ]);
     }
 
-    public function approve($attendanceChangeId)
+    public function approve(Request $request)
     {
+        $attendanceChangeId = $request->input('attendance_change_id');
         $this->attendanceUpdateService->approveAttendance($attendanceChangeId, Auth::id());
 
         return redirect()->route('application.index', ['mode' => ApprovalStatus::APPROVED->value])

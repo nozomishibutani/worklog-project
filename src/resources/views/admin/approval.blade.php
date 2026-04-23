@@ -16,13 +16,15 @@
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
-        <form action="{{ route('admin.approve', ['attendance_correct_request_id' => $attendanceChangeId]) }}" method="post"
-            novalidate>
+        {{-- <form action="{{ route('admin.approve', ['attendance_correct_request_id' => $attendanceChangeId]) }}" method="post"
+            novalidate> --}}
+        <form action="{{ route('admin.approve') }}" method="POST" novalidate>
             @csrf
             {{-- hidden --}}
             <input type="hidden" name="year" value="{{ $workDate['year'] }}">
             <input type="hidden" name="month" value="{{ $workDate['month'] }}">
             <input type="hidden" name="day" value="{{ $workDate['day'] }}">
+            <input type="hidden" name="attendance_change_id" value="{{ $attendanceChangeId }}">
             <table class="approval__table">
                 <tr class="approval__row">
                     <th class="approval__label">名前</th>

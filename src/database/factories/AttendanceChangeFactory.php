@@ -2,25 +2,27 @@
 
 namespace Database\Factories;
 
-use App\Models\Attendance;
+use App\Models\AttendanceChange;
 use Illuminate\Database\Eloquent\Factories\Factory;
+
+use function Symfony\Component\Clock\now;
 
 /**
  * @extends Factory<Attendance>
  */
-class AttendanceFactory extends Factory
+class AttendanceChangeFactory extends Factory
 {
     /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
      */
-    protected $model = Attendance::class;
+    protected $model = AttendanceChange::class;
 
     public function definition(): array
     {
         return [
-        'work_date' =>  now()->format('Y-m-d'),
+            'applied_at' => now(),
         ];
     }
 }

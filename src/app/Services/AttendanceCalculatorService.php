@@ -28,7 +28,7 @@ class AttendanceCalculatorService
     /**
      * 特定日のユーザーの勤怠を取得
      */
-    public function getUserDailyAttendances($date): array
+    public function getUserDailyAttendances(Carbon $date): array
     {
         $workTimes = [];
         $breakTimes = [];
@@ -41,7 +41,7 @@ class AttendanceCalculatorService
         $breakMinutes = [];
 
         $attendances = Attendance::with(['user', 'breakTimes'])
-                                            ->where('work_date', $date)
+                                            ->where('work_date', $date->copy()->format('Y-m-d'))
                                             ->get();
 
         foreach ($attendances as $attendance) {

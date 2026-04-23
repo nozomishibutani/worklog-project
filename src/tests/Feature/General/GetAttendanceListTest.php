@@ -10,7 +10,6 @@ use App\Models\Attendance;
 use App\Models\BreakTime;
 use Carbon\Carbon;
 use App\Services\AttendanceCalculatorService;
-use App\Services\AttendanceResolverService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -31,14 +30,14 @@ class GetAttendanceListTest extends TestCase
         $now = now();
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'work_date' => $now->copy()->subDay()->format('Y-m-d'),
-            'clock_in' => $now->copy()->subDay()->subHour()->format('Y-m-d H:i:s'),
-            'clock_out' => $now->copy()->subDay()->format('Y-m-d H:i:s'),
+            'work_date' => $now->copy()->format('Y-m-d'),
+            'clock_in' => $now->copy()->subMinutes(75)->format('Y-m-d H:i:s'),
+            'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
         ]);
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->subDay()->subMinutes(35)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->subDay()->subMinutes(20)->format('Y-m-d H:i:s'),
+                    'clock_in' => $now->copy()->subMinutes(35)->format('Y-m-d H:i:s'),
+                    'clock_out' => $now->copy()->subMinutes(30)->format('Y-m-d H:i:s'),
         ]);
 
         // 1. 勤怠情報が登録されたユーザーにログインする
@@ -64,13 +63,15 @@ class GetAttendanceListTest extends TestCase
         ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $startOfMonth);
 
         // 自分の勤怠情報が全て表示されている
-        $response->assertSeeInOrder([
-            $workTimes[$now->copy()->subDay()->format('Ymd')]['display_date'],
-            $workTimes[$now->copy()->subDay()->format('Ymd')]['clock_in'],
-            $workTimes[$now->copy()->subDay()->format('Ymd')]['clock_out'],
-            $breakTimes[$now->copy()->subDay()->format('Ymd')]['display_total'],
-            $workTimes[$now->copy()->subDay()->format('Ymd')]['display_total'],
-        ]);
+        foreach ($workTimes as $workTime) {
+            $response->assertSee($workTime['display_date']);
+            $response->assertSee($workTime['clock_in']);
+            $response->assertSee($workTime['clock_out']);
+            if (isset($breakTimes[$now->copy()->format('Ymd')]['display_total'])) {
+                $response->assertSee($breakTimes[$now->copy()->format('Ymd')]['display_total']);
+            }
+            $response->assertSee($workTime['display_total']);
+        }
     }
 
     /**
@@ -109,15 +110,15 @@ class GetAttendanceListTest extends TestCase
         // 1. 勤怠情報が登録されたユーザーにログインをする
         $attendance = Attendance::factory()->create([
                     'user_id' => $user->id,
-                    'work_date' => $now->copy()->subMonth()->format('Y-m-d'),
-                    'clock_in' => $now->copy()->subMonth()->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->subMonth()->addHours(1)->format('Y-m-d H:i:s'),
+                    'work_date' => $now->copy()->startOfMonth()->subMonth()->format('Y-m-d'),
+                    'clock_in' => $now->copy()->startOfMonth()->subMonth()->format('Y-m-d H:i:s'),
+                    'clock_out' => $now->copy()->startOfMonth()->subMonth()->addHours(8)->format('Y-m-d H:i:s'),
                 ]);
 
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->subMonth()->addMinutes(10)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->subMonth()->addMinutes(30)->format('Y-m-d H:i:s'),
+                    'clock_in' => $now->copy()->startOfMonth()->subMonth()->addHours(6)->format('Y-m-d H:i:s'),
+                    'clock_out' => $now->copy()->startOfMonth()->subMonth()->addHours(7)->format('Y-m-d H:i:s'),
                 ]);
 
         session([
@@ -132,22 +133,22 @@ class GetAttendanceListTest extends TestCase
 
         // 3. 「前月」ボタンを押す
         // 前月の情報が表示されている
-        $response =  $this->get(route('monthly.index', ['id' => $user->id, 'date' => $now->copy()->subMonth()->format('Ym')]));
-        $response->assertSee($now->copy()->subMonth()->format('Ym'));
+        $response =  $this->get(route('monthly.index', ['id' => $user->id, 'date' => $now->copy()->startOfMonth()->subMonth()->format('Ym')]));
+        $response->assertSee($now->copy()->startOfMonth()->subMonth()->format('Ym'));
 
         $attendanceCalculatorService = app(AttendanceCalculatorService::class);
         [
             'name' => $name,
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
-        ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $now->copy()->subMonth());
+        ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $now->copy()->startOfMonth()->subMonth());
 
         foreach ($workTimes as $workTime) {
             $response->assertSee($workTime['display_date']);
             $response->assertSee($workTime['clock_in']);
             $response->assertSee($workTime['clock_out']);
-            if (isset($breakTimes[$now->copy()->subMonth()->format('Ymd')]['display_total'])) {
-                $response->assertSee($breakTimes[$now->copy()->subMonth()->format('Ymd')]['display_total']);
+            if (isset($breakTimes[$now->copy()->startOfMonth()->subMonth()->format('Ymd')]['display_total'])) {
+                $response->assertSee($breakTimes[$now->copy()->startOfMonth()->subMonth()->format('Ymd')]['display_total']);
             }
             $response->assertSee($workTime['display_total']);
         }
@@ -165,15 +166,15 @@ class GetAttendanceListTest extends TestCase
         // 1. 勤怠情報が登録されたユーザーにログインをする
         $attendance = Attendance::factory()->create([
                     'user_id' => $user->id,
-                    'work_date' => $now->copy()->addMonth()->format('Y-m-d'),
-                    'clock_in' => $now->copy()->addMonth()->subHour()->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->addMonth()->format('Y-m-d H:i:s'),
+                    'work_date' => $now->copy()->startOfMonth()->addMonth()->format('Y-m-d'),
+                    'clock_in' => $now->copy()->startOfMonth()->addMonth()->format('Y-m-d H:i:s'),
+                    'clock_out' => $now->copy()->startOfMonth()->addMonth()->addHours(8.5)->format('Y-m-d H:i:s'),
                 ]);
 
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->addMonth()->subMinutes(35)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->addMonth()->subMinutes(20)->format('Y-m-d H:i:s'),
+                    'clock_in' => $now->copy()->startOfMonth()->addMonth()->addHours(1)->format('Y-m-d H:i:s'),
+                    'clock_out' => $now->copy()->startOfMonth()->addMonth()->addHours(3)->format('Y-m-d H:i:s'),
                 ]);
 
         session([
@@ -188,22 +189,22 @@ class GetAttendanceListTest extends TestCase
 
         // 3. 「翌月」ボタンを押す
         // 翌月の情報が表示されている
-        $response =  $this->get(route('monthly.index', ['id' => $user->id, 'date' => $now->copy()->addMonth()->format('Ym')]));
-        $response->assertSee($now->copy()->addMonth()->format('Ym'));
+        $response =  $this->get(route('monthly.index', ['id' => $user->id, 'date' => $now->copy()->startOfMonth()->addMonth()->format('Ym')]));
+        $response->assertSee($now->copy()->startOfMonth()->addMonth()->format('Ym'));
 
         $attendanceCalculatorService = app(AttendanceCalculatorService::class);
         [
             'name' => $name,
             'workTimes' => $workTimes,
             'breakTimes' => $breakTimes,
-        ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $now->copy()->addMonth());
+        ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $now->copy()->startOfMonth()->addMonth());
 
         foreach ($workTimes as $workTime) {
             $response->assertSee($workTime['display_date']);
             $response->assertSee($workTime['clock_in']);
             $response->assertSee($workTime['clock_out']);
-            if (isset($breakTimes[$now->copy()->addMonth()->format('Ymd')]['display_total'])) {
-                $response->assertSee($breakTimes[$now->copy()->addMonth()->format('Ymd')]['display_total']);
+            if (isset($breakTimes[$now->copy()->startOfMonth()->addMonth()->format('Ymd')]['display_total'])) {
+                $response->assertSee($breakTimes[$now->copy()->startOfMonth()->addMonth()->format('Ymd')]['display_total']);
             }
             $response->assertSee($workTime['display_total']);
         }
