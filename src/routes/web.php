@@ -35,8 +35,6 @@ Route::prefix('admin')
                     ->name('admin.monthly.index');
         Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'showForApproval'])
                     ->name('admin.approval.show');
-        // Route::post('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'approve'])
-        //             ->name('admin.approve');
         Route::post('/stamp_correction_request/approve/', [AdminController::class, 'approve'])
                     ->name('admin.approve');
         Route::post('/attendance/update', [AdminController::class, 'update'])
