@@ -74,7 +74,6 @@ class RegisterTest extends TestCase
         ]);
     }
 
-
     /**
      * パスワードが一致しない場合、バリデーションメッセージが表示される
      */

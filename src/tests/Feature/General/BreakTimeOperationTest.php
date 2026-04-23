@@ -23,7 +23,8 @@ class BreakTimeOperationTest extends TestCase
      * 休憩ボタンが正しく機能する
      */
     #[Test]
-    public function onBreakTimeButtonIsWorking() {
+    public function onBreakTimeButtonIsWorking()
+    {
         $user = User::factory()->create();
         session([
                 'user_id' => $user->id,
@@ -32,7 +33,7 @@ class BreakTimeOperationTest extends TestCase
         $now = now();
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subHours(1)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute()->format('Y-m-d H:i:s'),
         ]);
 
         // 1. ステータスが出勤中のユーザーにログインする
@@ -58,7 +59,8 @@ class BreakTimeOperationTest extends TestCase
      * 休憩は一日に何回でもできる
      */
     #[Test]
-    public function userCanSubmitOnBreakTimeManyTimes() {
+    public function userCanSubmitOnBreakTimeManyTimes()
+    {
         $user = User::factory()->create();
         session([
                 'user_id' => $user->id,
@@ -67,7 +69,7 @@ class BreakTimeOperationTest extends TestCase
         $now = now();
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subHours(1)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute()->format('Y-m-d H:i:s'),
         ]);
 
         // 1. ステータスが出勤中のユーザーにログインする
@@ -95,7 +97,8 @@ class BreakTimeOperationTest extends TestCase
      * 休憩戻ボタンが正しく機能する
      */
     #[Test]
-    public function offBreakTimeButtonIsWorking() {
+    public function offBreakTimeButtonIsWorking()
+    {
         $user = User::factory()->create();
         session([
                 'user_id' => $user->id,
@@ -104,7 +107,7 @@ class BreakTimeOperationTest extends TestCase
         $now = now();
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subHours(1)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute()->format('Y-m-d H:i:s'),
         ]);
 
         // 1. ステータスが出勤中のユーザーにログインする
@@ -137,7 +140,8 @@ class BreakTimeOperationTest extends TestCase
      * 休憩戻は一日に何回でもできる
      */
     #[Test]
-    public function userCanSubmitOffBreakTimeManyTimes() {
+    public function userCanSubmitOffBreakTimeManyTimes()
+    {
         $user = User::factory()->create();
         session([
                 'user_id' => $user->id,
@@ -146,7 +150,7 @@ class BreakTimeOperationTest extends TestCase
         $now = now();
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subHours(1)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute()->format('Y-m-d H:i:s'),
         ]);
 
         // 1. ステータスが出勤中のユーザーにログインする
@@ -180,7 +184,8 @@ class BreakTimeOperationTest extends TestCase
      * 休憩時刻が勤怠一覧画面で確認できる
      */
     #[Test]
-    public function userCanCheckAttendanceList() {
+    public function userCanCheckAttendanceList()
+    {
         $user = User::factory()->create();
         session([
                 'user_id' => $user->id,
@@ -189,7 +194,7 @@ class BreakTimeOperationTest extends TestCase
         $now = now();
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subHours(1)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute()->format('Y-m-d H:i:s'),
         ]);
 
         // 1. ステータスが勤務（出勤）中のユーザーにログインする
@@ -208,23 +213,14 @@ class BreakTimeOperationTest extends TestCase
         ]);
 
         // 3.勤怠一覧画面から休憩の日付を確認する
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        $startOfMonth = Carbon::createFromFormat('Ymd', $now->copy()->format('Ym') . '01')->startOfMonth();
-
-        [
-            'name' => $name,
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-        ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $startOfMonth);
-
         $response =  $this->get(route('monthly.index'));
         $response->assertStatus(200);
 
         // 勤怠一覧画面に休憩時刻が正確に記録されている
         $response->assertSeeInOrder([
-            $workTimes[$now->copy()->format('Ymd')]['display_date'],
-            $workTimes[$now->copy()->format('Ymd')]['clock_in'],
-            $breakTimes[$now->copy()->format('Ymd')]['display_total'],
-        ]);
+                $now->copy()->format('m/d') . '(' . $now->isoFormat('ddd') . ')',
+                $now->copy()->subMinute()->format('H:i'),
+                '0:00'
+            ]);
     }
 }

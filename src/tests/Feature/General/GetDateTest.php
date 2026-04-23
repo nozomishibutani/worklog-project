@@ -5,7 +5,6 @@ namespace Tests\Feature\Auth;
 use App\Enums\LoginForm;
 use Tests\TestCase;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -35,7 +34,6 @@ class GetDateTest extends TestCase
         $response->assertStatus(200);
 
         // 2. 画面に表示されている日時情報を確認する
-        $response->assertSee($now->format('H:i'));
-
+        $response->assertSeeText($now->format('H:i'));
     }
 }

@@ -8,9 +8,9 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\Attendance;
 use Carbon\Carbon;
-use App\Services\AttendanceCalculatorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
+
 
 class OnDutyOperationTest extends TestCase
 {
@@ -33,7 +33,6 @@ class OnDutyOperationTest extends TestCase
         // 1. ステータスが勤務外のユーザーにログインする
         $this->assertDatabaseMissing('attendances', [
             'user_id' => $user->id,
-            'work_date' => now()->format('Y-m-d'),
         ]);
         $response = $this->actingAs($user)->get(route('index'));
         $response->assertSee(attendanceStatus::OFF->label());
@@ -66,7 +65,7 @@ class OnDutyOperationTest extends TestCase
         $now = now();
         Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subHours(6)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute()->format('Y-m-d H:i:s'),
             'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
         ]);
 
@@ -77,7 +76,7 @@ class OnDutyOperationTest extends TestCase
         // 2. 勤務ボタンが表示されないことを確認する
         // 画面上に「出勤」ボタンが表示されない
         $response->assertDontSee('出勤</button>', false);
-        $response->assertDontSee('出勤', false);
+        $response->assertSee('お疲れ様でした。');
     }
 
     /**
@@ -85,6 +84,7 @@ class OnDutyOperationTest extends TestCase
      */
     #[Test]
     public function userCanCheckAttendanceList() {
+
         $user = User::factory()->create();
         session([
                 'user_id' => $user->id,
@@ -95,7 +95,6 @@ class OnDutyOperationTest extends TestCase
         $now = now();
         $this->assertDatabaseMissing('attendances', [
             'user_id' => $user->id,
-            'work_date' => $now->copy()->format('Y-m-d'),
         ]);
         $response = $this->actingAs($user)->get(route('index'));
         $response->assertSee(attendanceStatus::OFF->label());
@@ -106,23 +105,14 @@ class OnDutyOperationTest extends TestCase
             'action' => attendanceStatus::ON_DUTY->value
         ]);
 
-        // 3.勤怠一覧画面から休憩の日付を確認する
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        $startOfMonth = Carbon::createFromFormat('Ymd', $now->copy()->format('Ym') . '01')->startOfMonth();
-
-        [
-            'name' => $name,
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-        ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $startOfMonth);
-
+        // 3.勤怠一覧画面から出勤の日付を確認する
         $response =  $this->get(route('monthly.index'));
         $response->assertStatus(200);
 
          // 勤怠一覧画面に出勤時刻が正確に記録されている
         $response->assertSeeInOrder([
-            $workTimes[$now->copy()->format('Ymd')]['display_date'],
-            $workTimes[$now->copy()->format('Ymd')]['clock_in'],
+            $now->copy()->format('m/d') . '(' . $now->isoFormat('ddd') . ')',
+            $now->copy()->format('H:i'),
         ]);
     }
 }

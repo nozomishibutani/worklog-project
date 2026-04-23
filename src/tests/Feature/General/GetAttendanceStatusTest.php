@@ -34,7 +34,6 @@ class GetAttendanceStatusTest extends TestCase
         // 2. 勤怠打刻画面を開く
         $this->assertDatabaseMissing('attendances', [
             'user_id' => $user->id,
-            'work_date' => now()->format('Y-m-d'),
         ]);
         $response = $this->actingAs($user)->get(route('index'));
         $response->assertStatus(200);
@@ -90,7 +89,7 @@ class GetAttendanceStatusTest extends TestCase
         $now = now();
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subMinute(5)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute(1)->format('Y-m-d H:i:s'),
         ]);
         BreakTime::factory()->create([
             'attendance_id' => $attendance->id,
@@ -102,7 +101,7 @@ class GetAttendanceStatusTest extends TestCase
         $this->assertDatabaseHas('attendances', [
             'user_id' => $user->id,
             'work_date' => $now->format('Y-m-d'),
-            'clock_in' => $now->copy()->subMinute(5)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute(1)->format('Y-m-d H:i:s'),
         ]);
         $this->assertDatabaseHas('break_times', [
             'attendance_id' => $attendance->id,
@@ -130,7 +129,7 @@ class GetAttendanceStatusTest extends TestCase
         $now = now();
         Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subHours(6)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute()->format('Y-m-d H:i:s'),
             'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
         ]);
 
@@ -139,7 +138,7 @@ class GetAttendanceStatusTest extends TestCase
         $this->assertDatabaseHas('attendances', [
             'user_id' => $user->id,
             'work_date' => $now->format('Y-m-d'),
-            'clock_in' => $now->copy()->subHours(6)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute()->format('Y-m-d H:i:s'),
             'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
         ]);
         $response = $this->actingAs($user)->get(route('index'));

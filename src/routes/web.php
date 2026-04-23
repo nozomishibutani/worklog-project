@@ -33,14 +33,23 @@ Route::prefix('admin')
                     ->name('admin.user.index');
         Route::get('/attendance/staff/{id}', [AdminController::class, 'userMonthlyIndex'])
                     ->name('admin.monthly.index');
-        Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'showForApproval'])
-                    ->name('admin.approval.show');
-        Route::post('/stamp_correction_request/approve/', [AdminController::class, 'approve'])
-                    ->name('admin.approve');
+
         Route::post('/attendance/update', [AdminController::class, 'update'])
                     ->name('admin.update');
         Route::get('/attendance/export/{user_id}/{date}', [AdminController::class, 'export'])
                     ->name('admin.export');
+        Route::post('/stamp_correction_request/approve/', [AdminController::class, 'approve'])
+                    ->name('admin.approve');
+    });
+
+Route::middleware([
+    'auth',
+    CheckAdmin::class,
+    CheckSessionValue::class,
+    ])
+    ->group(function () {
+        Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [AdminController::class, 'showForApproval'])
+                    ->name('admin.approval.show');
     });
 
 // =====================

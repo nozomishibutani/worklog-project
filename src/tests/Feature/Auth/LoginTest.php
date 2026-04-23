@@ -68,7 +68,7 @@ class LoginTest extends TestCase
         // 3. ログインの処理を行う"
         $response = $this->post('/login', [
             'email' => 'notexist@example.com',
-            'password' => 'testpass',
+            'password' => 'password',
         ]);
 
         // 「ログイン情報が登録されていません」というバリデーションメッセージが表示される

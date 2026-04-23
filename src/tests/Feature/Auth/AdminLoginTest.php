@@ -19,16 +19,16 @@ class AdminLoginTest extends TestCase
      * メールアドレスが未入力の場合、バリデーションメッセージが表示される
      */
     #[Test]
-    public function emailIsRequired() {
+    public function emailIsRequired()
+    {
         // 1. ユーザーを登録する
         $user = User::factory()->create(['role' => Role::ADMIN]);
-
-        $response = $this->get(route('admin.login'));
-        $response->assertStatus(200);
 
         // 2. メールアドレス以外のユーザー情報を入力する
         // 3. ログインの処理を行う
         // ログイン処理は管理者も/loginで行っている
+        $response = $this->get(route('admin.login'));
+        $response->assertStatus(200);
         $response = $this->post('/login', [
             'email' => '',
             'password' => 'password',
@@ -44,15 +44,15 @@ class AdminLoginTest extends TestCase
      * パスワードが未入力の場合、バリデーションメッセージが表示される
      */
     #[Test]
-    public function passwordIsRequired() {
+    public function passwordIsRequired()
+    {
         // 1. ユーザーを登録する
         $user = User::factory()->create(['role' => Role::ADMIN]);
 
-        $response = $this->get(route('admin.login'));
-        $response->assertStatus(200);
-
         // 2. パスワード以外のユーザー情報を入力する
         // 3. ログインの処理を行う
+        $response = $this->get(route('admin.login'));
+        $response->assertStatus(200);
         $response = $this->post('/login', [
             'email' => $user->email,
             'password' => '',
@@ -68,18 +68,18 @@ class AdminLoginTest extends TestCase
      * 登録内容と一致しない場合、バリデーションメッセージが表示される
      */
     #[Test]
-    public function loginFailsForNonExistentUser() {
+    public function loginFailsForNonExistentUser()
+    {
         // 1. ユーザーを登録する
         $user = User::factory()->create(['role' => Role::ADMIN]);
 
-        $response = $this->get(route('admin.login'));
-        $response->assertStatus(200);
-
         // 2. 誤ったメールアドレスのユーザー情報を入力する
         // 3. ログインの処理を行う
+        $response = $this->get(route('admin.login'));
+        $response->assertStatus(200);
         $response = $this->post('/login', [
             'email' => 'notexistadmin@example.com',
-            'password' => 'adminpass',
+            'password' => 'password',
         ]);
 
         // 「ログイン情報が登録されていません」というバリデーションメッセージが表示される
