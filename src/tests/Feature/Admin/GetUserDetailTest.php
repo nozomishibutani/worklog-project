@@ -8,8 +8,6 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Models\BreakTime;
-use Carbon\Carbon;
-use App\Services\AttendanceCalculatorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -59,29 +57,26 @@ class GetUserDetailTest extends TestCase
     public function userAttendanceIsDisplayAccurately()
     {
         $user = User::factory()->create();
-        $now = now();
-        $attendance = Attendance::factory()->create([
-            'user_id' => $user->id,
-            'work_date' => $now->copy()->format('Y-m-d'),
-            'clock_in' => $now->copy()->subHour()->format('Y-m-d H:i:s'),
-            'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
-        ]);
-        BreakTime::factory()->create([
-                    'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->subMinutes(45)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->subMinutes(20)->format('Y-m-d H:i:s'),
-        ]);
-        BreakTime::factory()->create([
-                    'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->subMinutes(15)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->subMinutes(5)->format('Y-m-d H:i:s'),
-        ]);
-        $attendance = Attendance::factory()->create([
-                    'user_id' => $user->id,
-                    'work_date' => $now->copy()->subDay()->format('Y-m-d'),
-                    'clock_in' => $now->copy()->subHour()->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
-                ]);
+        $startOfMonth = now()->startOfMonth();
+        for ($i = 0; $i < 7; $i++) {
+            $date = $startOfMonth->copy()->addDays($i);
+            $attendance = Attendance::factory()->create([
+                'user_id' => $user->id,
+                'work_date' => $date->copy()->format('Y-m-d'),
+                'clock_in' => $date->copy()->format('Y-m-d H:i:s'), // 0:00
+                'clock_out' => $date->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
+            ]);
+            BreakTime::factory()->create([
+                        'attendance_id' => $attendance->id,
+                        'clock_in' => $date->copy()->addHours(5)->format('Y-m-d H:i:s'), // 5:00
+                        'clock_out' => $date->copy()->addHours(5.5)->format('Y-m-d H:i:s'), // 5:30
+            ]);
+            BreakTime::factory()->create([
+                        'attendance_id' => $attendance->id,
+                        'clock_in' => $date->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                        'clock_out' => $date->copy()->addHours(7)->format('Y-m-d H:i:s'), // 7:00
+            ]);
+        }
 
         // 1. 管理者ユーザーにログインをする
         $admin = User::factory()->create(['role' => Role::ADMIN]);
@@ -95,23 +90,16 @@ class GetUserDetailTest extends TestCase
         $response =  $this->get(route('admin.monthly.index', ['id' => $user->id]));
         $response->assertStatus(200);
 
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        $startOfMonth = Carbon::createFromFormat('Ymd', $now->copy()->format('Ym') . '01')->startOfMonth();
-        [
-            'name' => $name,
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-        ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $startOfMonth);
-
         // 勤怠情報が正確に表示される
-        foreach ($workTimes as $workTime) {
-            $response->assertSee($workTime['display_date']);
-            $response->assertSee($workTime['clock_in']);
-            $response->assertSee($workTime['clock_out']);
-            if (isset($breakTimes[$now->copy()->format('Ymd')]['display_total'])) {
-                $response->assertSee($breakTimes[$now->copy()->format('Ymd')]['display_total']);
-            }
-            $response->assertSee($workTime['display_total']);
+        for ($i = 0; $i < 7; $i++) {
+            $date = $startOfMonth->copy()->addDays($i);
+            $response->assertSeeInOrder([
+                $date->copy()->format('m/d') . '(' . $date->copy()->isoFormat('ddd') . ')',
+                    '0:00', // 出勤
+                    '08:00', // 退勤
+                    '1:30', // 休憩
+                    '6:30', // 合計
+            ]);
         }
     }
 
@@ -122,22 +110,23 @@ class GetUserDetailTest extends TestCase
     public function previousMonthIsDisplayed()
     {
         $user = User::factory()->create();
-        $now = now();
+        $startOfMonth = now()->startOfMonth()->subMonth();
+
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'work_date' => $now->copy()->startOfMonth()->subMonth()->format('Y-m-d'),
-            'clock_in' => $now->copy()->startOfMonth()->subMonth()->format('Y-m-d H:i:s'),
-            'clock_out' => $now->copy()->startOfMonth()->subMonth()->addHour(6)->format('Y-m-d H:i:s'),
+            'work_date' => $startOfMonth->copy()->format('Y-m-d'),
+            'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+            'clock_out' => $startOfMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
         ]);
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->startOfMonth()->subMonth()->addHours(3)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->startOfMonth()->subMonth()->addHours(4)->format('Y-m-d H:i:s'),
+                    'clock_in' => $startOfMonth->copy()->addHours(3)->format('Y-m-d H:i:s'), // 3:00
+                    'clock_out' => $startOfMonth->copy()->addHours(4)->format('Y-m-d H:i:s'), // 4:00
         ]);
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->startOfMonth()->subMonth()->addHours(4.5)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->startOfMonth()->subMonth()->addHours(5)->format('Y-m-d H:i:s'),
+                    'clock_in' => $startOfMonth->copy()->addHours(5)->format('Y-m-d H:i:s'), // 5:00
+                    'clock_out' => $startOfMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
         ]);
 
         // 1. 管理者ユーザーにログインをする
@@ -154,25 +143,15 @@ class GetUserDetailTest extends TestCase
 
         // 3. 「前月」ボタンを押す
         // 前月の情報が表示されている
-        $response =  $this->get(route('admin.monthly.index', ['id' => $user->id, 'date' => $now->copy()->startOfMonth()->subMonth()->format('Ym')]));
-        $response->assertSee($now->copy()->startOfMonth()->subMonth()->format('Ym'));
-
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        [
-            'name' => $name,
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-        ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $now->copy()->startOfMonth()->subMonth());
-
-        foreach ($workTimes as $workTime) {
-            $response->assertSee($workTime['display_date']);
-            $response->assertSee($workTime['clock_in']);
-            $response->assertSee($workTime['clock_out']);
-            if (isset($breakTimes[$now->copy()->startOfMonth()->subMonth()->format('Ymd')]['display_total'])) {
-                $response->assertSee($breakTimes[$now->copy()->startOfMonth()->subMonth()->format('Ymd')]['display_total']);
-            }
-            $response->assertSee($workTime['display_total']);
-        }
+        $response =  $this->get(route('admin.monthly.index', ['id' => $user->id, 'date' => $startOfMonth->copy()->format('Ym')]));
+        $response->assertSee($startOfMonth->copy()->format('Ym'));
+        $response->assertSeeInOrder([
+                        $startOfMonth->copy()->format('m/d') . '(' . $startOfMonth->copy()->isoFormat('ddd') . ')',
+                        '0:00', // 出勤
+                        '08:00', // 退勤
+                        '2:00', // 休憩
+                        '6:00', // 合計
+                    ]);
     }
 
     /**
@@ -182,18 +161,18 @@ class GetUserDetailTest extends TestCase
     public function nextMonthIsDisplayed()
     {
         $user = User::factory()->create();
-        $now = now();
+        $nextOfMonth = now()->startOfMonth()->addMonth();
 
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'work_date' => $now->copy()->startOfMonth()->addMonth()->format('Y-m-d'),
-            'clock_in' => $now->copy()->startOfMonth()->format('Y-m-d H:i:s'),
-            'clock_out' => $now->copy()->startOfMonth()->addHours(6.5)->format('Y-m-d H:i:s'),
+            'work_date' => $nextOfMonth->copy()->format('Y-m-d'),
+            'clock_in' => $nextOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+            'clock_out' => $nextOfMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
         ]);
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->startOfMonth()->addHours(0.5)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->startOfMonth()->addHours(2)->format('Y-m-d H:i:s'),
+                    'clock_in' => $nextOfMonth->copy()->addHours(3.5)->format('Y-m-d H:i:s'), // 3:30
+                    'clock_out' => $nextOfMonth->copy()->addHours(4)->format('Y-m-d H:i:s'), // 4:00
         ]);
 
         // 1. 管理者ユーザーにログインをする
@@ -210,25 +189,15 @@ class GetUserDetailTest extends TestCase
 
         // 3. 「翌月」ボタンを押す
         // 翌月の情報が表示されている
-        $response =  $this->get(route('admin.monthly.index', ['id' => $user->id, 'date' => $now->copy()->startOfMonth()->addMonth()->format('Ym')]));
-        $response->assertSee($now->copy()->addMonth()->format('Ym'));
-
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        [
-            'name' => $name,
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-        ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $now->copy()->startOfMonth()->addMonth());
-
-        foreach ($workTimes as $workTime) {
-            $response->assertSee($workTime['display_date']);
-            $response->assertSee($workTime['clock_in']);
-            $response->assertSee($workTime['clock_out']);
-            if (isset($breakTimes[$now->copy()->subMonth()->format('Ymd')]['display_total'])) {
-                $response->assertSee($breakTimes[$now->copy()->subMonth()->format('Ymd')]['display_total']);
-            }
-            $response->assertSee($workTime['display_total']);
-        }
+        $response =  $this->get(route('admin.monthly.index', ['id' => $user->id, 'date' => $nextOfMonth->copy()->format('Ym')]));
+        $response->assertSee($nextOfMonth->copy()->format('Ym'));
+        $response->assertSeeInOrder([
+                        $nextOfMonth->copy()->format('m/d') . '(' . $nextOfMonth->copy()->isoFormat('ddd') . ')',
+                        '0:00', // 出勤
+                        '08:00', // 退勤
+                        '0:30', // 休憩
+                        '7:30', // 合計
+                    ]);
     }
 
     /**
@@ -238,13 +207,18 @@ class GetUserDetailTest extends TestCase
     public function adminCanAccessShowPage()
     {
         $user = User::factory()->create();
-        $now = now();
+        $startOfMonth = now()->startOfMonth();
 
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'work_date' => $now->copy()->format('Y-m-d'),
-            'clock_in' => $now->copy()->subHour()->format('Y-m-d H:i:s'),
-            'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
+            'work_date' => $startOfMonth->copy()->format('Y-m-d'),
+            'clock_in' => $startOfMonth->copy()->addHour()->format('Y-m-d H:i:s'), // 1:00
+            'clock_out' => null,
+        ]);
+        BreakTime::factory()->create([
+                    'attendance_id' => $attendance->id,
+                    'clock_in' => $startOfMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                    'clock_out' => null,
         ]);
 
         // 1. 管理者ユーザーにログインをする
@@ -264,8 +238,15 @@ class GetUserDetailTest extends TestCase
         $response->assertStatus(200);
 
         // その日の勤怠詳細画面に遷移する
-        $response->assertSee($now->year . '年');
-        $response->assertSee($now->month. '月');
-        $response->assertSee($now->day. '日');
+        $response->assertSeeInOrder([
+            $user->name,
+            $startOfMonth->copy()->format('Y年'),
+            $startOfMonth->copy()->format('n月'),
+            $startOfMonth->copy()->format('j日'),
+            '01:00',
+            null,
+            '06:00',
+            null,
+        ]);
     }
 }

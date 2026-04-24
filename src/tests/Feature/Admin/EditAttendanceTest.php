@@ -30,35 +30,30 @@ class EditAttendanceTest extends TestCase
     public function adminCanGetAllUserDetail()
     {
         $users = User::factory(3)->create();
-        $now = now();
+        $startOfMonth = now()->startOfMonth();
         foreach ($users as $user) {
             $attendance = Attendance::factory()->create([
                 'user_id' => $user->id,
-                'work_date' => $now->copy()->startOfMonth()->format('Y-m-d'),
-                'clock_in' => $now->copy()->startOfMonth()->format('Y-m-d H:i:s'),
-                'clock_out' => $now->copy()->startOfMonth()->addHour()->format('Y-m-d H:i:s'),
+                'work_date' => $startOfMonth->copy()->format('Y-m-d'),
+                'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+                'clock_out' => $startOfMonth->copy()->addHours()->format('Y-m-d H:i:s'), // 8:00
             ]);
-            $breakTimeChange = BreakTime::factory()->create([
+            BreakTime::factory()->create([
                         'attendance_id' => $attendance->id,
-                        'clock_in' => $now->copy()->startOfMonth()->subMinutes(45)->format('Y-m-d H:i:s'),
-                        'clock_out' => $now->copy()->startOfMonth()->subMinutes(30)->format('Y-m-d H:i:s'),
+                        'clock_in' => $startOfMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                        'clock_out' => $startOfMonth->copy()->addHours(7)->format('Y-m-d H:i:s'), // 7:00
             ]);
             $attendanceChange = AttendanceChange::factory()->create([
                             'attendance_id' => $attendance->id,
                             'user_id' => $user->id,
                             'work_date' => $attendance->work_date,
                             'clock_in' => $attendance->clock_in,
-                            'clock_out' => $now->copy()->startOfMonth()->addHour($user->id)->format('Y-m-d H:i:s'),
+                            'clock_out' => $startOfMonth->copy()->addHours(4)->format('Y-m-d H:i:s'), // 4:00
                             'note' => '備考欄' . $user->name,
                             'applied_by' => $user->id,
                         ]);
-            BreakTimeChange::factory()->create([
-                        'attendance_change_id' => $attendanceChange->id,
-                        'clock_in' => $breakTimeChange->clock_in,
-                        'clock_out' => $now->copy()->startOfMonth()->subMinutes(15)->format('Y-m-d H:i:s'),
-            ]);
-
         }
+
         // 1. 管理者ユーザーにログインをする
         $admin = User::factory()->create(['role' => Role::ADMIN]);
         session([
@@ -94,6 +89,8 @@ class EditAttendanceTest extends TestCase
     #[Test]
     public function allApprovedApplicantsAreDisplayed()
     {
+        $attendanceUpdateService = app(AttendanceUpdateService::class);
+
         // 1. 管理者ユーザーにログインをする
         $admin = User::factory()->create(['role' => Role::ADMIN]);
         session([
@@ -103,36 +100,34 @@ class EditAttendanceTest extends TestCase
         $this->actingAs($admin);
 
         $users = User::factory(3)->create();
-        $now = now();
+        $startOfMonth = now()->startOfMonth();
         foreach ($users as $user) {
             $attendance = Attendance::factory()->create([
                 'user_id' => $user->id,
-                'work_date' => $now->copy()->startOfMonth()->format('Y-m-d'),
-                'clock_in' => $now->copy()->startOfMonth()->format('Y-m-d H:i:s'),
-                'clock_out' => $now->copy()->startOfMonth()->addHour()->format('Y-m-d H:i:s'),
+                'work_date' => $startOfMonth->copy()->format('Y-m-d'),
+                'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+                'clock_out' => $startOfMonth->copy()->addHours()->format('Y-m-d H:i:s'), // 8:00
             ]);
-            $breakTimeChange = BreakTime::factory()->create([
+            BreakTime::factory()->create([
                         'attendance_id' => $attendance->id,
-                        'clock_in' => $now->copy()->startOfMonth()->subMinutes(45)->format('Y-m-d H:i:s'),
-                        'clock_out' => $now->copy()->startOfMonth()->subMinutes(30)->format('Y-m-d H:i:s'),
+                        'clock_in' => $startOfMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                        'clock_out' => $startOfMonth->copy()->addHours(7)->format('Y-m-d H:i:s'), // 7:00
             ]);
             $attendanceChange = AttendanceChange::factory()->create([
                             'attendance_id' => $attendance->id,
                             'user_id' => $user->id,
                             'work_date' => $attendance->work_date,
                             'clock_in' => $attendance->clock_in,
-                            'clock_out' => $now->copy()->startOfMonth()->addHour($user->id)->format('Y-m-d H:i:s'),
-                            'note' => '備考欄備考欄' . $user->name,
+                            'clock_out' => $attendance->clock_out,
+                            'note' => '備考欄' . $user->name,
                             'applied_by' => $user->id,
                         ]);
             BreakTimeChange::factory()->create([
                         'attendance_change_id' => $attendanceChange->id,
-                        'clock_in' => $breakTimeChange->clock_in,
-                        'clock_out' => $now->copy()->startOfMonth()->subMinutes(15)->format('Y-m-d H:i:s'),
-            ]);
-
+                        'clock_in' => $startOfMonth->copy()->addHours(6.5)->format('Y-m-d H:i:s'), // 6:30
+                        'clock_out' => $startOfMonth->copy()->addHours(7.5)->format('Y-m-d H:i:s'), // 7:30
+                        ]);
             // 承認する
-            $attendanceUpdateService = app(AttendanceUpdateService::class);
             $attendanceUpdateService->approveAttendance($attendanceChange->id, $admin->id);
         }
 
@@ -151,7 +146,7 @@ class EditAttendanceTest extends TestCase
                         ApprovalStatus::APPROVED->label(),
                         $user->name,
                         Carbon::parse($attendanceChange->work_date)->format('Y/m/d'),
-                        '備考欄備考欄' . $user->name,
+                        '備考欄' . $user->name,
                         ($attendanceChange->applied_at)->format('Y/m/d'),
                     ]);
         }
@@ -165,27 +160,38 @@ class EditAttendanceTest extends TestCase
     public function ApplicantDetailIsDisplayedAccurately()
     {
         $user = User::factory()->create();
-        $now = now();
+        $startOfMonth = now()->startOfMonth();
+
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'work_date' => $now->copy()->startOfMonth()->format('Y-m-d'),
-            'clock_in' => $now->copy()->startOfMonth()->format('Y-m-d H:i:s'),
-            'clock_out' => $now->copy()->startOfMonth()->addHours(8)->format('Y-m-d H:i:s'),
+            'work_date' => $startOfMonth->copy()->format('Y-m-d'),
+            'clock_in' => $startOfMonth->copy()->addHour()->format('Y-m-d H:i:s'), // 1:00
+            'clock_out' => null,
+        ]);
+        BreakTime::factory()->create([
+                    'attendance_id' => $attendance->id,
+                    'clock_in' => $startOfMonth->copy()->addHours(3)->format('Y-m-d H:i:s'), // 3:00
+                    'clock_out' => null,
         ]);
         $attendanceChange = AttendanceChange::factory()->create([
                         'attendance_id' => $attendance->id,
                         'user_id' => $user->id,
                         'work_date' => $attendance->work_date,
-                        'clock_in' => $now->copy()->startOfMonth()->addHours(12)->format('Y-m-d H:i:s'),
-                        'clock_out' => $now->copy()->startOfMonth()->addHour(20)->format('Y-m-d H:i:s'),
-                        'note' => '備考欄備考欄備考欄' . $user->name,
+                        'clock_in' => $startOfMonth->copy()->addHour()->format('Y-m-d H:i:s'), // 1:00
+                        'clock_out' => $startOfMonth->copy()->addHours(9.5)->format('Y-m-d H:i:s'), // 9:30
+                        'note' => '備考欄' . $user->name,
                         'applied_by' => $user->id,
                     ]);
         BreakTimeChange::factory()->create([
-                    'attendance_change_id' => $attendanceChange->id,
-                    'clock_in' => $now->copy()->startOfMonth()->addHour(16)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->startOfMonth()->addHour(17.5)->format('Y-m-d H:i:s'),
-        ]);
+                        'attendance_change_id' => $attendanceChange->id,
+                        'clock_in' => $startOfMonth->copy()->addHours(6.5)->format('Y-m-d H:i:s'), // 6:30
+                        'clock_out' => $startOfMonth->copy()->addHours(7.5)->format('Y-m-d H:i:s'), // 7:30
+                    ]);
+        BreakTimeChange::factory()->create([
+                        'attendance_change_id' => $attendanceChange->id,
+                        'clock_in' => $startOfMonth->copy()->addHours(8.5)->format('Y-m-d H:i:s'), // 8:30
+                       'clock_out' => $startOfMonth->copy()->addHours(9)->format('Y-m-d H:i:s'), // 9:00
+                    ]);
 
         // 1. 管理者ユーザーにログインをする
         $admin = User::factory()->create(['role' => Role::ADMIN]);
@@ -204,14 +210,16 @@ class EditAttendanceTest extends TestCase
 
         $response->assertSeeInOrder([
                     $user->name,
-                    Carbon::parse($attendance->work_date)->format('Y年'),
-                    Carbon::parse($attendance->work_date)->format('n月'),
-                    Carbon::parse($attendance->work_date)->format('j日'),
-                    $now->copy()->startOfMonth()->addHours(12)->format('H:i'),
-                    $now->copy()->startOfMonth()->addHour(20)->format('H:i'),
-                    $now->copy()->startOfMonth()->addHour(16)->format('H:i'),
-                    $now->copy()->startOfMonth()->addHour(17.5)->format('H:i'),
-                    '備考欄備考欄備考欄' . $user->name,
+                    $startOfMonth->copy()->format('Y年'),
+                    $startOfMonth->copy()->format('n月'),
+                    $startOfMonth->copy()->format('j日'),
+                    '01:00', // 出勤
+                    '09:30', // 退勤
+                    '06:30', // 休憩入
+                    '07:30', // 休憩戻
+                    '08:30', // 休憩入②
+                    '09:00', // 休憩戻②
+                    '備考欄' . $user->name,
                 ]);
     }
 
@@ -222,27 +230,39 @@ class EditAttendanceTest extends TestCase
     public function approvalProcessingIsWorking()
     {
         $user = User::factory()->create();
-        $now = now();
+
+        $startOfMonth = now()->startOfMonth();
+
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'work_date' => $now->copy()->startOfMonth()->format('Y-m-d'),
-            'clock_in' => $now->copy()->startOfMonth()->format('Y-m-d H:i:s'),
-            'clock_out' => $now->copy()->startOfMonth()->addHours(8)->format('Y-m-d H:i:s'),
+            'work_date' => $startOfMonth->copy()->format('Y-m-d'),
+            'clock_in' => $startOfMonth->copy()->addHour()->format('Y-m-d H:i:s'), // 1:00
+            'clock_out' => null,
+        ]);
+        BreakTime::factory()->create([
+                    'attendance_id' => $attendance->id,
+                    'clock_in' => $startOfMonth->copy()->addHours(3)->format('Y-m-d H:i:s'), // 3:00
+                    'clock_out' => null,
         ]);
         $attendanceChange = AttendanceChange::factory()->create([
                         'attendance_id' => $attendance->id,
                         'user_id' => $user->id,
                         'work_date' => $attendance->work_date,
-                        'clock_in' => $now->copy()->startOfMonth()->addHours(12)->format('Y-m-d H:i:s'),
-                        'clock_out' => $now->copy()->startOfMonth()->addHour(20)->format('Y-m-d H:i:s'),
-                        'note' => '備考欄備考欄備考欄備考欄' . $user->name,
+                        'clock_in' => $startOfMonth->copy()->addHour()->format('Y-m-d H:i:s'), // 1:00
+                        'clock_out' => $startOfMonth->copy()->addHours(9.5)->format('Y-m-d H:i:s'), // 9:30
+                        'note' => '備考欄' . $user->name,
                         'applied_by' => $user->id,
                     ]);
         BreakTimeChange::factory()->create([
-                    'attendance_change_id' => $attendanceChange->id,
-                    'clock_in' => $now->copy()->startOfMonth()->addHour(16)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->startOfMonth()->addHour(17.5)->format('Y-m-d H:i:s'),
-        ]);
+                                'attendance_change_id' => $attendanceChange->id,
+                                'clock_in' => $startOfMonth->copy()->addHours(6.5)->format('Y-m-d H:i:s'), // 6:30
+                                'clock_out' => $startOfMonth->copy()->addHours(7.5)->format('Y-m-d H:i:s'), // 7:30
+                            ]);
+        BreakTimeChange::factory()->create([
+                                'attendance_change_id' => $attendanceChange->id,
+                                'clock_in' => $startOfMonth->copy()->addHours(8.5)->format('Y-m-d H:i:s'), // 8:30
+                                'clock_out' => $startOfMonth->copy()->addHours(9)->format('Y-m-d H:i:s'), // 9:00
+                            ]);
 
         // 1. 管理者ユーザーにログインをする
         $admin = User::factory()->create(['role' => Role::ADMIN]);
@@ -274,7 +294,7 @@ class EditAttendanceTest extends TestCase
                     ApprovalStatus::APPROVED->label(),
                     $user->name,
                     Carbon::parse($attendanceChange->work_date)->format('Y/m/d'),
-                    '備考欄備考欄備考欄備考欄' . $user->name,
+                    '備考欄' . $user->name,
                     ($attendanceChange->applied_at)->format('Y/m/d'),
                 ]);
         // 修正申請詳細画面で「承認済み」表示されている
@@ -282,6 +302,19 @@ class EditAttendanceTest extends TestCase
                             'attendance_correct_request_id' => $attendanceChange->id
                         ]));
         $response->assertStatus(200);
+        $response->assertSeeInOrder([
+                            $user->name,
+                            $startOfMonth->copy()->format('Y年'),
+                            $startOfMonth->copy()->format('n月'),
+                            $startOfMonth->copy()->format('j日'),
+                            '01:00', // 出勤
+                            '09:30', // 退勤
+                            '06:30', // 休憩入
+                            '07:30', // 休憩戻
+                            '08:30', // 休憩入②
+                            '09:00', // 休憩戻②
+                            '備考欄' . $user->name,
+                        ]);
         $response->assertSee('承認済み</button>', false);
     }
 }

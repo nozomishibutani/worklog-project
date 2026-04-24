@@ -8,8 +8,6 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\Attendance;
 use App\Models\BreakTime;
-use Carbon\Carbon;
-use App\Services\AttendanceCalculatorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -27,17 +25,18 @@ class GetAttendanceDetailAndEditTest extends TestCase
     public function displayDataIsAccurate()
     {
         $user = User::factory()->create();
-        $now = now();
+        $startOfMonth = now()->startOfMonth();
 
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subHours($user->id)->format('Y-m-d H:i:s'),
-            'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
+            'work_date' => $startOfMonth->copy()->format('Y-m-d'),
+            'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+            'clock_out' => $startOfMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
         ]);
-        BreakTime::factory()->create([
+        $breakTime = BreakTime::factory()->create([
                 'attendance_id' => $attendance->id,
-                'clock_in' => $now->copy()->subMinutes(35)->format('Y-m-d H:i:s'),
-                'clock_out' => $now->copy()->subMinutes(20)->format('Y-m-d H:i:s'),
+                'clock_in' => $startOfMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                'clock_out' => $startOfMonth->copy()->addHours(7)->format('Y-m-d H:i:s'), // 7:00
         ]);
 
         // 1. 管理者ユーザーにログインをする
@@ -47,47 +46,27 @@ class GetAttendanceDetailAndEditTest extends TestCase
             'login_form' => LoginForm::ADMIN->value,
         ]);
         $this->actingAs($admin);
-
         // 2. 勤怠詳細ページを開く
         $response =  $this->get(route('admin.show', ['id' => $attendance->id]));
         $response->assertStatus(200);
 
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        [
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-            'workDate' => $workDate,
-            'currentAttendanceStatus' => $currentAttendanceStatus,
-            'note' => $note,
-        ]
-        = $attendanceCalculatorService->getUserDailyAttendance($attendance->id, null);
-
         // 詳細画面の内容が選択した情報と一致する
         // 日付け
-        $response->assertSee($workDate);
-        $this->assertTrue(
-            Carbon::parse($workDate['year'] . '-' .$workDate['month'] . '-' .$workDate['day'])->equalTo(Carbon::parse($attendance->work_date))
-        );
+        $response->assertSee($startOfMonth->copy()->format('Y年'));
+        $response->assertSee($startOfMonth->copy()->format('n月'));
+        $response->assertSee($startOfMonth->copy()->format('j日'));
+
         // 出勤・退勤
-        $response->assertSee($workTimes['clock_in']);
-        $response->assertSee($workTimes['clock_out']);
-        $this->assertEquals($workTimes['clock_in'], ($attendance->clock_in)->format('H:i'));
-        $this->assertEquals($workTimes['clock_out'], ($attendance->clock_out)->format('H:i'));
+        $response->assertSee('00:00');
+        $response->assertSee('08:00');
+        $this->assertEquals('00:00', ($attendance->clock_in)->format('H:i'));
+        $this->assertEquals('08:00', ($attendance->clock_out)->format('H:i'));
 
         // 休憩
-        foreach ($breakTimes as $breakTime) {
-            $response->assertSee($breakTime['clock_in']);
-            $response->assertSee($breakTime['clock_out']);
-            $tmp = BreakTime::where([
-                    'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->subMinutes(35)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->subMinutes(20)->format('Y-m-d H:i:s'),
-            ])->first();
-            $this->assertEquals($breakTime['clock_in'], ($tmp->clock_in)->format('H:i'));
-            $this->assertEquals($breakTime['clock_out'], ($tmp->clock_out)->format('H:i'));
-        }
-        // 備考
-        $response->assertSee($note);
+        $response->assertSee('6:00');
+        $response->assertSee('7:00');
+        $this->assertEquals('6:00', ($breakTime['clock_in'])->format('G:i'));
+        $this->assertEquals('7:00', ($breakTime['clock_out'])->format('G:i'));
     }
 
     /**
@@ -97,20 +76,19 @@ class GetAttendanceDetailAndEditTest extends TestCase
     public function isClockInAfterClockOut()
     {
         $user = User::factory()->create();
-        $now = now();
+        $startOfMonth = now()->startOfMonth();
 
         $attendance = Attendance::factory()->create([
-                        'user_id' => $user->id,
-                        'work_date' => $now->copy()->format('Y-m-d'),
-                        'clock_in' => $now->copy()->subHour()->format('Y-m-d H:i:s'),
-                        'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
-                    ]);
-
-        BreakTime::factory()->create([
-                    'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->subMinutes(35)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->subMinutes(20)->format('Y-m-d H:i:s'),
-                ]);
+            'user_id' => $user->id,
+            'work_date' => $startOfMonth->copy()->format('Y-m-d'),
+            'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+            'clock_out' => $startOfMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
+        ]);
+        $breakTime = BreakTime::factory()->create([
+                'attendance_id' => $attendance->id,
+                'clock_in' => $startOfMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                'clock_out' => $startOfMonth->copy()->addHours(7)->format('Y-m-d H:i:s'), // 7:00
+        ]);
 
         // 1. 管理者ユーザーにログインをする
         $admin = User::factory()->create(['role' => Role::ADMIN]);
@@ -124,37 +102,26 @@ class GetAttendanceDetailAndEditTest extends TestCase
         $response =  $this->get(route('admin.show', ['id' => $attendance->id]));
         $response->assertStatus(200);
 
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        [
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-            'workDate' => $workDate,
-            'currentAttendanceStatus' => $currentAttendanceStatus,
-            'note' => $note,
-        ]
-        = $attendanceCalculatorService->getUserDailyAttendance($attendance->id, null);
-
-        $breakIn[0] =  null;
-        $breakOut[0] =  null;
-        foreach ($breakTimes as $breakTime) {
-            $breakIn[$breakTime['id']] =  $breakTime['clock_in'];
-            $breakOut[$breakTime['id']] =  $breakTime['clock_out'];
-        }
-
         // 3. 出勤時間を退勤時間より後に設定する
         // 4. 保存処理をする
         $response =  $this->post(route('admin.update'), [
             'attendance_id' => $attendance->id,
             'user_id' => $user->id,
-            'current_attendance_status' => $currentAttendanceStatus,
-            'year' => $workDate['year'],
-            'month' => $workDate['month'],
-            'day' => $workDate['day'],
-            'work_in' => $now->copy()->addMinutes(65)->format('H:i'),
-            'work_out' => $workTimes['clock_out'],
-            'break_in' => $breakIn,
-            'break_out' => $breakOut,
-            'note' => $note,
+            'current_attendance_status' => null,
+            'year' => $startOfMonth->copy()->format('Y'),
+            'month' => $startOfMonth->copy()->format('m'),
+            'day' => $startOfMonth->copy()->format('d'),
+            'work_in' => $startOfMonth->copy()->addHours(8)->format('H:i'), // 8:00
+            'work_out' => $startOfMonth->copy()->addHours(7)->format('H:i'), // 7:00
+            'break_in' => [
+                0 => null,
+                $breakTime->id => null,
+            ],
+            'break_out' => [
+                0 => null,
+                $breakTime->id => null,
+            ],
+            'note' => '備考',
         ]);
 
         //「出勤時間もしくは退勤時間が不適切な値です」というバリデーションメッセージが表示される
@@ -170,20 +137,19 @@ class GetAttendanceDetailAndEditTest extends TestCase
     public function isBreakInAfterClockOut()
     {
         $user = User::factory()->create();
-        $now = now();
+        $startOfMonth = now()->startOfMonth();
 
         $attendance = Attendance::factory()->create([
-                            'user_id' => $user->id,
-                            'work_date' => $now->copy()->format('Y-m-d'),
-                            'clock_in' => $now->copy()->subHour()->format('Y-m-d H:i:s'),
-                            'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
-                        ]);
-
-        BreakTime::factory()->create([
-                    'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->subMinutes(35)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->subMinutes(20)->format('Y-m-d H:i:s'),
-                ]);
+            'user_id' => $user->id,
+            'work_date' => $startOfMonth->copy()->format('Y-m-d'),
+            'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+            'clock_out' => $startOfMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
+        ]);
+        $breakTime = BreakTime::factory()->create([
+                'attendance_id' => $attendance->id,
+                'clock_in' => $startOfMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                'clock_out' => $startOfMonth->copy()->addHours(7)->format('Y-m-d H:i:s'), // 7:00
+        ]);
 
         // 1. 管理者ユーザーにログインをする
         $admin = User::factory()->create(['role' => Role::ADMIN]);
@@ -197,45 +163,32 @@ class GetAttendanceDetailAndEditTest extends TestCase
         $response =  $this->get(route('admin.show', ['id' => $attendance->id]));
         $response->assertStatus(200);
 
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        [
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-            'workDate' => $workDate,
-            'currentAttendanceStatus' => $currentAttendanceStatus,
-            'note' => $note,
-        ]
-        = $attendanceCalculatorService->getUserDailyAttendance($attendance->id, null);
-
         // 3. 休憩開始時間を退勤時間より後に設定する
         // 4. 保存処理をする
-        $breakIn[0] =  null;
-        $breakOut[0] =  null;
-        foreach ($breakTimes as $breakTime) {
-            $breakIn[$breakTime['id']] =  $now->copy()->addMinutes(10)->format('H:i');
-            $breakOut[$breakTime['id']] = $breakTime['clock_out'];
-        }
-
         $response =  $this->post(route('admin.update'), [
-            'attendance_id' => $attendance->id,
-            'user_id' => $user->id,
-            'current_attendance_status' => $currentAttendanceStatus,
-            'year' => $workDate['year'],
-            'month' => $workDate['month'],
-            'day' => $workDate['day'],
-            'work_in' => $workTimes['clock_in'],
-            'work_out' => $workTimes['clock_out'],
-            'break_in' => $breakIn,
-            'break_out' => $breakOut,
-            'note' => $note,
-        ]);
+                    'attendance_id' => $attendance->id,
+                    'user_id' => $user->id,
+                    'current_attendance_status' => null,
+                    'year' => $startOfMonth->copy()->format('Y'),
+                    'month' => $startOfMonth->copy()->format('m'),
+                    'day' => $startOfMonth->copy()->format('d'),
+                    'work_in' => $startOfMonth->copy()->format('H:i'), // 0:00
+                    'work_out' => $startOfMonth->copy()->addHours(8)->format('H:i'), // 8:00
+                    'break_in' => [
+                        0 => null,
+                        $breakTime->id => $startOfMonth->copy()->addHours(9)->format('H:i'), // 9:00
+                    ],
+                    'break_out' => [
+                        0 => null,
+                        $breakTime->id => $startOfMonth->copy()->addHours(10)->format('H:i'), // 10:00
+                    ],
+                    'note' => '備考',
+                ]);
 
         //「休憩時間が不適切な値です」というバリデーションメッセージが表示される
-        foreach ($breakTimes as $breakTime) {
-            $response->assertSessionHasErrors([
-                'break_in.' . $breakTime['id'] => '休憩時間が不適切な値です'
-            ]);
-        }
+        $response->assertSessionHasErrors([
+            'break_in.' . $breakTime['id'] => '休憩時間が不適切な値です'
+        ]);
     }
 
     /**
@@ -245,20 +198,19 @@ class GetAttendanceDetailAndEditTest extends TestCase
     public function isBreakOffAfterClockOut()
     {
         $user = User::factory()->create();
-        $now = now();
+        $startOfMonth = now()->startOfMonth();
 
         $attendance = Attendance::factory()->create([
-                            'user_id' => $user->id,
-                            'work_date' => $now->copy()->format('Y-m-d'),
-                            'clock_in' => $now->copy()->subHour()->format('Y-m-d H:i:s'),
-                            'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
-                        ]);
-
-        BreakTime::factory()->create([
-                    'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->subMinutes(35)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->subMinutes(20)->format('Y-m-d H:i:s'),
-                ]);
+            'user_id' => $user->id,
+            'work_date' => $startOfMonth->copy()->format('Y-m-d'),
+            'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+            'clock_out' => $startOfMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
+        ]);
+        $breakTime = BreakTime::factory()->create([
+                'attendance_id' => $attendance->id,
+                'clock_in' => $startOfMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                'clock_out' => $startOfMonth->copy()->addHours(7)->format('Y-m-d H:i:s'), // 7:00
+        ]);
 
         // 1. 管理者ユーザーにログインをする
         $admin = User::factory()->create(['role' => Role::ADMIN]);
@@ -272,45 +224,32 @@ class GetAttendanceDetailAndEditTest extends TestCase
         $response =  $this->get(route('admin.show', ['id' => $attendance->id]));
         $response->assertStatus(200);
 
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        [
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-            'workDate' => $workDate,
-            'currentAttendanceStatus' => $currentAttendanceStatus,
-            'note' => $note,
-        ]
-        = $attendanceCalculatorService->getUserDailyAttendance($attendance->id, null);
-
         // 3. 休憩終了時間を退勤時間より後に設定する
         // 4. 保存処理をする
-        $breakIn[0] =  null;
-        $breakOut[0] =  null;
-        foreach ($breakTimes as $breakTime) {
-            $breakIn[$breakTime['id']] =  $breakTime['clock_in'];
-            $breakOut[$breakTime['id']] = $now->copy()->addMinutes(10)->format('H:i');
-        }
-
         $response =  $this->post(route('admin.update'), [
-            'attendance_id' => $attendance->id,
-            'user_id' => $user->id,
-            'current_attendance_status' => $currentAttendanceStatus,
-            'year' => $workDate['year'],
-            'month' => $workDate['month'],
-            'day' => $workDate['day'],
-            'work_in' => $workTimes['clock_in'],
-            'work_out' => $workTimes['clock_out'],
-            'break_in' => $breakIn,
-            'break_out' => $breakOut,
-            'note' => $note,
-        ]);
+                            'attendance_id' => $attendance->id,
+                            'user_id' => $user->id,
+                            'current_attendance_status' => null,
+                            'year' => $startOfMonth->copy()->format('Y'),
+                            'month' => $startOfMonth->copy()->format('m'),
+                            'day' => $startOfMonth->copy()->format('d'),
+                            'work_in' => $startOfMonth->copy()->format('H:i'), // 0:00
+                            'work_out' => $startOfMonth->copy()->addHours(8)->format('H:i'), // 8:00
+                            'break_in' => [
+                                0 => null,
+                                $breakTime->id => $startOfMonth->copy()->addHours(6)->format('H:i'), // 6:00
+                            ],
+                            'break_out' => [
+                                0 => null,
+                                $breakTime->id => $startOfMonth->copy()->addHours(10)->format('H:i'), // 10:00
+                            ],
+                            'note' => '備考',
+                        ]);
 
         //「休憩時間もしくは退勤時間が不適切な値です」というバリデーションメッセージが表示される
-        foreach ($breakTimes as $breakTime) {
-            $response->assertSessionHasErrors([
-                        'break_in.' . $breakTime['id'] => '休憩時間もしくは退勤時間が不適切な値です'
-                    ]);
-        }
+        $response->assertSessionHasErrors([
+                    'break_in.' . $breakTime['id'] => '休憩時間もしくは退勤時間が不適切な値です'
+                ]);
     }
 
     /**
@@ -325,15 +264,9 @@ class GetAttendanceDetailAndEditTest extends TestCase
         $attendance = Attendance::factory()->create([
                             'user_id' => $user->id,
                             'work_date' => $now->copy()->format('Y-m-d'),
-                            'clock_in' => $now->copy()->subHour()->format('Y-m-d H:i:s'),
+                            'clock_in' => $now->copy()->format('Y-m-d H:i:s'),
                             'clock_out' => $now->copy()->format('Y-m-d H:i:s'),
                         ]);
-
-        BreakTime::factory()->create([
-                    'attendance_id' => $attendance->id,
-                    'clock_in' => $now->copy()->subMinutes(35)->format('Y-m-d H:i:s'),
-                    'clock_out' => $now->copy()->subMinutes(20)->format('Y-m-d H:i:s'),
-                ]);
 
         // 1. 管理者ユーザーにログインをする
         $admin = User::factory()->create(['role' => Role::ADMIN]);
@@ -347,35 +280,22 @@ class GetAttendanceDetailAndEditTest extends TestCase
         $response =  $this->get(route('admin.show', ['id' => $attendance->id]));
         $response->assertStatus(200);
 
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        [
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-            'workDate' => $workDate,
-            'currentAttendanceStatus' => $currentAttendanceStatus,
-            'note' => $note,
-        ]
-        = $attendanceCalculatorService->getUserDailyAttendance($attendance->id, null);
-
         // 3. 備考欄を未入力のまま保存処理をする
-        $breakIn[0] =  null;
-        $breakOut[0] =  null;
-        foreach ($breakTimes as $breakTime) {
-            $breakIn[$breakTime['id']] =  $breakTime['clock_in'];
-            $breakOut[$breakTime['id']] = $breakTime['clock_out'];
-        }
-
         $response =  $this->post(route('admin.update'), [
             'attendance_id' => $attendance->id,
             'user_id' => $user->id,
-            'current_attendance_status' => $currentAttendanceStatus,
-            'year' => $workDate['year'],
-            'month' => $workDate['month'],
-            'day' => $workDate['day'],
-            'work_in' => $workTimes['clock_in'],
-            'work_out' => $workTimes['clock_out'],
-            'break_in' => $breakIn,
-            'break_out' => $breakOut,
+            'current_attendance_status' => null,
+            'year' => $now->copy()->format('Y'),
+            'month' => $now->copy()->format('m'),
+            'day' => $now->copy()->format('d'),
+            'work_in' => $now->copy()->format('H:i'),
+            'work_out' => $now->copy()->format('H:i'),
+            'break_in' => [
+                0 => null,
+            ],
+            'break_out' => [
+                0 => null,
+            ],
             'note' => '',
         ]);
 
