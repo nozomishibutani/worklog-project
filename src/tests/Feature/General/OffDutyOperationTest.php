@@ -7,9 +7,6 @@ use App\Enums\LoginForm;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Attendance;
-use Carbon\Carbon;
-use App\Services\AttendanceCalculatorService;
-use App\Services\AttendanceResolverService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -34,7 +31,7 @@ class OffDutyOperationTest extends TestCase
         $now = now();
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subHours(1)->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->subMinute()->format('Y-m-d H:i:s'),
         ]);
 
         // 1. ステータスが勤務（出勤）中のユーザーにログインする
@@ -70,6 +67,9 @@ class OffDutyOperationTest extends TestCase
         $now = now();
 
         // 1. ステータスが勤務外のユーザーにログインする
+        $this->assertDatabaseMissing('attendances', [
+            'user_id' => $user->id,
+        ]);
         $response = $this->actingAs($user)->get(route('index'));
         $response->assertSee(attendanceStatus::OFF->label());
 
@@ -78,36 +78,21 @@ class OffDutyOperationTest extends TestCase
             'attendance_id' => '',
             'action' => attendanceStatus::ON_DUTY->value,
         ]);
-
-        $attendanceResolverService = app(AttendanceResolverService::class);
-        [
-            'attendanceStatus' => $attendanceStatus,
-            'attendance' => $attendance,
-        ]
-        = $attendanceResolverService->getUserAttendanceStatus($now->copy()->format('Y-m-d'));
+        $attendance = Attendance::where('user_id', $user->id)->Where('work_date', $now->format('Y-m-d'))->first();
         $this->post(route('log'), [
             'attendance_id' => $attendance->id,
             'action' => attendanceStatus::OFF->value,
         ]);
 
         // 3.勤怠一覧画面から退勤の日付を確認する
-        $attendanceCalculatorService = app(AttendanceCalculatorService::class);
-        $startOfMonth = Carbon::createFromFormat('Ymd', $now->copy()->format('Ym') . '01')->startOfMonth();
-
-        [
-            'name' => $name,
-            'workTimes' => $workTimes,
-            'breakTimes' => $breakTimes,
-        ] = $attendanceCalculatorService->getUserMonthlyAttendances($user->id, $startOfMonth);
-
         $response =  $this->get(route('monthly.index'));
         $response->assertStatus(200);
 
         // 勤怠一覧画面に退勤時刻が正確に記録されている
         $response->assertSeeInOrder([
-            $workTimes[$now->copy()->format('Ymd')]['display_date'],
-            $workTimes[$now->copy()->format('Ymd')]['clock_in'],
-            $workTimes[$now->copy()->format('Ymd')]['clock_out'],
+            $now->copy()->format('m/d') . '(' . $now->isoFormat('ddd') . ')',
+            $now->copy()->format('H:i'),
+            $now->copy()->format('H:i'), // 退勤
         ]);
     }
 }

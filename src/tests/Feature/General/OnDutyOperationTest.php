@@ -7,7 +7,6 @@ use App\Enums\LoginForm;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Attendance;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -112,7 +111,7 @@ class OnDutyOperationTest extends TestCase
          // 勤怠一覧画面に出勤時刻が正確に記録されている
         $response->assertSeeInOrder([
             $now->copy()->format('m/d') . '(' . $now->isoFormat('ddd') . ')',
-            $now->copy()->format('H:i'),
+            $now->copy()->format('H:i'), // 出勤
         ]);
     }
 }
