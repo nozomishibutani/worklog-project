@@ -49,7 +49,7 @@ class EditAttendanceTest extends TestCase
                             'work_date' => $attendance->work_date,
                             'clock_in' => $attendance->clock_in,
                             'clock_out' => $startOfMonth->copy()->addHours(4)->format('Y-m-d H:i:s'), // 4:00
-                            'note' => '備考欄' . $user->name,
+                            'note' => '承認待ち' . $user->name,
                             'applied_by' => $user->id,
                         ]);
         }
@@ -76,7 +76,7 @@ class EditAttendanceTest extends TestCase
                         ApprovalStatus::PENDING->label(),
                         $user->name,
                         Carbon::parse($attendanceChange->work_date)->format('Y/m/d'),
-                        '備考欄' . $user->name,
+                        '承認待ち' . $user->name,
                         ($attendanceChange->applied_at)->format('Y/m/d'),
                     ]);
         }
@@ -119,7 +119,7 @@ class EditAttendanceTest extends TestCase
                             'work_date' => $attendance->work_date,
                             'clock_in' => $attendance->clock_in,
                             'clock_out' => $attendance->clock_out,
-                            'note' => '備考欄' . $user->name,
+                            'note' => '承認済み' . $user->name,
                             'applied_by' => $user->id,
                         ]);
             BreakTimeChange::factory()->create([
@@ -146,7 +146,7 @@ class EditAttendanceTest extends TestCase
                         ApprovalStatus::APPROVED->label(),
                         $user->name,
                         Carbon::parse($attendanceChange->work_date)->format('Y/m/d'),
-                        '備考欄' . $user->name,
+                        '承認済み' . $user->name,
                         ($attendanceChange->applied_at)->format('Y/m/d'),
                     ]);
         }

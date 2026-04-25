@@ -31,14 +31,14 @@ class GetAttendanceListTest extends TestCase
             $attendance = Attendance::factory()->create([
                 'user_id' => $user->id,
                 'work_date' => $date->format('Y-m-d'),
-                'clock_in' => $date->copy()->format('Y-m-d H:i:s'),
-                'clock_out' => $date->copy()->addHours(8)->format('Y-m-d H:i:s'),
+                'clock_in' => $date->copy()->format('Y-m-d H:i:s'), // 0:00
+                'clock_out' => $date->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
             ]);
 
             BreakTime::factory()->create([
                 'attendance_id' => $attendance->id,
-                'clock_in' => $date->copy()->addHours(6)->format('Y-m-d H:i:s'),
-                'clock_out' => $date->copy()->addHours(7)->format('Y-m-d H:i:s'),
+                'clock_in' => $date->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                'clock_out' => $date->copy()->addHours(7)->format('Y-m-d H:i:s'), // 7:00
             ]);
         }
 
@@ -105,14 +105,14 @@ class GetAttendanceListTest extends TestCase
         $attendance = Attendance::factory()->create([
                     'user_id' => $user->id,
                     'work_date' => $startOfPreviousMonth->copy()->format('Y-m-d'),
-                    'clock_in' => $startOfPreviousMonth->copy()->format('Y-m-d H:i:s'),
-                    'clock_out' => $startOfPreviousMonth->copy()->addHours(8)->format('Y-m-d H:i:s'),
+                    'clock_in' => $startOfPreviousMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+                    'clock_out' => $startOfPreviousMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
                 ]);
 
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $startOfPreviousMonth->copy()->addHours(6)->format('Y-m-d H:i:s'),
-                    'clock_out' => $startOfPreviousMonth->copy()->addHours(7)->format('Y-m-d H:i:s'),
+                    'clock_in' => $startOfPreviousMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                    'clock_out' => $startOfPreviousMonth->copy()->addHours(7)->format('Y-m-d H:i:s'), //7:00
                 ]);
 
         session([
@@ -151,14 +151,14 @@ class GetAttendanceListTest extends TestCase
         $attendance = Attendance::factory()->create([
                     'user_id' => $user->id,
                     'work_date' => $startOfNextMonth->copy()->format('Y-m-d'),
-                    'clock_in' =>  $startOfNextMonth->copy()->format('Y-m-d H:i:s'),
-                    'clock_out' => $startOfNextMonth->copy()->addHours(8.5)->format('Y-m-d H:i:s'),
+                    'clock_in' =>  $startOfNextMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+                    'clock_out' => $startOfNextMonth->copy()->addHours(8.5)->format('Y-m-d H:i:s'), // 8:30
                 ]);
 
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' =>  $startOfNextMonth->copy()->addHours(1)->format('Y-m-d H:i:s'),
-                    'clock_out' => $startOfNextMonth->copy()->addHours(3)->format('Y-m-d H:i:s'),
+                    'clock_in' =>  $startOfNextMonth->copy()->addHours(1)->format('Y-m-d H:i:s'), // 1:00
+                    'clock_out' => $startOfNextMonth->copy()->addHours(3)->format('Y-m-d H:i:s'), // 3:00
                 ]);
 
         session([
@@ -198,14 +198,14 @@ class GetAttendanceListTest extends TestCase
         $attendance = Attendance::factory()->create([
                     'user_id' => $user->id,
                     'work_date' => $startOfMonth->copy()->format('Y-m-d'),
-                    'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'),
-                    'clock_out' => $startOfMonth->copy()->addHours(8)->format('Y-m-d H:i:s'),
+                    'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+                    'clock_out' => $startOfMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
                 ]);
 
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $startOfMonth->copy()->addHours(2)->format('Y-m-d H:i:s'),
-                    'clock_out' => $startOfMonth->copy()->addHours(2.5)->format('Y-m-d H:i:s'),
+                    'clock_in' => $startOfMonth->copy()->addHours(2)->format('Y-m-d H:i:s'), // 2:00
+                    'clock_out' => $startOfMonth->copy()->addHours(2.5)->format('Y-m-d H:i:s'), // 2:30
                 ]);
 
         session([

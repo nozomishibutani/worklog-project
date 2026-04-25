@@ -53,15 +53,18 @@ class AdminGetAttendanceListTest extends TestCase
 
         // その日の全ユーザーの勤怠情報が正確な値になっている
         $response->assertSee($now->copy()->format('Y/m/d'));
+        $count = 0;
         foreach ($users as $user) {
+            $count++;
             $response->assertSeeInOrder([
             $user->name,
-            '09:00',
-            '18:00',
-            '1:00',
-            '8:00',
+            '09:00', //出勤
+            '18:00', // 退勤
+            '1:00', // 休憩
+            '8:00', // 合計
             ]);
         }
+        $this->assertEquals(count($users),$count);
     }
 
     /**
@@ -121,8 +124,9 @@ class AdminGetAttendanceListTest extends TestCase
         // 3. 「前日」ボタンを押す
         // 前日の日付の勤怠情報が表示される
         $response =  $this->get(route('admin.index', ['date' => $yesterday->copy()->format('Ymd')]));
-        $response->assertSee($yesterday->copy()->format('Y/m/d'));
+        $response->assertStatus(200);
 
+        $response->assertSee($yesterday->copy()->format('Y/m/d'));
         $response->assertSeeInOrder([
         $user->name,
         '09:00',
@@ -167,6 +171,7 @@ class AdminGetAttendanceListTest extends TestCase
         // 3. 「翌日」ボタンを押す
         // 翌日の日付の勤怠情報が表示される
         $response =  $this->get(route('admin.index', ['date' => $tomorrow->copy()->format('Ymd')]));
+        $response->assertStatus(200);
         $response->assertSee($tomorrow->copy()->format('Y/m/d'));
         $response->assertSeeInOrder([
         $user->name,

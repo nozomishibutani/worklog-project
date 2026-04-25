@@ -91,7 +91,7 @@ class OffDutyOperationTest extends TestCase
         // 勤怠一覧画面に退勤時刻が正確に記録されている
         $response->assertSeeInOrder([
             $now->copy()->format('m/d') . '(' . $now->isoFormat('ddd') . ')',
-            $now->copy()->format('H:i'),
+            $now->copy()->format('H:i'), // 出勤
             $now->copy()->format('H:i'), // 退勤
         ]);
     }

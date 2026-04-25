@@ -34,14 +34,14 @@ class EditAttendanceDetailTest extends TestCase
         $attendance = Attendance::factory()->create([
                     'user_id' => $user->id,
                     'work_date' => $startOfMonth->copy()->format('Y-m-d'),
-                    'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'),
-                    'clock_out' => $startOfMonth->copy()->addHour(8)->format('Y-m-d H:i:s'),
+                    'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+                    'clock_out' => $startOfMonth->copy()->addHour(8)->format('Y-m-d H:i:s'), // 8:00
                 ]);
 
         $breakTime = BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $startOfMonth->copy()->addHour(6)->format('Y-m-d H:i:s'),
-                    'clock_out' => $startOfMonth->copy()->addHour(7)->format('Y-m-d H:i:s'),
+                    'clock_in' => $startOfMonth->copy()->addHour(6)->format('Y-m-d H:i:s'), // 6:00
+                    'clock_out' => $startOfMonth->copy()->addHour(7)->format('Y-m-d H:i:s'), // 7:00
                 ]);
 
         session([
@@ -313,7 +313,7 @@ class EditAttendanceDetailTest extends TestCase
             'year' => $startOfMonth->copy()->format('Y'),
             'month' => $startOfMonth->copy()->format('n'),
             'day' => $startOfMonth->copy()->format('j'),
-            'work_in' => $startOfMonth->copy()->format('H:i'), // 0:00
+            'work_in' => $startOfMonth->copy()->addHour(5)->format('H:i'), // 5:00
             'work_out' => $startOfMonth->copy()->addHour(8)->format('H:i'), // 08:00
             'break_in' => [
                 0 => null,
@@ -344,9 +344,9 @@ class EditAttendanceDetailTest extends TestCase
         $response->assertSee($startOfMonth->copy()->format('Y年'));
         $response->assertSee($startOfMonth->copy()->format('n月'));
         $response->assertSee($startOfMonth->copy()->format('j日'));
-        $response->assertSee($startOfMonth->copy()->format('H:i'));
-        $response->assertSee($startOfMonth->copy()->addHour(8)->format('H:i'));
-        $response->assertSee('0:00');
+        $response->assertSee('5:00'); // 出勤
+        $response->assertSee('8:00'); // 退勤
+        $response->assertSee(null); // 休憩
         $response->assertSee('備考欄');
 
         // 申請一覧画面
@@ -550,7 +550,7 @@ class EditAttendanceDetailTest extends TestCase
             'year' => $startOfMonth->copy()->format('Y'),
             'month' => $startOfMonth->copy()->format('n'),
             'day' => $startOfMonth->copy()->format('j'),
-            'work_in' => $startOfMonth->copy()->format('H:i'), // 0:00
+            'work_in' => $startOfMonth->copy()->addHour(1)->format('H:i'), // 1:00
             'work_out' => $startOfMonth->copy()->addHour(8)->format('H:i'), // 08:00
             'break_in' => [
                 0 => null,
@@ -578,8 +578,10 @@ class EditAttendanceDetailTest extends TestCase
             $startOfMonth->copy()->format('Y') . '年',
             $startOfMonth->copy()->format('n'). '月',
             $startOfMonth->copy()->format('j'). '日',
-            $startOfMonth->copy()->format('H:i'),
-            $startOfMonth->copy()->addHour(8)->format('H:i'),
+            '01:00', // 出勤
+            '08:00', // 退勤
+            null, // 休憩入
+            null, // 休憩戻
             '備考欄',
         ]);
     }

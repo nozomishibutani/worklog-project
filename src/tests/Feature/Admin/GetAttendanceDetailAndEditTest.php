@@ -63,10 +63,10 @@ class GetAttendanceDetailAndEditTest extends TestCase
         $this->assertEquals('08:00', ($attendance->clock_out)->format('H:i'));
 
         // 休憩
-        $response->assertSee('6:00');
-        $response->assertSee('7:00');
-        $this->assertEquals('6:00', ($breakTime['clock_in'])->format('G:i'));
-        $this->assertEquals('7:00', ($breakTime['clock_out'])->format('G:i'));
+        $response->assertSee('06:00');
+        $response->assertSee('07:00');
+        $this->assertEquals('06:00', ($breakTime['clock_in'])->format('H:i'));
+        $this->assertEquals('07:00', ($breakTime['clock_out'])->format('H:i'));
     }
 
     /**

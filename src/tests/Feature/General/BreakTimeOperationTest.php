@@ -7,8 +7,6 @@ use App\Enums\LoginForm;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Attendance;
-use Carbon\Carbon;
-use App\Services\AttendanceCalculatorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -194,7 +192,7 @@ class BreakTimeOperationTest extends TestCase
         $now = now();
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'clock_in' => $now->copy()->subMinute()->format('Y-m-d H:i:s'),
+            'clock_in' => $now->copy()->format('Y-m-d H:i:s'),
         ]);
 
         // 1. ステータスが勤務（出勤）中のユーザーにログインする
@@ -219,8 +217,8 @@ class BreakTimeOperationTest extends TestCase
         // 勤怠一覧画面に休憩時刻が正確に記録されている
         $response->assertSeeInOrder([
                 $now->copy()->format('m/d') . '(' . $now->isoFormat('ddd') . ')',
-                $now->copy()->subMinute()->format('H:i'),
-                '0:00'
+                $now->copy()->format('H:i'), // 出勤
+                '0:00' // 休憩
             ]);
     }
 }

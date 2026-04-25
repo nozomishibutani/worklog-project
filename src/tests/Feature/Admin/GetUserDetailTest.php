@@ -110,23 +110,23 @@ class GetUserDetailTest extends TestCase
     public function previousMonthIsDisplayed()
     {
         $user = User::factory()->create();
-        $startOfMonth = now()->startOfMonth()->subMonth();
+        $startOfPreviousMonth = now()->startOfMonth()->subMonth();
 
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'work_date' => $startOfMonth->copy()->format('Y-m-d'),
-            'clock_in' => $startOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
-            'clock_out' => $startOfMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
+            'work_date' => $startOfPreviousMonth->copy()->format('Y-m-d'),
+            'clock_in' => $startOfPreviousMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+            'clock_out' => $startOfPreviousMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
         ]);
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $startOfMonth->copy()->addHours(3)->format('Y-m-d H:i:s'), // 3:00
-                    'clock_out' => $startOfMonth->copy()->addHours(4)->format('Y-m-d H:i:s'), // 4:00
+                    'clock_in' => $startOfPreviousMonth->copy()->addHours(3)->format('Y-m-d H:i:s'), // 3:00
+                    'clock_out' => $startOfPreviousMonth->copy()->addHours(4)->format('Y-m-d H:i:s'), // 4:00
         ]);
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $startOfMonth->copy()->addHours(5)->format('Y-m-d H:i:s'), // 5:00
-                    'clock_out' => $startOfMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
+                    'clock_in' => $startOfPreviousMonth->copy()->addHours(5)->format('Y-m-d H:i:s'), // 5:00
+                    'clock_out' => $startOfPreviousMonth->copy()->addHours(6)->format('Y-m-d H:i:s'), // 6:00
         ]);
 
         // 1. 管理者ユーザーにログインをする
@@ -143,10 +143,10 @@ class GetUserDetailTest extends TestCase
 
         // 3. 「前月」ボタンを押す
         // 前月の情報が表示されている
-        $response =  $this->get(route('admin.monthly.index', ['id' => $user->id, 'date' => $startOfMonth->copy()->format('Ym')]));
-        $response->assertSee($startOfMonth->copy()->format('Ym'));
+        $response =  $this->get(route('admin.monthly.index', ['id' => $user->id, 'date' => $startOfPreviousMonth->copy()->format('Ym')]));
+        $response->assertSee($startOfPreviousMonth->copy()->format('Ym'));
         $response->assertSeeInOrder([
-                        $startOfMonth->copy()->format('m/d') . '(' . $startOfMonth->copy()->isoFormat('ddd') . ')',
+                        $startOfPreviousMonth->copy()->format('m/d') . '(' . $startOfPreviousMonth->copy()->isoFormat('ddd') . ')',
                         '0:00', // 出勤
                         '08:00', // 退勤
                         '2:00', // 休憩
@@ -161,18 +161,18 @@ class GetUserDetailTest extends TestCase
     public function nextMonthIsDisplayed()
     {
         $user = User::factory()->create();
-        $nextOfMonth = now()->startOfMonth()->addMonth();
+        $startOfNextMonth = now()->startOfMonth()->addMonth();
 
         $attendance = Attendance::factory()->create([
             'user_id' => $user->id,
-            'work_date' => $nextOfMonth->copy()->format('Y-m-d'),
-            'clock_in' => $nextOfMonth->copy()->format('Y-m-d H:i:s'), // 0:00
-            'clock_out' => $nextOfMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
+            'work_date' => $startOfNextMonth->copy()->format('Y-m-d'),
+            'clock_in' => $startOfNextMonth->copy()->format('Y-m-d H:i:s'), // 0:00
+            'clock_out' => $startOfNextMonth->copy()->addHours(8)->format('Y-m-d H:i:s'), // 8:00
         ]);
         BreakTime::factory()->create([
                     'attendance_id' => $attendance->id,
-                    'clock_in' => $nextOfMonth->copy()->addHours(3.5)->format('Y-m-d H:i:s'), // 3:30
-                    'clock_out' => $nextOfMonth->copy()->addHours(4)->format('Y-m-d H:i:s'), // 4:00
+                    'clock_in' => $startOfNextMonth->copy()->addHours(3.5)->format('Y-m-d H:i:s'), // 3:30
+                    'clock_out' => $startOfNextMonth->copy()->addHours(4)->format('Y-m-d H:i:s'), // 4:00
         ]);
 
         // 1. 管理者ユーザーにログインをする
@@ -189,10 +189,10 @@ class GetUserDetailTest extends TestCase
 
         // 3. 「翌月」ボタンを押す
         // 翌月の情報が表示されている
-        $response =  $this->get(route('admin.monthly.index', ['id' => $user->id, 'date' => $nextOfMonth->copy()->format('Ym')]));
-        $response->assertSee($nextOfMonth->copy()->format('Ym'));
+        $response =  $this->get(route('admin.monthly.index', ['id' => $user->id, 'date' => $startOfNextMonth->copy()->format('Ym')]));
+        $response->assertSee($startOfNextMonth->copy()->format('Ym'));
         $response->assertSeeInOrder([
-                        $nextOfMonth->copy()->format('m/d') . '(' . $nextOfMonth->copy()->isoFormat('ddd') . ')',
+                        $startOfNextMonth->copy()->format('m/d') . '(' . $startOfNextMonth->copy()->isoFormat('ddd') . ')',
                         '0:00', // 出勤
                         '08:00', // 退勤
                         '0:30', // 休憩
@@ -243,10 +243,10 @@ class GetUserDetailTest extends TestCase
             $startOfMonth->copy()->format('Y年'),
             $startOfMonth->copy()->format('n月'),
             $startOfMonth->copy()->format('j日'),
-            '01:00',
-            null,
-            '06:00',
-            null,
+            '01:00', // 出勤
+            null, // 退勤
+            '06:00', // 休憩入
+            null, // 休憩戻
         ]);
     }
 }

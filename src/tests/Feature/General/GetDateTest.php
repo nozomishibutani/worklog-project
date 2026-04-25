@@ -34,6 +34,7 @@ class GetDateTest extends TestCase
         $response->assertStatus(200);
 
         // 2. 画面に表示されている日時情報を確認する
+        // 画面上に表示されている日時が現在の日時と一致する
         $response->assertSeeText($now->format('H:i'));
     }
 }
