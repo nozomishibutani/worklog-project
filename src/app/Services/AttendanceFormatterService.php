@@ -98,20 +98,6 @@ class AttendanceFormatterService
     }
 
     /**
-     * 日付に曜日を追加する
-     *
-     * @param string $date フォーマットしたい日付
-     * @param string $type フォーマットの型（例: Y月m日）
-     * @return string フォーマット済みの日付文字列（例: 03月06日（木））
-     */
-    public function addDay($date, $type): string
-    {
-        $date = Carbon::parse($date);
-        $weekdays = ['日','月','火','水','木','金','土'];
-        return $date->format($type) . '(' . $weekdays[$date->dayOfWeek] . ')';
-    }
-
-    /**
      * 日付けをCarbon形式にフォーマットする
      *
      * @param array $date フォーマットしたい日付
@@ -210,7 +196,7 @@ class AttendanceFormatterService
 
         for ($i = $start->copy(); $i->lte($end); $i->addDay()) {
             $key = $i->format('Ymd');
-            $formatDate = $this->addDay($i, 'm/d');
+            $formatDate = $i->copy()->format('m/d') . '(' . $i->copy()->isoFormat('ddd') . ')';
 
             $work = $workTimes[$key] ?? $this->formatTime(null);
 

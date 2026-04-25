@@ -37,8 +37,9 @@ class UserController extends Controller
         ]
         = $this->attendanceResolverService->getUserAttendanceStatus(now()->format('Y-m-d'));
 
-        $time = now()->format('H:i');
-        $date = $this->attendanceFormatterService->addDay(now(), 'Y年n月j日');
+        $now = now();
+        $time = $now->copy()->format('H:i');
+        $date = $now->copy()->format('Y年n月j日') . '(' . $now->copy()->isoFormat('ddd') . ')';
 
         return view('user.index', compact('attendanceStatus', 'attendance', 'time', 'date'));
     }
