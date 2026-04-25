@@ -13,7 +13,7 @@ return new class () extends Migration {
         Schema::create('break_time_changes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('attendance_change_id')->constrained('attendance_changes');
-            $table->dateTime('clock_in')->nullable();
+            $table->dateTime('clock_in');
             $table->dateTime('clock_out')->nullable();
         });
     }
