@@ -40,6 +40,7 @@
 3. 「.env.example」ファイルを 「.env」ファイルに命名を変更。または、新しく.envファイルを作成
 4. .envに以下の環境変数を追加
 ``` text
+DB_CONNECTION=mysql
 DB_HOST=mysql
 DB_PORT=3306
 DB_DATABASE=laravel_db
@@ -48,13 +49,18 @@ DB_PASSWORD=laravel_pass
 
 # Mailtrap（メール認証）
 MAIL_MAILER=smtp
+MAIL_SCHEME=null
 MAIL_HOST=sandbox.smtp.mailtrap.io
 MAIL_PORT=2525
 MAIL_USERNAME=xxxx
 MAIL_PASSWORD=xxxx
 MAIL_FROM_ADDRESS=test@example.com # 値は自由です
 MAIL_FROM_NAME="Test App" # 値は自由です
-# MAIL_MAILER=log # 後述のMailtrap（メール認証）で説明しています
+
+# 下記をコメントアウトまたは削除
+# APP_LOCALE=en
+# APP_FALLBACK_LOCALE=en
+# APP_FAKER_LOCALE=en_US
 ```
 
 5. アプリケーションキーの作成
@@ -87,11 +93,27 @@ CREATE DATABASE demo_test;
 ``` text
 APP_ENV=test
 
+DB_CONNECTION=mysql
 DB_HOST=mysql
 DB_PORT=3306
 DB_DATABASE=demo_test
 DB_USERNAME=root
 DB_PASSWORD=root
+
+# Mailtrap（メール認証）
+MAIL_MAILER=smtp
+MAIL_SCHEME=null
+MAIL_HOST=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=xxxx
+MAIL_PASSWORD=xxxx
+MAIL_FROM_ADDRESS=test@example.com # 値は自由です
+MAIL_FROM_NAME="Test App" # 値は自由です
+
+# 下記をコメントアウトまたは削除
+# APP_LOCALE=en
+# APP_FALLBACK_LOCALE=en
+# APP_FAKER_LOCALE=en_US
 ```
 3. アプリケーションキーの作成
 ``` bash
@@ -101,6 +123,7 @@ php artisan key:generate --env=testing
 ## ⚠️ 注意事項
 ### 権限エラーについて（Windows環境）
 Windows + Docker 環境では、以下のような権限エラーが発生する場合があります。
+> tempnam(): file created in the system's temporary directory
 > The stream or file "/var/www/storage/logs/laravel.log" could not be opened in append mode: Failed to open stream: Permission denied The exception occurred while attempting to log
 
 #### 対処方法
