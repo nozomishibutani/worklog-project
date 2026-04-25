@@ -3,6 +3,8 @@
 erDiagram
 %%{init: {'theme': 'default'}}%%
     users ||--o{ attendances : "打刻勤怠"
+    users ||--o{ attendance_changes : ""
+    users ||--o{ attendance_approvals : ""
 
     users {
         bigint id PK "ID"
