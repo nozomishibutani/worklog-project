@@ -173,4 +173,6 @@ vendor/bin/phpunit tests/Feature/Auth/RegisterTest.php
 - 開発環境：http://localhost/
 - phpMyAdmin:：http://localhost:8080/
 
+## ER図
+- [erd.md](erd.md)からも確認できます
 ![alt](src/ER.png)
