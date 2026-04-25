@@ -49,8 +49,7 @@ erDiagram
         datetime clock_out
         bigint applied_by FK "users.id"
         datetime applied_at
-        timestamp created_at
-        timestamp updated_at
+        varchar(255) note
     }
 
      attendance_changes ||--o{ break_time_changes : "休憩"
@@ -73,8 +72,7 @@ erDiagram
         datetime clock_out
         bigint approved_by FK "users.id"
         datetime approved_at
-        timestamp created_at
-        timestamp updated_at
+        varchar(255) note
     }
 
     attendance_approvals ||--o{ break_time_approvals : "休憩"
