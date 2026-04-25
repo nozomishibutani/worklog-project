@@ -61,7 +61,7 @@ class UserSeeder extends Seeder
             foreach ($users as $user) {
                 User::create([
                     ...$user,
-                    'password' => Hash::make('11111111'),
+                    'password' => Hash::make('pass1234'),
                     'email_verified_at' => now(),
                 ]);
             }

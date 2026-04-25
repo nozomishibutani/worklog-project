@@ -23,7 +23,6 @@ class AttendanceChange extends Model
     ];
 
     protected $casts = [
-    'work_date' => 'datetime',
     'clock_in' => 'datetime',
     'clock_out' => 'datetime',
     'applied_at' => 'datetime',

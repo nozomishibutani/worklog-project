@@ -32,7 +32,6 @@ class RedirectIfAuthenticated extends Middleware
             if ($request->user() && !$request->user()->hasVerifiedEmail()) {
                 // メール再送
                 $request->user()->sendEmailVerificationNotification();
-                session(['unverified_user_id' => $request->user()->id]);
                 return route('verification.notice');
             }
         }
