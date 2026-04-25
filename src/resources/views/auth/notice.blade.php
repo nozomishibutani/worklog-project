@@ -41,9 +41,9 @@
     </main>
 
     <!-- メール再送信完了したメッセージ-->
-    @if(session('message'))
+    @if (session('status') === 'verification-link-sent')
         <script>
-            alert("{{ session('message') }}");
+            alert("認証メールを再送信しました");
         </script>
     @endif
 

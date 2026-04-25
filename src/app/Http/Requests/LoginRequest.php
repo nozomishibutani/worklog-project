@@ -27,7 +27,7 @@ class LoginRequest extends FortifyLoginRequest
     {
         return [
             'email' => 'bail|required|email|max:255',
-            'password' => 'bail|required|max:255',
+            'password' => 'bail|required',
         ];
     }
 
@@ -38,7 +38,6 @@ class LoginRequest extends FortifyLoginRequest
             'email.max' => 'メールアドレスは255文字以内で入力してください',
             'email.email' => 'メールアドレスはメール形式で入力してください',
             'password.required' => 'パスワードを入力してください',
-            'password.max' => 'パスワードは255文字以内で入力してください',
         ];
     }
 }

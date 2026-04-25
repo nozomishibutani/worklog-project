@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Enums\LoginForm;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 
 class VerificationController extends Controller
 {
@@ -14,7 +13,6 @@ class VerificationController extends Controller
      * VerifyEmail 通知ではデフォルトで以下3つのルートを使用します：
      * 1. verification.notice      -> 確認メール送信後の画面
      * 2. verification.verify      -> メール内のリンククリックで確認完了
-     * 3. verification.send        -> メール再送信
      *
      * ビューは自由にカスタマイズ可能ですが、ルート名は変更不可です。
      */
@@ -32,7 +30,7 @@ class VerificationController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$user) {
-            return redirect()->route('login')
+            return redirect()->route('register')
                             ->with('alert', 'システムエラーが発生しました。')
                             ->with('alert-type', 'alert--error');
 
@@ -48,14 +46,6 @@ class VerificationController extends Controller
         return redirect()->route('index');
     }
 
-    public function resend()
-    {
-        $user = User::find(session('unverified_user_id'));
-        $user->sendEmailVerificationNotification();
-
-        return back()->with('message', '認証メールを再送信しました');
-    }
-
     /**
      * テスト用メール認証URL作成
      */
@@ -64,9 +54,8 @@ class VerificationController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$user) {
-            // 会員登録とメール認証のブラウザが異なるとセッションがないのでエラー
-            return redirect()->route('login')
-                            ->with('alert', 'システムエラーが発生しました。再度ログインしてメール認証を行ってください。')
+            return redirect()->route('register')
+                            ->with('alert', 'システムエラーが発生しました。')
                             ->with('alert-type', 'alert--error');
         }
         $url = URL::temporarySignedRoute(

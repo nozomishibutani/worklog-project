@@ -16,8 +16,6 @@
                 <p>{{ session('alert') }}</p>
             </div>
         @endif
-        {{-- <form action="{{ route('admin.approve', ['attendance_correct_request_id' => $attendanceChangeId]) }}" method="post"
-            novalidate> --}}
         <form action="{{ route('admin.approve') }}" method="POST" novalidate>
             @csrf
             {{-- hidden --}}

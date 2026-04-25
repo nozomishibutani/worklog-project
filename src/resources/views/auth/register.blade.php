@@ -33,6 +33,11 @@
                         </ul>
                     </div>
                 @endif
+                @if (session('alert'))
+                    <div class="alert {{ session('alert-type', 'alert--success') }}">
+                        <p>{{ session('alert') }}</p>
+                    </div>
+                @endif
                 <form class="form" action="/register" method="POST" novalidate>
                     @csrf
                     <ul class="auth__list">

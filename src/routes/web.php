@@ -93,7 +93,3 @@ Route::middleware(['signed'])->group(function () {
     // メール認証
     Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])->name('verification.verify');
 });
-Route::middleware(['throttle:3,1'])->group(function () {
-    // 認証メール再送
-    Route::post('/email/resend', [VerificationController::class, 'resend'])->name('verification.send');
-});
