@@ -51,6 +51,7 @@ class AttendanceRequest extends FormRequest
 
             $attendanceFormatterService = app(AttendanceFormatterService::class);
             $isInvalidBreakTimes = [];
+            $isDuplicatedBreakTimes = [];
             $breakTimes = [];
             $workDate = [
                 'year' => $this->year,
@@ -61,19 +62,22 @@ class AttendanceRequest extends FormRequest
             $carbonWorkOut = $this->work_out ? $attendanceFormatterService->formatCarbonDate($workDate, $this->work_out) : null;
 
             // 1. 出勤時間が退勤時間より後になっている場合，および退勤時間が出勤時間より前になっている場合に以下のメッセージを表示
-            if (!is_null($carbonWorkIn) && !is_null($carbonWorkOut) && $carbonWorkIn >= $carbonWorkOut) {
+            if (!is_null($carbonWorkIn) && !is_null($carbonWorkOut) && $carbonWorkIn > $carbonWorkOut) {
                 if (!$validator->errors()->has('work_in') && !$validator->errors()->has('work_out')) {
                     $validator->errors()->add('work_in', '出勤時間もしくは退勤時間が不適切な値です');
                 }
             }
-
             // 2. 休憩開始時間が出勤時間より前になっている場合及び退勤時間より後になっている場合、以下のメッセージを表示
             foreach ($this->break_in as $id => $breakIn) {
                 if (is_null($breakIn)) {
                     continue;
                 }
+                if (array_key_exists($breakIn, $breakTimes)) {
+                    // 重複している
+                    $isDuplicatedBreakTimes[$id] = true;
+                }
                 $CarbonBreakIn[$id] = $attendanceFormatterService->formatCarbonDate($workDate, $breakIn);
-                $CarbonBreakOut[$id] =  $this->break_out[$id] ? $attendanceFormatterService->formatCarbonDate($workDate, $this->break_out[$id]) : null;
+                $CarbonBreakOut[$id] = $this->break_out[$id] ? $attendanceFormatterService->formatCarbonDate($workDate, $this->break_out[$id]) : null;
                 $breakTimes[$breakIn] = [
                     'id' => $id,
                     'break_in' =>  $CarbonBreakIn[$id],
@@ -91,9 +95,9 @@ class AttendanceRequest extends FormRequest
                     continue;
                 }
                 // 休憩開始時間が出勤時間より前になっている場合及び退勤時間より後になっている場合
-                if ($breakIn <= $carbonWorkIn) {
+                if ($breakIn < $carbonWorkIn) {
                     $isInvalidBreakTimes[$id] = true;
-                } elseif (!is_null($carbonWorkOut) && $breakIn >= $carbonWorkOut) {
+                } elseif (!is_null($carbonWorkOut) && $breakIn > $carbonWorkOut) {
                     $isInvalidBreakTimes[$id] = true;
                 }
             }
@@ -107,7 +111,7 @@ class AttendanceRequest extends FormRequest
                     // 退勤時間が入力済みなのに休憩戻り時間がない場合に以下のメッセージを表示
                     $validator->errors()->add('break_out.'. $id, '休憩時間もしくは退勤時間が不適切な値です');
                 }
-                if ($breakOut >= $carbonWorkOut && empty($isInvalidBreakTimes[$id])) {
+                if ($breakOut > $carbonWorkOut && empty($isInvalidBreakTimes[$id])) {
                     $validator->errors()->add('break_in.'. $id, '休憩時間もしくは退勤時間が不適切な値です');
                 }
             }
@@ -126,7 +130,7 @@ class AttendanceRequest extends FormRequest
                             // 最後の休憩戻り以外が空だった場合に以下のメッセージを表示
                             $validator->errors()->add('break_out.'. $id, '休憩戻り時間を入力してください');
                             break 2;
-                        } elseif (!is_null($breakTime['break_out']) && $breakTime['break_in'] >= $breakTime['break_out']) {
+                        } elseif (!is_null($breakTime['break_out']) && $breakTime['break_in'] > $breakTime['break_out']) {
                             //休憩入り時間が休憩戻り時間より後になっている場合、および休憩戻り時間が休憩入り時間より前になっている場合に以下のメッセージを表示
                             $isInvalidBreakTimes[$id] = true;
                             break 2;
@@ -138,8 +142,8 @@ class AttendanceRequest extends FormRequest
                         $tmp = $val;
                         continue;
                     }
-                    if ($tmp < $val) {
-                        // 休憩入り時間 < 休憩戻り時間 < 休憩入り時間
+                    if ($tmp <= $val) {
+                        // 休憩入り時間 <= 休憩戻り時間 <= 休憩入り時間
                         $tmp = $val;
                     } elseif (!is_null($breakTime['break_out'])) {
                         // 重複が発生
@@ -148,6 +152,14 @@ class AttendanceRequest extends FormRequest
                     }
                 }
             }
+
+            foreach ($isDuplicatedBreakTimes as $id => $isDuplicatedBreakTime) {
+                if ($isDuplicatedBreakTime && !$validator->errors()->has('break_in.'. $id) && !$validator->errors()->has('break_out.'. $id)) {
+                    // エラーメッセージは一回だけ表示
+                    $validator->errors()->add('break_in.'. $id, '他の休憩時間と重複しています');
+                }
+            }
+
             foreach ($isInvalidBreakTimes as $id => $isInvalidBreakTime) {
                 if ($isInvalidBreakTime && !$validator->errors()->has('break_in.'. $id) && !$validator->errors()->has('break_out.'. $id)) {
                     // エラーメッセージは一回だけ表示
