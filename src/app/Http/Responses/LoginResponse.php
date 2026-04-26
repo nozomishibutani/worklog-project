@@ -20,7 +20,7 @@ class LoginResponse implements LoginResponseContract
                 Auth::logout();
                 return redirect()->route('admin.login')
                     ->with('alert', 'ログイン情報が登録されていません')
-                    ->with('alert-type', 'alert-error');
+                    ->with('alert-type', 'alert--error');
             }
 
             if ($request->user() && $request->user()->isAdmin()) {
