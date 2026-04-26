@@ -7,12 +7,10 @@ use App\Services\AttendanceFormatterService;
 use App\Services\AttendanceResolverService;
 use App\Models\Attendance;
 use App\Enums\AttendanceStatus;
-use App\Enums\LoginForm;
 use App\Models\BreakTime;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\AttendanceApproval;
 use App\Models\AttendanceChange;
 
 class AttendanceUpdateService
@@ -31,7 +29,7 @@ class AttendanceUpdateService
         $this->attendanceResolverService =  $attendanceResolverService;
     }
 
-    public function applyAttendance($applyAttendance): AttendanceChange|\Illuminate\Http\RedirectResponse
+    public function applyAttendance($applyAttendance): ?AttendanceChange
     {
         $targetAttendance = Attendance::find($applyAttendance['attendance_id']);
         $formatCarbonDate =  $this->attendanceFormatterService->buildWorkDateFromEditAttendance($applyAttendance);
@@ -50,12 +48,9 @@ class AttendanceUpdateService
                     $this->createBreakTimeChanges($createAttendanceChange, $applyAttendance, $formatCarbonDate);
                 }
                 return $createAttendanceChange;
-            } catch (\Exception $e) {
+            }  catch (\Exception $e) {
                 Log::error($e);
-                $route = session('login_form') ? LoginForm::ADMIN->value . '.' : null;
-                return redirect()->route($route .'index')
-                                ->with('alert', 'システムエラーが発生しました')
-                                ->with('alert-type', 'alert--error');
+                return null;
             }
         });
     }
@@ -100,7 +95,7 @@ class AttendanceUpdateService
         }
     }
 
-    public function approveAttendance($attendanceChangeId, $approvedBy): AttendanceApproval|\Illuminate\Http\RedirectResponse
+    public function approveAttendance($attendanceChangeId, $approvedBy): bool
     {
         try {
             $attendanceChange = AttendanceChange::find($attendanceChangeId);
@@ -125,13 +120,11 @@ class AttendanceUpdateService
                                             ]);
                     }
                 }
-                return $createApproval;
+                return true;
             });
         } catch (\Exception $e) {
             Log::error($e);
-            return redirect()->route('application.index', ['mode' => 'approved'])
-                            ->with('alert', 'システムエラーが発生しました')
-                            ->with('alert-type', 'alert--error');
+            return false;
         }
     }
 
@@ -146,9 +139,7 @@ class AttendanceUpdateService
             };
         } catch (\Exception $e) {
             Log::error($e);
-            return redirect()->route('index')
-                            ->with('alert', 'システムエラーが発生しました')
-                            ->with('alert-type', 'alert--error');
+            return false;
         }
     }
 

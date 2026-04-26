@@ -9,7 +9,9 @@ use App\Services\AttendanceResolverService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Http\Requests\AttendanceRequest;
+use App\Models\Attendance;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
 
 class UserController extends Controller
 {
@@ -50,8 +52,10 @@ class UserController extends Controller
         $action = $request->input('action');
 
         if (!is_null($action)) {
-            $this->attendanceUpdateService->attendanceRegister($action, $attendanceId);
-            return redirect()->route('index');
+            $result = $this->attendanceUpdateService->attendanceRegister($action, $attendanceId);
+            if($result !== false){
+                return redirect()->route('index');
+            }
         }
     }
 
@@ -90,6 +94,9 @@ class UserController extends Controller
     {
         $date =  $request->query('date');
         if ($attendanceId) {
+            $attendance = Attendance::findOrFail($attendanceId);
+            // 閲覧権限があるか確認
+            $this->authorize('view', $attendance);
             [
                 'workTimes' => $workTimes,
                 'breakTimes' => $breakTimes,
@@ -98,7 +105,6 @@ class UserController extends Controller
                 'note' => $note,
             ]
             = $this->attendanceCalculatorService->getUserDailyAttendance($attendanceId, null);
-
         } else {
             $user = Auth::user();
             [
@@ -122,14 +128,25 @@ class UserController extends Controller
     public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
     {
         $input = $request->validated();
-        $hidden = $request->only('user_id', 'attendance_id', 'current_attendance_status', 'year', 'month', 'day');
+        $hidden = $request->only('attendance_id', 'current_attendance_status', 'year', 'month', 'day');
+        $hidden['user_id'] = Auth::id();
         $applyAttendance = array_merge($hidden, $input);
 
+        $attendance = Attendance::find($hidden['attendance_id']);
+        // 修正権限があるか確認
+        if($attendance){
+            $this->authorize('view', $attendance);
+        }
         $result = $this->attendanceUpdateService->applyAttendance($applyAttendance);
 
-        return redirect()
-            ->route('show', ['id' => $result->attendance_id])
-            ->with('alert', '勤怠情報を修正しました')
-            ->with('alert-type', 'alert--success');
+        if($result){
+            return redirect()->route('show', ['id' => $result->attendance_id])
+                        ->with('alert', '勤怠情報を修正しました')
+                        ->with('alert-type', 'alert--success');
+        }else{
+            return redirect()->route('index')
+                        ->with('alert', 'システムエラーが発生しました')
+                        ->with('alert-type', 'alert--error');
+        }
     }
 }

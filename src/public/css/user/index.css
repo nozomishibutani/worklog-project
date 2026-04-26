@@ -7,6 +7,10 @@
     text-align: center;
 }
 
+.general__alert {
+    margin-bottom: 2rem;
+}
+
 .general__label {
     display: block;
     margin: 1rem 0;
