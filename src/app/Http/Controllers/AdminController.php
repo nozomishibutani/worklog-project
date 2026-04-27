@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\ApprovalStatus;
 use App\Models\User;
-use App\Models\Attendance;
 use App\Services\AttendanceCalculatorService;
 use App\Services\AttendanceUpdateService;
 use App\Services\AttendanceFormatterService;
@@ -12,6 +11,7 @@ use App\Services\AttendanceResolverService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Http\Requests\AttendanceRequest;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -78,7 +78,7 @@ class AdminController extends Controller
             ]
             = $this->attendanceCalculatorService->getUserDailyAttendance($attendanceId, null);
         } else {
-            $user = User::find($userId);
+            $user = User::findOrFail($userId);
             [
                 'workTimes' => $workTimes,
                 'breakTimes' => $breakTimes,
@@ -134,7 +134,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function showForApproval($attendanceChangeId)
+    public function showForApproval($attendanceChangeId): \Illuminate\View\View
     {
         [
             'workTimes' => $workTimes,
@@ -155,57 +155,57 @@ class AdminController extends Controller
         ]);
     }
 
-    public function approve(Request $request)
+    public function approve(Request $request): \Illuminate\Http\RedirectResponse
     {
         $attendanceChangeId = $request->input('attendance_change_id');
-
-        $result = $this->attendanceUpdateService->approveAttendance($attendanceChangeId, Auth::id());
-        if ($result !== false) {
+        try {
+            $this->attendanceUpdateService->approveAttendance($attendanceChangeId, Auth::id());
             return redirect()->route('application.index', ['mode' => ApprovalStatus::APPROVED->value])
-                            ->with('alert', '承認しました')
+                            ->with('alert', '承認が完了しました')
                             ->with('alert-type', 'alert--success');
+        } catch (\Exception $e) {
+            Log::error($e);
+            return redirect()->route('application.index', ['mode' => 'approved'])
+                                    ->with('alert', 'システムエラーが発生しました')
+                                    ->with('alert-type', 'alert--error');
         }
-        return redirect()->route('application.index', ['mode' => 'approved'])
-                        ->with('alert', 'システムエラーが発生しました')
-                        ->with('alert-type', 'alert--error');
     }
 
     public function update(AttendanceRequest $request): \Illuminate\Http\RedirectResponse
     {
         $input = $request->validated();
         $hidden = $request->only('user_id', 'attendance_id', 'current_attendance_status', 'year', 'month', 'day');
-
         $applyAttendance = array_merge($hidden, $input);
 
-        // 送られてきたattendance_idとuser_idは一致するか
-        if (!is_null($hidden['user_id']) && !is_null($hidden['attendance_id'])) {
-            $attendance = Attendance::findOrFail($hidden['attendance_id']);
-            if ($attendance->user_id !== $hidden['user_id']) {
-                return redirect()->route('admin.index')
-                                        ->with('alert', 'システムエラーが発生しました')
-                                        ->with('alert-type', 'alert--error');
+        try {
+            // 承認前かどうか
+            $count = $this->attendanceResolverService->countPendingAttendances($hidden['attendance_id']);
+            if ($count !== 0) {
+                throw new \RuntimeException('勤怠情報が更新されたため修正できませんでした');
             }
-        }
+            $applyAttendance = $this->attendanceUpdateService->applyAttendance($applyAttendance);
+            // 承認も行う
+            $this->attendanceUpdateService->approveAttendance($applyAttendance->id, Auth::id());
 
-        // 管理者が直接修正した場合は承認も一緒に行う
-        $count = $this->attendanceResolverService->countPendingAttendances($hidden['attendance_id']);
-        if ($count !== 0) {
+            return redirect()->route('admin.show', ['id' => $applyAttendance->attendance_id])
+                            ->with('alert', '勤怠情報を修正しました')
+                            ->with('alert-type', 'alert--success');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return redirect()->route('admin.index')
+                            ->with('alert', 'システムエラーが発生しました')
+                            ->with('alert-type', 'alert--error');
+
+        } catch (\RuntimeException $e) {
             return redirect()->route('admin.show', ['id' => $hidden['attendance_id']])
-                            ->with('alert', 'この勤怠情報は、更新されたため修正できません。')
+                            ->with('alert', $e->getMessage())
+                            ->with('alert-type', 'alert--error');
+
+        } catch (\Exception $e) {
+            Log::error($e);
+            return redirect()->route('admin.index')
+                            ->with('alert', 'システムエラーが発生しました')
                             ->with('alert-type', 'alert--error');
         }
-        $result = $this->attendanceUpdateService->applyAttendance($applyAttendance);
-        if ($result) {
-            $isApproveAttendance = $this->attendanceUpdateService->approveAttendance($result->id, Auth::id());
-            if ($isApproveAttendance === true) {
-                return redirect()->route('admin.show', ['id' => $result->attendance_id])
-                                ->with('alert', '勤怠情報を修正しました')
-                                ->with('alert-type', 'alert--success');
-            }
-        }
-        return redirect()->route('admin.index')
-                        ->with('alert', 'システムエラーが発生しました')
-                        ->with('alert-type', 'alert--error');
     }
 
     public function export($userId, $date)

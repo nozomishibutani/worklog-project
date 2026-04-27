@@ -10,7 +10,6 @@ use App\Enums\AttendanceStatus;
 use App\Models\BreakTime;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Models\AttendanceChange;
 
 class AttendanceUpdateService
@@ -29,30 +28,34 @@ class AttendanceUpdateService
         $this->attendanceResolverService =  $attendanceResolverService;
     }
 
-    public function applyAttendance($applyAttendance): ?AttendanceChange
+    public function applyAttendance($applyAttendance): AttendanceChange
     {
         $targetAttendance = Attendance::find($applyAttendance['attendance_id']);
+
+        // 送られてきたattendance_idとuser_idがDBと一致するか
+        if (!is_null($applyAttendance['user_id']) && !is_null($applyAttendance['attendance_id'])) {
+            if ((string)$targetAttendance->user_id !== $applyAttendance['user_id']) {
+                throw new \RuntimeException('システムエラーが発生しました');
+            }
+        }
+
         $formatCarbonDate =  $this->attendanceFormatterService->buildWorkDateFromEditAttendance($applyAttendance);
 
         return DB::transaction(function () use ($targetAttendance, $applyAttendance, $formatCarbonDate) {
-            try {
-                // 修正登録
-                if (is_null($targetAttendance)) {
-                    // 打刻ない場合は空レコード作成
-                    $createAttendance = $this->createAttendance($applyAttendance, $formatCarbonDate);
-                    $applyAttendance['attendance_id'] = $createAttendance->id;
-                }
-                $createAttendanceChange = $this->createAttendanceChange($applyAttendance, $formatCarbonDate);
-                // 休憩
-                if (isset($applyAttendance['break_in'])) {
-                    $this->createBreakTimeChanges($createAttendanceChange, $applyAttendance, $formatCarbonDate);
-                }
-                return $createAttendanceChange;
-            }  catch (\Exception $e) {
-                Log::error($e);
-                return null;
+            // 修正登録
+            if (is_null($targetAttendance)) {
+                // 打刻ない場合は空レコード作成
+                $createAttendance = $this->createAttendance($applyAttendance, $formatCarbonDate);
+                $applyAttendance['attendance_id'] = $createAttendance->id;
             }
+            $createAttendanceChange = $this->createAttendanceChange($applyAttendance, $formatCarbonDate);
+            // 休憩
+            if (isset($applyAttendance['break_in'])) {
+                $this->createBreakTimeChanges($createAttendanceChange, $applyAttendance, $formatCarbonDate);
+            }
+            return $createAttendanceChange;
         });
+
     }
 
     private function createAttendance($attendance, $formatCarbonDate): Attendance
@@ -95,86 +98,73 @@ class AttendanceUpdateService
         }
     }
 
-    public function approveAttendance($attendanceChangeId, $approvedBy): bool
+    public function approveAttendance($attendanceChangeId, $approvedBy): void
     {
-        try {
-            $attendanceChange = AttendanceChange::find($attendanceChangeId);
-            return DB::transaction(function () use ($attendanceChange, $approvedBy) {
-                // 承認する内容を履歴として保存
-                $createApproval = $this->attendanceRepository->createAttendanceApproval([
-                    'user_id' => $attendanceChange->user_id,
-                    'attendance_change_id' => $attendanceChange->id,
-                    'work_date' => $attendanceChange->work_date,
-                    'clock_in' => $attendanceChange->clock_in,
-                    'clock_out' => $attendanceChange->clock_out,
-                    'approved_by' => $approvedBy,
-                    'approved_at' => now(),
-                    'note' => $attendanceChange->note,
-                ]);
-                if ($attendanceChange->breakTimes) {
-                    foreach ($attendanceChange->breakTimes as $breakTime) {
-                        $this->attendanceRepository->createBreakTimeApprovals([
-                                                'attendance_approval_id' => $createApproval->id,
-                                                'clock_in' => $breakTime->clock_in,
-                                                'clock_out' => $breakTime->clock_out,
-                                            ]);
-                    }
+        $attendanceChange = AttendanceChange::findOrFail($attendanceChangeId);
+        DB::transaction(function () use ($attendanceChange, $approvedBy) {
+            // 承認する内容を履歴として保存
+            $createApproval = $this->attendanceRepository->createAttendanceApproval([
+                'user_id' => $attendanceChange->user_id,
+                'attendance_change_id' => $attendanceChange->id,
+                'work_date' => $attendanceChange->work_date,
+                'clock_in' => $attendanceChange->clock_in,
+                'clock_out' => $attendanceChange->clock_out,
+                'approved_by' => $approvedBy,
+                'approved_at' => now(),
+                'note' => $attendanceChange->note,
+            ]);
+            if ($attendanceChange->breakTimes) {
+                foreach ($attendanceChange->breakTimes as $breakTime) {
+                    $this->attendanceRepository->createBreakTimeApprovals([
+                                            'attendance_approval_id' => $createApproval->id,
+                                            'clock_in' => $breakTime->clock_in,
+                                            'clock_out' => $breakTime->clock_out,
+                                        ]);
                 }
-                return true;
-            });
-        } catch (\Exception $e) {
-            Log::error($e);
-            return false;
-        }
+            }
+        });
     }
 
-    public function attendanceRegister($action, $attendanceId)
+    public function attendanceRegister($action, $attendanceId): void
     {
-        try {
-            return match ($action) {
-                attendanceStatus::ON_DUTY->value => $this->startWork(),
-                attendanceStatus::OFF->value => $this->endWork($attendanceId),
-                attendanceStatus::ON_BREAK->value => $this->startBreak($attendanceId),
-                attendanceStatus::OFF_BREAK->value => $this->endBreak($attendanceId),
-            };
-        } catch (\Exception $e) {
-            Log::error($e);
-            return false;
-        }
+        match ($action) {
+            attendanceStatus::ON_DUTY->value => $this->startWork(),
+            attendanceStatus::OFF->value => $this->endWork($attendanceId),
+            attendanceStatus::ON_BREAK->value => $this->startBreak($attendanceId),
+            attendanceStatus::OFF_BREAK->value => $this->endBreak($attendanceId),
+        };
     }
 
-    private function startWork()
+    private function startWork(): void
     {
-        return $this->attendanceRepository->createAttendance([
+        $this->attendanceRepository->createAttendance([
             'user_id' => Auth::id(),
             'work_date' => now()->format('Y-m-d'),
             'clock_in' => now(),
         ]);
     }
 
-    private function endWork($attendanceId)
+    private function endWork($attendanceId): void
     {
         $targetAttendance = Attendance::find($attendanceId);
         $targetAttendance->clock_out = now();
-        return $this->attendanceRepository->updateAttendance($targetAttendance);
+        $this->attendanceRepository->updateAttendance($targetAttendance);
     }
 
-    private function startBreak($attendanceId)
+    private function startBreak($attendanceId): void
     {
-        return $this->attendanceRepository->createBreakTime([
+        $this->attendanceRepository->createBreakTime([
                             'attendance_id' => $attendanceId,
                             'clock_in'  => now(),
                         ]);
     }
 
-    private function endBreak($attendanceId)
+    private function endBreak($attendanceId): void
     {
         /** @var \App\Models\BreakTime $targetBreakTime */
         $targetBreakTime = BreakTime::where('attendance_id', $attendanceId)->whereNull('clock_out')->latest('clock_in')->first();
-        if (is_null($targetBreakTime)) {
-            throw new \Exception();
-        }
-        return $this->attendanceRepository->updateBreakTime(
+
+        $this->attendanceRepository->updateBreakTime(
             ['id' => $targetBreakTime->id],
             [
                 'clock_out' => now(),
