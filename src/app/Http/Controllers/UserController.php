@@ -142,9 +142,9 @@ class UserController extends Controller
         $hidden = $request->only('attendance_id', 'user_id', 'current_attendance_status', 'year', 'month', 'day');
         $applyAttendance = array_merge($hidden, $input);
 
-        $attendance = Attendance::findOrFail($hidden['attendance_id']);
         // 修正権限があるか確認
-        if ($attendance) {
+        if ($hidden['attendance_id']) {
+            $attendance = Attendance::findOrFail($hidden['attendance_id']);
             $this->authorize('update', $attendance);
         }
         try {

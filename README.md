@@ -124,6 +124,7 @@ php artisan key:generate --env=testing
 ### 権限エラーについて（Windows環境）
 Windows + Docker 環境では、以下のような権限エラーが発生する場合があります。
 > tempnam(): file created in the system's temporary directory
+
 > The stream or file "/var/www/storage/logs/laravel.log" could not be opened in append mode: Failed to open stream: Permission denied The exception occurred while attempting to log
 
 #### 対処方法
