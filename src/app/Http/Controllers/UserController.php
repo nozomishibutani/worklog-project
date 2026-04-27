@@ -153,6 +153,11 @@ class UserController extends Controller
             return redirect()->route('show', ['id' => $applyAttendance->attendance_id])
                                 ->with('alert', '勤怠情報を修正しました')
                                 ->with('alert-type', 'alert--success');
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error($e);
+            return redirect()->route('index')
+                            ->with('alert', 'システムエラーが発生しました')
+                            ->with('alert-type', 'alert--error');
         } catch (\RuntimeException $e) {
             return redirect()->route('show', ['id' => $hidden['attendance_id']])
                             ->with('alert', $e->getMessage())
