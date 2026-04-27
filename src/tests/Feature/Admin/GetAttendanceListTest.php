@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Auth;
+namespace Tests\Feature\Admin;
 
 use App\Enums\LoginForm;
 use App\Enums\Role;
@@ -11,7 +11,7 @@ use App\Models\BreakTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
-class AdminGetAttendanceListTest extends TestCase
+class GetAttendanceListTest extends TestCase
 {
     /**
      * 勤怠一覧情報取得機能（管理者）

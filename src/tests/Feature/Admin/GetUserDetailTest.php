@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Auth;
+namespace Tests\Feature\Admin;
 
 use App\Enums\LoginForm;
 use App\Enums\Role;

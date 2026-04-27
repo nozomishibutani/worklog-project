@@ -34,7 +34,9 @@ class AttendanceUpdateService
 
         // 送られてきたattendance_idとuser_idがDBと一致するか
         if (!is_null($applyAttendance['user_id']) && !is_null($applyAttendance['attendance_id'])) {
-            if ((string)$targetAttendance->user_id !== $applyAttendance['user_id']) {
+
+            if ($targetAttendance->user_id !== (int)$applyAttendance['user_id']) {
+
                 throw new \RuntimeException('システムエラーが発生しました');
             }
         }

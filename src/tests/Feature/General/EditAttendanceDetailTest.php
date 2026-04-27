@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Auth;
+namespace Tests\Feature\General;
 
 use App\Enums\ApprovalStatus;
 use App\Enums\LoginForm;

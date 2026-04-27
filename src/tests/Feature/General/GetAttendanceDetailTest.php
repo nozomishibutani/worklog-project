@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Auth;
+namespace Tests\Feature\General;
 
 use App\Enums\LoginForm;
 use Tests\TestCase;
